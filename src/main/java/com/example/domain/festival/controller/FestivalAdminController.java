@@ -49,7 +49,11 @@ public class FestivalAdminController {
                 festivalSyncService.collectDetailEnrichTargetContentIds(listResult.getChangedContentIds());
 
         // 수집된 대상 기준으로 상세 보강 이벤트 발행
-        festivalSyncService.publishSyncCompletedEvent(targetContentIds);
+        if (targetContentIds == null || targetContentIds.isEmpty()) {
+            festivalSyncService.notifyFestivalSyncResultOnly(listResult);
+        } else {
+            festivalSyncService.publishSyncCompletedEvent(targetContentIds, listResult);
+        }
 
         FestivalSyncResponseDto response = new FestivalSyncResponseDto(
                 listResult.getTotalCount(),

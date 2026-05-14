@@ -15,7 +15,7 @@ public class FestivalSyncScheduler {
 
     private final FestivalSyncService festivalSyncService;
 
-    //@Scheduled(cron = "0 0 0 * * *") //시작할 시간
+    @Scheduled(cron = "0 0 0 * * *") //시작할 시간
     public void syncFestivalData() {
         String eventStartDate =
                 LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
