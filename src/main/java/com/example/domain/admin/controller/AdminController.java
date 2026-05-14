@@ -11,6 +11,7 @@ import com.example.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
 @Tag(name = "Admin", description = "관리자API")
+@Slf4j
 public class AdminController {
     private final MemberService memberService;
     private final ReviewService reviewService;
@@ -109,11 +111,12 @@ public class AdminController {
             @PathVariable Long reviewId,
             @RequestBody ReviewProcessRequest req
     ) {
+        log.info("[ADMIN] 리뷰  상태 변경 요청 - reviewId={} , action={}",reviewId,req.action());
         AdminReviewBlindResponse res = reviewService.processReviewAction(reviewId, req.action());
-
         String msg = "Blind".equalsIgnoreCase(req.action())
                 ? "리뷰가 블라인드 처리되었습니다."
                 : "리뷰 신고횟수가 초기화 되었습니다.";
+        log.info("[ADMIN] 리뷰 상태 변경 완료 - reviewId={}, action={}, result={}", reviewId, req.action(), msg);
         return ResponseEntity.ok(
                 new RsData<>(
                         "200",
@@ -133,7 +136,9 @@ public class AdminController {
     public ResponseEntity<RsData<AdminMemberWithdrawnResponse>> memberWithdraw(
             @PathVariable Long memberId
     ){
+        log.info("[Admin] 회원 강제 탈퇴 요청 - memberId={}",memberId);
         AdminMemberWithdrawnResponse res= memberService.memberWithdraw(memberId);
+        log.info("[ADMIN] 회원 강제 탈퇴 완료 - memberId={}", memberId);
         return ResponseEntity.ok(
                 new RsData<>(
                         "200",
