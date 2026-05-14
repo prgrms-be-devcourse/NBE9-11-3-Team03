@@ -11,6 +11,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,6 +28,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String ROLE_PREFIX = "ROLE_";
@@ -63,6 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             if (isLoggedOutAccessToken(token)) {
+                log.warn("[Auth] 블랙리스트 토큰 접근 시도 - uri={}", request.getRequestURI());
                 writeUnauthorizedResponse(response, "이미 로그아웃 처리된 토큰입니다.");
                 return;
             }
@@ -80,7 +83,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (jwtUtil.validateToken(token) && jwtUtil.isAccessToken(token) && !isBlacklisted(token)) {
+        if (!jwtUtil.validateToken(token) || !jwtUtil.isAccessToken(token)) {
+            log.warn("[Auth] 유효하지 않은 토큰 접근 - uri={}", request.getRequestURI());
+            return;
+        }
+
+        if (!isBlacklisted(token)) {
             String loginId = jwtUtil.getLoginId(token);
             // 탈퇴한 회원의 남아있는 access token은 유효해도 인증 처리하지 않음.
             if (isActiveMember(loginId)) {
