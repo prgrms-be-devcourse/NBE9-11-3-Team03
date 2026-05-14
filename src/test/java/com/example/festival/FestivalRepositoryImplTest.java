@@ -1,6 +1,6 @@
 package com.example.festival;
 
-import com.example.domain.festival.dto.FestivalSearchRequestDto;
+import com.example.domain.festival.dto.request.FestivalSearchRequest;
 import com.example.domain.festival.entity.Festival;
 import com.example.domain.festival.entity.FestivalStatus;
 import com.example.domain.festival.repository.FestivalRepository;
@@ -116,7 +116,7 @@ public class FestivalRepositoryImplTest {
     @Test
     @DisplayName("1. 글로벌 기본 정렬 룰 테스트 (조건 없을 때)")
     void defaultSortTest() {
-        FestivalSearchRequestDto condition = new FestivalSearchRequestDto(null, null, null, null, null, null, null);
+        FestivalSearchRequest condition = new FestivalSearchRequest(null, null, null, null, null, null, null);
         PageRequest pageRequest = PageRequest.of(0, 10);
 
         Page<Festival> result = festivalRepository.searchFestivals(condition, pageRequest);
@@ -139,7 +139,7 @@ public class FestivalRepositoryImplTest {
     @DisplayName("2. 지역 및 키워드 필터링 테스트")
     void searchFilterTest() {
         // given
-        FestivalSearchRequestDto condition = new FestivalSearchRequestDto("11", null, null, "벚꽃", null, null,null);
+        FestivalSearchRequest condition = new FestivalSearchRequest("11", null, null, "벚꽃", null, null,null);
         PageRequest pageRequest = PageRequest.of(0, 10);
 
         // when
@@ -154,7 +154,7 @@ public class FestivalRepositoryImplTest {
     @DisplayName("3. 다중 조건 정렬 테스트 (조회순 내림차순)")
     void customSortTest() {
         // given
-        FestivalSearchRequestDto condition = new FestivalSearchRequestDto(null, null, null, null, null, null,null);
+        FestivalSearchRequest condition = new FestivalSearchRequest(null, null, null, null, null, null,null);
         // 조회수(viewCount) 내림차순 정렬 추가
         PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "viewCount"));
 
@@ -177,7 +177,7 @@ public class FestivalRepositoryImplTest {
         // given
         // 현재 달을 기준으로 세팅 (setUp 데이터들이 현재 날짜 기준이므로)
         int currentMonth = LocalDateTime.now().getMonthValue();
-        FestivalSearchRequestDto condition = new FestivalSearchRequestDto(null, null, currentMonth, null, null, null,null);
+        FestivalSearchRequest condition = new FestivalSearchRequest(null, null, currentMonth, null, null, null,null);
         PageRequest pageRequest = PageRequest.of(0, 10);
 
         // when
@@ -193,7 +193,7 @@ public class FestivalRepositoryImplTest {
     @DisplayName("5. 상태(Status) 단일 필터링 및 ENDED 기본 정렬 테스트")
     void statusFilterAndEndedSortTest() {
         // given: 상태를 ENDED(종료)로만 검색
-        FestivalSearchRequestDto condition = new FestivalSearchRequestDto(null, FestivalStatus.ENDED, null, null, null, null,null);
+        FestivalSearchRequest condition = new FestivalSearchRequest(null, FestivalStatus.ENDED, null, null, null, null,null);
         PageRequest pageRequest = PageRequest.of(0, 10);
 
         // when
@@ -212,7 +212,7 @@ public class FestivalRepositoryImplTest {
     @DisplayName("6. 찜순(bookMarkCount) 다중 조건 정렬 테스트")
     void bookMarkSortTest() {
         // given: 조건 없이 찜순 내림차순 정렬 요청
-        FestivalSearchRequestDto condition = new FestivalSearchRequestDto(null, null, null, null, null, null,null);
+        FestivalSearchRequest condition = new FestivalSearchRequest(null, null, null, null, null, null,null);
         PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "bookMarkCount"));
 
         // when
@@ -235,7 +235,7 @@ public class FestivalRepositoryImplTest {
     @DisplayName("7. 검색 결과가 전혀 없는 경우 (Empty) 테스트")
     void emptyResultTest() {
         // given: 절대 있을 수 없는 요상한 조건으로 검색
-        FestivalSearchRequestDto condition = new FestivalSearchRequestDto("하와이", null, null, "외계인", null, null,null);
+        FestivalSearchRequest condition = new FestivalSearchRequest("하와이", null, null, "외계인", null, null,null);
         PageRequest pageRequest = PageRequest.of(0, 10);
 
         // when
@@ -256,7 +256,7 @@ public class FestivalRepositoryImplTest {
         Double radiusKm = 10.0; // 반경 10km
 
         // 기존 4개 조건은 null로 두고, 방금 추가한 좌표 3개만 세팅
-        FestivalSearchRequestDto condition = new FestivalSearchRequestDto(null, null, null, null, myMapX, myMapY, radiusKm);
+        FestivalSearchRequest condition = new FestivalSearchRequest(null, null, null, null, myMapX, myMapY, radiusKm);
 
         // when: 마커 전용 메서드(findNearbyFestivals) 호출
         List<Festival> result = festivalRepository.findNearbyFestivals(condition);
@@ -275,7 +275,7 @@ public class FestivalRepositoryImplTest {
         Double myMapY = 37.5665;
         Double radiusKm = 100.0; // 반경 100km
 
-        FestivalSearchRequestDto condition = new FestivalSearchRequestDto(null, null, null, null, myMapX, myMapY, radiusKm);
+        FestivalSearchRequest condition = new FestivalSearchRequest(null, null, null, null, myMapX, myMapY, radiusKm);
 
         // when
         List<Festival> result = festivalRepository.findNearbyFestivals(condition);

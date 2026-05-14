@@ -50,3 +50,6 @@ mysql_data/
 sq/
 *.sq
 uploads/
+
+logs/
+*.log

@@ -1,6 +1,6 @@
 package com.example.domain.festival.service;
 
-import com.example.domain.festival.dto.response.FestivalSyncStatusResponseDto;
+import com.example.domain.festival.dto.response.FestivalSyncStatusResponse;
 import com.example.domain.festival.entity.DetailSyncPendingReason;
 import com.example.domain.festival.entity.FestivalDetailSyncPending;
 import com.example.domain.festival.repository.FestivalDetailSyncPendingRepository;
@@ -56,7 +56,7 @@ public class FestivalDetailSyncPendingService {
 
     //reason별 pending 건수 조회(로그용)
     @Transactional(readOnly = true)
-    public FestivalSyncStatusResponseDto getSyncStatus() {
+    public FestivalSyncStatusResponse getSyncStatus() {
         Map<String, Long> pendingBreakdown = new LinkedHashMap<>();
 
         for (DetailSyncPendingReason reason : DetailSyncPendingReason.values()) {
@@ -65,7 +65,7 @@ public class FestivalDetailSyncPendingService {
 
         long pendingCount = count();
 
-        return new FestivalSyncStatusResponseDto(
+        return new FestivalSyncStatusResponse(
                 pendingCount,
                 pendingBreakdown,
                 pendingCount > 0

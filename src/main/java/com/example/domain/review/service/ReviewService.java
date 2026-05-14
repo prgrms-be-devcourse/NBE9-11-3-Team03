@@ -1,12 +1,14 @@
 package com.example.domain.review.service;
 
-import com.example.domain.admin.dto.AdminReviewBlindRes;
-import com.example.domain.admin.dto.AdminReviewReportPageRes;
+import com.example.domain.admin.dto.response.AdminReviewBlindResponse;
+import com.example.domain.admin.dto.response.AdminReviewReportPageResponse;
 import com.example.domain.festival.entity.Festival;
 import com.example.domain.festival.repository.FestivalRepository;
 import com.example.domain.member.entity.Member;
 import com.example.domain.member.repository.MemberRepository;
-import com.example.domain.review.dto.*;
+import com.example.domain.review.dto.request.ReviewCreateRequest;
+import com.example.domain.review.dto.request.ReviewUpdateRequest;
+import com.example.domain.review.dto.response.*;
 import com.example.domain.review.entity.Review;
 import com.example.domain.review.entity.ReviewStatus;
 import com.example.domain.review.repository.ReviewRepository;
@@ -33,9 +35,9 @@ public class ReviewService {
 
     //리뷰 작성
     @Transactional
-    public ReviewResponseDto createReview(Long festivalId, String loginId,
-                                          ReviewCreateRequestDto requestDto,
-                                          MultipartFile imageFile) { // 1. 파일 매개변수 추가
+    public ReviewResponse createReview(Long festivalId, String loginId,
+                                       ReviewCreateRequest requestDto,
+                                       MultipartFile imageFile) { // 1. 파일 매개변수 추가
 
         // 1. 로그인한 회원 조회
         Member member = memberRepository.findByLoginId(loginId)
@@ -68,13 +70,13 @@ public class ReviewService {
 
         Review savedReview = reviewRepository.save(review);
 
-        return new ReviewResponseDto(savedReview);
+        return new ReviewResponse(savedReview);
 
     }
 
 
     //리뷰 목록조회
-    public ReviewPageResponseDto getReviewList(Long festivalId, String loginId, int page, int size) {
+    public ReviewPageResponse getReviewList(Long festivalId, String loginId, int page, int size) {
 
         // 1. 로그인 체크
         if (loginId == null || loginId.equals("anonymousUser")) {
@@ -101,7 +103,7 @@ public class ReviewService {
         Member loginMember = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다."));
 
-        return ReviewPageResponseDto.builder()
+        return ReviewPageResponse.builder()
                 .festivalId(festivalId)
                 .content(reviewPage.getContent().stream()
                         .map(review -> {
@@ -109,7 +111,7 @@ public class ReviewService {
                                     loginMember.getId(),
                                     review.getId()
                             );
-                            return ReviewListResponseDto.from(review, liked);
+                            return ReviewListResponse.from(review, liked);
                         })
                         .toList())
                 .page(reviewPage.getNumber())
@@ -124,7 +126,7 @@ public class ReviewService {
 
     //리뷰 수정
     @Transactional
-    public ReviewUpdateResponseDto updateReview(Long reviewId, String loginId, ReviewUpdateRequestDto requestDto, MultipartFile imageFile) {
+    public ReviewUpdateResponse updateReview(Long reviewId, String loginId, ReviewUpdateRequest requestDto, MultipartFile imageFile) {
 
         // 1. 로그인한 회원 조회
         Member member = memberRepository.findByLoginId(loginId)
@@ -183,12 +185,12 @@ public class ReviewService {
         Double averageRating = reviewRepository.calculateAverageRatingByFestivalId(festival.getId());
         festival.updateAverageRating(averageRating == null ? 0.0 : averageRating);
 
-        return ReviewUpdateResponseDto.from(review);
+        return ReviewUpdateResponse.from(review);
     }
 
     //리뷰 삭제
     @Transactional
-    public ReviewDeleteResponseDto deleteReview(Long reviewId, String loginId) {
+    public ReviewDeleteResponse deleteReview(Long reviewId, String loginId) {
 
 
 
@@ -223,21 +225,21 @@ public class ReviewService {
         Double averageRating = reviewRepository.calculateAverageRatingByFestivalId(festival.getId());
         festival.updateAverageRating(averageRating == null ? 0.0 : averageRating);
 
-        return ReviewDeleteResponseDto.from(review);
+        return ReviewDeleteResponse.from(review);
     }
 
 
 
 
     // 신고횟수가 5이상인 review리스트를 DTO로 반환하여 주는 함수
-    public AdminReviewReportPageRes getReportReview(Pageable pageable) {
+    public AdminReviewReportPageResponse getReportReview(Pageable pageable) {
         Page<Review> reviews = reviewRepository.findAllByReportCountGreaterThanEqualAndStatus(5,ReviewStatus.ACTIVE,pageable);
-        return AdminReviewReportPageRes.from(reviews);
+        return AdminReviewReportPageResponse.from(reviews);
     }
 
     //리뷰를 검토하여 블라인드처리, 신고횟수 초기화하는 함수
     @Transactional
-    public AdminReviewBlindRes processReviewAction(Long reviewId, String action) {
+    public AdminReviewBlindResponse processReviewAction(Long reviewId, String action) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(()->new CustomNotFoundException("404","존재하지 않는 리뷰입니다."));//추후 변경 예정
         if(review.getStatus()==ReviewStatus.DELETED){
@@ -267,7 +269,7 @@ public class ReviewService {
         if(updatedCount==0){
             throw new ConflictException("이미 다른 관리자가 처리한 리뷰입니다.");
         }
-        return new AdminReviewBlindRes(
+        return new AdminReviewBlindResponse(
                 review.getId(),
                 review.getStatus(),
                 review.getReportCount()

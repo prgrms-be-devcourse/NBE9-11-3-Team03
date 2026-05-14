@@ -1,17 +1,15 @@
 package com.example.domain.member.controller;
 
-import com.example.domain.bookmark.entity.FestivalBookmark;
-import com.example.domain.member.dto.request.WithdrawReq;
-import com.example.domain.member.dto.response.MyBookMarkPageRes;
-import com.example.domain.member.dto.response.MyPageRes;
-import com.example.domain.member.dto.response.MyReviewPageRes;
-import com.example.domain.member.dto.response.WithdrawRes;
+import com.example.domain.member.dto.request.WithdrawRequest;
+import com.example.domain.member.dto.response.MyBookMarkPageResponse;
+import com.example.domain.member.dto.response.MyPageResponse;
+import com.example.domain.member.dto.response.MyReviewPageResponse;
+import com.example.domain.member.dto.response.WithdrawResponse;
 import com.example.domain.member.service.AuthService;
 import com.example.domain.member.service.MemberService;
 import com.example.domain.member.service.MyPageService;
 import com.example.domain.review.service.ReviewService;
 import com.example.global.exception.BadRequestException;
-import com.example.global.exception.ForbiddenException;
 import com.example.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,13 +17,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.example.global.security.TokenCookieManager;
 
@@ -48,11 +44,11 @@ public class MyPageController {
      */
     @GetMapping()
     @Operation(summary = "내정보 보기", description = "로그인한 사용자가 자신의 정보(닉네임, 이메일)를 봅니다.")
-    public ResponseEntity<RsData<MyPageRes>> getMyPage(
+    public ResponseEntity<RsData<MyPageResponse>> getMyPage(
             Authentication authentication
     ) {
         String loginId = authentication.getName();
-        MyPageRes res = myPageService.getMyPage(loginId);
+        MyPageResponse res = myPageService.getMyPage(loginId);
         return ResponseEntity.ok(
                 new RsData<>(
                         "200",
@@ -69,7 +65,7 @@ public class MyPageController {
      */
     @GetMapping("/reviews")
     @Operation(summary = "내가 작성한 리뷰 목록 조회", description = "로그인한 사용자가 작성한 리뷰 목록을 조회합니다.")
-    public ResponseEntity<RsData<MyReviewPageRes>> getMyReview(
+    public ResponseEntity<RsData<MyReviewPageResponse>> getMyReview(
             Authentication authentication,
             @PageableDefault(
                     size = 5,
@@ -78,7 +74,7 @@ public class MyPageController {
             ) Pageable pageable
     ) {
         String loginid = authentication.getName();
-        MyReviewPageRes res = myPageService.getMyReviews(loginid, pageable);
+        MyReviewPageResponse res = myPageService.getMyReviews(loginid, pageable);
         return ResponseEntity.ok(
                 new RsData<>("200", "내가 쓴 리뷰 목록 조회 성공", res)
         );
@@ -91,7 +87,7 @@ public class MyPageController {
      */
     @GetMapping("/bookmarks")
     @Operation(summary = "내가 찜한 축제 목록 조회", description = "로그인한 사용자가 자신이 찜한 축제의 목록을 조회합니다.")
-    public ResponseEntity<RsData<MyBookMarkPageRes>> getMyBookMark(
+    public ResponseEntity<RsData<MyBookMarkPageResponse>> getMyBookMark(
             Authentication authentication,
             @PageableDefault(
                     size = 5,
@@ -101,7 +97,7 @@ public class MyPageController {
             Pageable pageable
     ) {
         String loginId = authentication.getName();
-        MyBookMarkPageRes res = myPageService.getMyBookMark(loginId, pageable);
+        MyBookMarkPageResponse res = myPageService.getMyBookMark(loginId, pageable);
         return ResponseEntity.ok(
                 new RsData<>("200", "찜한 축제 목록 조회 성공", res)
         );
@@ -115,8 +111,8 @@ public class MyPageController {
      */
     @DeleteMapping("/withdraw")
     @Operation(summary = "회원 탈퇴", description = "회원은 자신의 상태를 withdraw로변경(탈퇴)를 진행할 수 있습니다.")
-    public ResponseEntity<RsData<WithdrawRes>> selfWithdraw(
-            @Valid @RequestBody WithdrawReq req,
+    public ResponseEntity<RsData<WithdrawResponse>> selfWithdraw(
+            @Valid @RequestBody WithdrawRequest req,
             Authentication authentication,
             HttpServletRequest request,
             HttpServletResponse response
@@ -125,7 +121,7 @@ public class MyPageController {
         if (!req.password().equals(req.passwordConfirm())) {
             throw new BadRequestException("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
         }
-        WithdrawRes res = authService.selfWithdraw(
+        WithdrawResponse res = authService.selfWithdraw(
                 authentication.getName(),
                 req.password(),
                 // 탈퇴 요청에 사용된 access token을 blacklist 처리하기 위해 전달.

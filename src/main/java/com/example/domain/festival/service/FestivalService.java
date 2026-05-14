@@ -1,11 +1,10 @@
 package com.example.domain.festival.service;
 
 import com.example.domain.bookmark.repository.FestivalBookmarkRepository;
-import com.example.domain.festival.dto.FestivalDetailResponseDto;
-import com.example.domain.festival.dto.FestivalListResponseDto;
-import com.example.domain.festival.dto.FestivalSearchRequestDto;
+import com.example.domain.festival.dto.response.FestivalDetailResponse;
+import com.example.domain.festival.dto.response.FestivalListResponse;
+import com.example.domain.festival.dto.request.FestivalSearchRequest;
 import com.example.domain.festival.entity.Festival;
-import com.example.domain.festival.entity.FestivalStatus;
 import com.example.domain.festival.repository.FestivalRepository;
 import com.example.domain.member.entity.Member;
 import com.example.domain.member.repository.MemberRepository;
@@ -16,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,18 +27,18 @@ public class FestivalService {
     private final MemberRepository memberRepository;
     private final FestivalBookmarkRepository festivalBookmarkRepository;
 
-    public Page<Festival> searchFestivals(FestivalSearchRequestDto searchDto, Pageable pageable) {
+    public Page<Festival> searchFestivals(FestivalSearchRequest searchDto, Pageable pageable) {
         return festivalRepository.searchFestivals(searchDto, pageable);
     }
 
     // 로그인 유저의 찜 여부까지 채워서 목록 DTO 페이지로 반환
-    public Page<FestivalListResponseDto> searchFestivalsDto(
-            FestivalSearchRequestDto searchDto, Pageable pageable, String loginId) {
+    public Page<FestivalListResponse> searchFestivalsDto(
+            FestivalSearchRequest searchDto, Pageable pageable, String loginId) {
         Page<Festival> page = festivalRepository.searchFestivals(searchDto, pageable);
 
         Set<Long> bookmarkedIds = resolveBookmarkedIds(loginId, page.getContent());
 
-        return page.map(f -> FestivalListResponseDto.from(f, bookmarkedIds.contains(f.getId())));
+        return page.map(f -> FestivalListResponse.from(f, bookmarkedIds.contains(f.getId())));
     }
 
     @Transactional
@@ -53,7 +51,7 @@ public class FestivalService {
 
     // 로그인 유저의 찜 여부까지 채워서 상세 DTO로 반환
     @Transactional
-    public FestivalDetailResponseDto getFestivalDetail(Long id, String loginId) {
+    public FestivalDetailResponse getFestivalDetail(Long id, String loginId) {
         Festival festival = getFestival(id);
         boolean isBookmarked = false;
 
@@ -67,10 +65,10 @@ public class FestivalService {
             }
         }
 
-        return FestivalDetailResponseDto.from(festival, isBookmarked);
+        return FestivalDetailResponse.from(festival, isBookmarked);
     }
 
-    public List<Festival> getNearbyMarkers(FestivalSearchRequestDto searchDto){
+    public List<Festival> getNearbyMarkers(FestivalSearchRequest searchDto){
         return festivalRepository.findNearbyFestivals(searchDto);
     }
 
