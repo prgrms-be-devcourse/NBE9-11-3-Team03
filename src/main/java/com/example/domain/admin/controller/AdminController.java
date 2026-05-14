@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -109,15 +110,16 @@ public class AdminController {
     @Operation(summary = "악성리뷰 블라인드처리", description = "관리자가 악성리뷰를 블라인드처리할 수 있습니다.")
     public ResponseEntity<RsData<AdminReviewBlindResponse>> processReview(
             @PathVariable Long reviewId,
-            @RequestBody ReviewProcessRequest req
+            @RequestBody ReviewProcessRequest req,
+            Authentication authentication
     ) {
-        log.info("[ADMIN] 리뷰  상태 변경 요청 - reviewId={} , action={}",reviewId,req.action());
+        String adminLoginId = authentication.getName();
+        log.info("[ADMIN] 리뷰 상태 변경 요청 - adminLoginId={}, reviewId={}, action={}", adminLoginId, reviewId, req.action());
         AdminReviewBlindResponse res = reviewService.processReviewAction(reviewId, req.action());
         String msg = "Blind".equalsIgnoreCase(req.action())
                 ? "리뷰가 블라인드 처리되었습니다."
                 : "리뷰 신고횟수가 초기화 되었습니다.";
-        log.info("[ADMIN] 리뷰 상태 변경 완료 - reviewId={}, action={}, result={}", reviewId, req.action(), msg);
-        return ResponseEntity.ok(
+        log.info("[ADMIN] 리뷰 상태 변경 완료 - adminLoginId={}, reviewId={}, action={}, result={}", adminLoginId, reviewId, req.action(), msg);        return ResponseEntity.ok(
                 new RsData<>(
                         "200",
                         msg,
@@ -134,11 +136,13 @@ public class AdminController {
     @PatchMapping("/members/{memberId}/withdraw")
     @Operation(summary = "회원 강제 탈퇴 처리", description = "관리자가 회원을 강제 탈퇴처리할 수 있습니다.")
     public ResponseEntity<RsData<AdminMemberWithdrawnResponse>> memberWithdraw(
-            @PathVariable Long memberId
+            @PathVariable Long memberId,
+            Authentication authentication
     ){
-        log.info("[Admin] 회원 강제 탈퇴 요청 - memberId={}",memberId);
+        String adminLoginId=authentication.getName();
+        log.info("[ADMIN] 회원 강제 탈퇴 요청 - adminLoginId={}, memberId={}", adminLoginId, memberId);
         AdminMemberWithdrawnResponse res= memberService.memberWithdraw(memberId);
-        log.info("[ADMIN] 회원 강제 탈퇴 완료 - memberId={}", memberId);
+        log.info("[ADMIN] 회원 강제 탈퇴 요청 - adminLoginId={}, memberId={}", adminLoginId, memberId);
         return ResponseEntity.ok(
                 new RsData<>(
                         "200",

@@ -191,8 +191,7 @@ public class GlobalExceptionHandler {
     //처리되지 않은 예외의 최종 방어 (500 Internal Server Error)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<RsData<Void>> handleException(Exception e) {
-        e.printStackTrace();
-
+        log.error("[500] 서버 내부 오류 발생 - message={}", e.getMessage(), e);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new RsData<>("500", "서버 오류가 발생했습니다.", null));
