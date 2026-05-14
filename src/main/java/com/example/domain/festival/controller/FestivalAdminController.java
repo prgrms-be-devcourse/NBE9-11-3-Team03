@@ -38,6 +38,9 @@ public class FestivalAdminController {
             @RequestParam(defaultValue = "200") int numOfRows,
             @RequestParam(defaultValue = "20260101") String eventStartDate
     ) {
+        // API 전체 응답 시간 측정 시작
+        long apiStart = System.currentTimeMillis();
+
         FestivalSyncResult listResult =
                 festivalSyncService.syncFestivalList(pageNo, numOfRows, eventStartDate);
 
@@ -54,6 +57,12 @@ public class FestivalAdminController {
                 listResult.getUpdatedCount(),
                 listResult.getFailedCount()
         );
+
+        // API 전체 응답 시간 측정 종료
+        long apiEnd = System.currentTimeMillis();
+
+        System.out.println("[API 응답 시간] sync-and-enrich : "
+                + (apiEnd - apiStart) + "ms");
 
         boolean hasFailedItems = listResult.getFailedCount() > 0;
         boolean hasDetailTargets = targetContentIds != null && !targetContentIds.isEmpty();
