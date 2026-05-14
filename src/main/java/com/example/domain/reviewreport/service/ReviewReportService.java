@@ -13,9 +13,11 @@ import com.example.global.exception.ConflictException;
 import com.example.global.exception.UnauthorizedException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -54,6 +56,12 @@ public class ReviewReportService {
         ReviewReport reviewReport = reviewReportRepository.save(new ReviewReport(reporter, review));
 
         reviewRepository.increaseReportCount(reviewId);
+
+        Integer reportCount = reviewRepository.findReportCountById(reviewId);
+
+        if (reportCount != null && reportCount >= 5) {
+            log.warn("[Review] 신고 5회 임계치 - reviewId={}, reportCount={}", reviewId, reportCount);
+        }
 
         return new ReviewReportResponse(reviewReport.getId());
     }
