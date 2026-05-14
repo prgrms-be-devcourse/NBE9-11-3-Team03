@@ -1,5 +1,9 @@
 plugins {
     java
+    kotlin("jvm") version "1.9.25"
+    kotlin("plugin.spring") version "1.9.25"
+    kotlin("plugin.jpa") version "1.9.25"
+    kotlin("plugin.allopen") version "1.9.25"
     id("org.springframework.boot") version "3.5.13"
     id("io.spring.dependency-management") version "1.1.7"
 }
@@ -18,6 +22,14 @@ repositories {
     mavenCentral()
 }
 
+sourceSets {
+    main {
+        java {
+            srcDir("build/generated/sources/annotationProcessor/java/main")
+        }
+    }
+}
+
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     //db및 swagger체크용을 잠시 꺼둠
@@ -28,6 +40,7 @@ dependencies {
     // JwtUtil에서 JWT 토큰을 만들고 해석할 때 사용하는 라이브러리다.
     implementation("io.jsonwebtoken:jjwt-api:0.12.6")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
     compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("com.h2database:h2")
@@ -51,6 +64,19 @@ dependencies {
     implementation("org.jsoup:jsoup:1.17.2") //DB 정제용 의존성추가
 
     runtimeOnly("com.mysql:mysql-connector-j")//mysql 의존성 추가
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    compilerOptions {
+        freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
+    }
+}
+allOpen {
+    annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.MappedSuperclass")
+    annotation("jakarta.persistence.Embeddable")
 }
 
 tasks.withType<Test> {
