@@ -17,7 +17,7 @@ public class FestivalSyncEventListener {
     private final FestivalSyncService festivalSyncService;
 
     //목록 동기화 완료 이벤트를 수신하면, 변경된 contentId에 대해 상세 보강을 수행한다.
-    @Async
+    @Async("festivalDetailTaskExecutor")
     @EventListener
     public void handleFestivalSyncCompleted(FestivalSyncCompletedEvent event) {
         List<String> changedContentIds = event.getChangedContentIds();
