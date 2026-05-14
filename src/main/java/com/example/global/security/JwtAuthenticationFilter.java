@@ -1,6 +1,8 @@
 package com.example.global.security;
 
+import com.example.domain.member.entity.MemberStatus;
 import com.example.domain.member.repository.AccessTokenBlacklistRepository;
+import com.example.domain.member.repository.MemberRepository;
 import com.example.global.jwt.JwtUtil;
 import com.example.global.rsData.RsData;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,6 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final AccessTokenBlacklistRepository accessTokenBlacklistRepository;
+    private final MemberRepository memberRepository;
     private final TokenCookieManager tokenCookieManager;
     private final ObjectMapper objectMapper;
 
@@ -78,8 +81,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (jwtUtil.validateToken(token) && jwtUtil.isAccessToken(token) && !isBlacklisted(token)) {
-            setAuthentication(jwtUtil.getLoginId(token), jwtUtil.getRole(token), request);
+            String loginId = jwtUtil.getLoginId(token);
+            // 탈퇴한 회원의 남아있는 access token은 유효해도 인증 처리하지 않음.
+            if (isActiveMember(loginId)) {
+                setAuthentication(loginId, jwtUtil.getRole(token), request);
+            }
         }
+    }
+
+    // DB에 남아있는 회원 상태가 ACTIVE인 경우에만 인증을 허용.
+    private boolean isActiveMember(String loginId) {
+        return memberRepository.findByLoginId(loginId)
+                .map(member -> member.getStatus() == MemberStatus.ACTIVE)
+                .orElse(false);
     }
 
     private boolean isBlacklisted(String token) {

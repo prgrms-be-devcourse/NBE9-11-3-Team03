@@ -15,6 +15,8 @@ import com.example.global.exception.ForbiddenException;
 import com.example.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import com.example.global.security.TokenCookieManager;
 
 @RestController
 @RequestMapping("/api/users/me")
@@ -35,6 +38,7 @@ public class MyPageController {
     private final ReviewService reviewService;
     private final MemberService memberService;
     private final AuthService authService;
+    private final TokenCookieManager tokenCookieManager;
 
     /**
      * 마이페이지 조회를 하여 사용자가 자신의 정보를 얻을 수 있다.
@@ -113,13 +117,22 @@ public class MyPageController {
     @Operation(summary = "회원 탈퇴", description = "회원은 자신의 상태를 withdraw로변경(탈퇴)를 진행할 수 있습니다.")
     public ResponseEntity<RsData<WithdrawRes>> selfWithdraw(
             @Valid @RequestBody WithdrawReq req,
-            Authentication authentication
+            Authentication authentication,
+            HttpServletRequest request,
+            HttpServletResponse response
     ) {
         //비밀번호, 비밀번호 확인이 맞나 확인
         if (!req.password().equals(req.passwordConfirm())) {
             throw new BadRequestException("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
         }
-        WithdrawRes res = authService.selfWithdraw(authentication.getName(), req.password());
+        WithdrawRes res = authService.selfWithdraw(
+                authentication.getName(),
+                req.password(),
+                // 탈퇴 요청에 사용된 access token을 blacklist 처리하기 위해 전달.
+                tokenCookieManager.resolveAccessToken(request)
+        );
+        // 탈퇴 후 브라우저에 남아있는 refresh token 쿠키도 제거.
+        tokenCookieManager.clearRefreshTokenCookie(response);
         return ResponseEntity.ok(
                 new RsData<>(
                         "200",

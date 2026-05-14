@@ -4,7 +4,9 @@ import com.example.domain.admin.dto.AdminMemberWithdrawnRes;
 import com.example.domain.admin.dto.MemberPageResponse;
 import com.example.domain.member.entity.Member;
 import com.example.domain.member.entity.MemberStatus;
+import com.example.domain.member.entity.RefreshToken;
 import com.example.domain.member.repository.MemberRepository;
+import com.example.domain.member.repository.RefreshTokenRepository;
 import com.example.domain.review.repository.ReviewRepository;
 import com.example.global.exception.CustomNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final ReviewRepository reviewRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     //저장된 모든 회원정보를 페이징하여 조회하는 함수
     public MemberPageResponse getAllMembers(Pageable pageable) {
@@ -42,6 +45,9 @@ public class MemberService {
             throw new IllegalArgumentException("이미 탈퇴 처리된 회원입니다.");
         }
         member.withdraw();
+        // 강제 탈퇴된 회원의 refresh token도 재발급에 사용할 수 없도록 비활성화.
+        refreshTokenRepository.findByMemberId(member.getId())
+                .ifPresent(RefreshToken::logout);
         return AdminMemberWithdrawnRes.from(member);
     }
 

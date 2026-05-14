@@ -4,7 +4,10 @@ import com.example.domain.festival.entity.Festival;
 import com.example.domain.festival.repository.FestivalRepository;
 import com.example.domain.member.entity.Member;
 import com.example.domain.member.entity.MemberStatus;
+import com.example.domain.member.entity.RefreshToken;
+import com.example.domain.member.entity.RefreshTokenStatus;
 import com.example.domain.member.repository.MemberRepository;
+import com.example.domain.member.repository.RefreshTokenRepository;
 import com.example.domain.review.controller.ReviewController;
 import com.example.domain.review.entity.Review;
 import com.example.domain.review.repository.ReviewRepository;
@@ -43,6 +46,8 @@ public class AdminMemberControllerTest {
     private ReviewRepository reviewRepository;
     @Autowired
     private FestivalRepository festivalRepository;
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
 
     @Test
     @DisplayName("관리자 전체회원 목록조회")
@@ -80,6 +85,9 @@ public class AdminMemberControllerTest {
     public void t4() throws Exception {
         Member member = new Member("user4", "1234", "이름4", "user4@test.com", "활동중인회원", 0);
         memberRepository.save(member);
+        RefreshToken refreshToken = refreshTokenRepository.save(
+                RefreshToken.create(member, "admin-withdraw-refresh-token", LocalDateTime.now().plusDays(1))
+        );
         Long memberId = member.getId();
         mockMvc.perform(patch("/api/admin/members/" + memberId + "/withdraw")
                         .header("Authorization","Bearer dev-temp-token"))
@@ -96,6 +104,11 @@ public class AdminMemberControllerTest {
 
         // 2. DB의 닉네임이 '탈퇴회원_ID' 형식으로 변경되었는지 확인
         assertThat(withdrawnMember.getNickname()).isEqualTo("탈퇴한회원_" + memberId);
+
+        // 3. 강제 탈퇴된 회원의 refresh token도 재발급에 사용할 수 없도록 비활성화되는지 확인
+        RefreshToken withdrawnRefreshToken = refreshTokenRepository.findById(refreshToken.getId()).orElseThrow();
+        assertThat(withdrawnRefreshToken.getToken()).isNull();
+        assertThat(withdrawnRefreshToken.getStatus()).isEqualTo(RefreshTokenStatus.UNACTIVATED);
     }
 
     @Test
