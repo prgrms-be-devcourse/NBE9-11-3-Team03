@@ -36,11 +36,11 @@ public class FestivalRepositoryImpl implements FestivalRepositoryCustom{
         List<Festival> content = queryFactory
                 .selectFrom(festival)
                 .where(
-                        regionCodeEquals(searchDto.regionCode()),
-                        statusEquals(searchDto.status()),
-                        monthEquals(searchDto.month()),
-                        keywordContains(searchDto.keyword()),
-                        nearBy(searchDto.mapX(), searchDto.mapY(), searchDto.radiusKm())
+                        regionCodeEquals(searchDto.regionCode),
+                        statusEquals(searchDto.status),
+                        monthEquals(searchDto.month),
+                        keywordContains(searchDto.keyword),
+                        nearBy(searchDto.mapX, searchDto.mapY, searchDto.radiusKm)
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -51,11 +51,11 @@ public class FestivalRepositoryImpl implements FestivalRepositoryCustom{
                 .select(festival.count())
                 .from(festival)
                 .where(
-                        regionCodeEquals(searchDto.regionCode()),
-                        statusEquals(searchDto.status()),
-                        monthEquals(searchDto.month()),
-                        keywordContains(searchDto.keyword()),
-                        nearBy(searchDto.mapX(), searchDto.mapY(), searchDto.radiusKm())
+                        regionCodeEquals(searchDto.regionCode),
+                        statusEquals(searchDto.status),
+                        monthEquals(searchDto.month),
+                        keywordContains(searchDto.keyword),
+                        nearBy(searchDto.mapX, searchDto.mapY, searchDto.radiusKm)
                 );
 
         return PageableExecutionUtils.getPage(content, pageable, contentQuery::fetchOne);
@@ -67,7 +67,7 @@ public class FestivalRepositoryImpl implements FestivalRepositoryCustom{
                 .selectFrom(festival)
                 .where(
                         festival.status.in(FestivalStatus.ONGOING, FestivalStatus.UPCOMING),
-                        nearBy(searchDto.mapX(), searchDto.mapY(), searchDto.radiusKm())
+                        nearBy(searchDto.mapX, searchDto.mapY, searchDto.radiusKm)
                 )
                 .fetch();
     }
