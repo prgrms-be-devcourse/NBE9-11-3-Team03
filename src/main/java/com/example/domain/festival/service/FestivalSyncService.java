@@ -4,8 +4,8 @@ import com.example.domain.festival.client.FestivalApiClient;
 import com.example.domain.festival.converter.FestivalApiConverter;
 import com.example.domain.festival.dto.external.FestivalApiItem;
 import com.example.domain.festival.dto.external.FestivalApiResponse;
-import com.example.domain.festival.dto.response.FestivalSyncStatusResponse;
 import com.example.domain.festival.dto.response.FestivalSyncResultResponse;
+import com.example.domain.festival.dto.response.FestivalSyncStatusResponse;
 import com.example.domain.festival.entity.DetailSyncPendingReason;
 import com.example.domain.festival.entity.Festival;
 import com.example.domain.festival.entity.FestivalStatus;
@@ -14,6 +14,7 @@ import com.example.domain.festival.notification.FestivalSyncSlackMessageFactory;
 import com.example.domain.festival.repository.FestivalRepository;
 import com.example.global.notification.SlackNotificationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
@@ -24,6 +25,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -38,48 +40,49 @@ public class FestivalSyncService {
     private final SlackNotificationService slackNotificationService;
     private final FestivalSyncSlackMessageFactory festivalSyncSlackMessageFactory;
 
-    /// 스케줄러 전용 실행 메서드 (로그 도입 X => 추후 확장 예정)
+    /// 스케줄러 전용 실행 메서드
     @Transactional
     public void runScheduledSync(String eventStartDate, int pageNo, int numOfRows) {
-        System.out.println("[FestivalScheduler] 축제 동기화 시작");
-        System.out.println("pageNo=" + pageNo + ", numOfRows=" + numOfRows + ", eventStartDate=" + eventStartDate);
+        log.info("[FestivalScheduler] 축제 동기화 시작 - pageNo={}, numOfRows={}, eventStartDate={}",
+                pageNo, numOfRows, eventStartDate);
 
         try {
             FestivalSyncResultResponse syncResult = syncFestivalList(pageNo, numOfRows, eventStartDate);
 
-            System.out.println("[FestivalScheduler] 목록 동기화 완료");
-            System.out.println("생성 건수: " + syncResult.getCreatedCount());
-            System.out.println("수정 건수: " + syncResult.getUpdatedCount());
-            System.out.println("실패 건수: " + syncResult.getFailedCount());
+            log.info("[FestivalScheduler] 목록 동기화 완료 - created={}, updated={}, failed={}",
+                    syncResult.getCreatedCount(),
+                    syncResult.getUpdatedCount(),
+                    syncResult.getFailedCount());
 
             List<String> detailTargetContentIds =
                     collectDetailEnrichTargetContentIds(syncResult.getChangedContentIds());
 
-            System.out.println("[FestivalScheduler] 상세 보강 대상 건수: " + detailTargetContentIds.size());
+            log.info("[FestivalScheduler] 상세 보강 대상 수집 완료 - targetCount={}",
+                    detailTargetContentIds.size());
 
             enrichFestivalDetailsAndNotify(detailTargetContentIds, syncResult);
 
-            System.out.println("[FestivalScheduler] 상세 보강 완료");
+            log.info("[FestivalScheduler] 상세 보강 완료");
 
         } catch (Exception e) {
-            System.out.println("[FestivalScheduler] 축제 동기화 실패");
-            e.printStackTrace();
+            log.error("[FestivalScheduler] 축제 동기화 실패 - message={}",
+                    e.getMessage(), e);
         }
 
-        System.out.println("[FestivalScheduler] 축제 동기화 종료");
+        log.info("[FestivalScheduler] 축제 동기화 종료");
     }
 
     // 목록 API 기반 기본 축제 데이터 저장/수정
     public FestivalSyncResultResponse syncFestivalList(int pageNo, int numOfRows, String eventStartDate) {
 
-        //성능 TEST코드: API 시간 호출 시간 (추후 삭제 가능)
+        // 동기화 소요 시간 측정
         long totalStart = System.currentTimeMillis();
         long apiStart = System.currentTimeMillis();
 
         FestivalApiResponse response =
                 festivalApiClient.fetchFestivalList(pageNo, numOfRows, eventStartDate);
 
-        //성능 TEST코드: API 시간 호출 시간 (추후 삭제 가능)
+        // 동기화 소요 시간 측정
         long apiEnd = System.currentTimeMillis();
 
         // 빈 페이지는 예외가 아니라 0건 동기화 결과로 반환(0, ,0, 0, 0)
@@ -102,7 +105,7 @@ public class FestivalSyncService {
         int failedCount = 0;
         List<String> changedContentIds = new ArrayList<>();
 
-        //성능TEST코드: DB 처리 시간 시간 (추후 삭제 가능)
+        //성능TEST코드: DB 처리 시간 시간
         long dbStart = System.currentTimeMillis();
 
         // 목록 API 응답에서 contentId만 먼저 추출한다. (DB를 건별 조회X, 필요한 축제만 한 번에 조회하기 위함)
@@ -147,26 +150,26 @@ public class FestivalSyncService {
             } catch (Exception e) {
                 // item 단위 실패 처리 (전체 중단 방지)
                 failedCount++;
-                System.out.println("목록 동기화 실패 contentId=" + item.getContentid()
-                        + ", message=" + e.getMessage());
+                log.warn("[FestivalSync] 목록 동기화 항목 실패 - contentId={}, message={}",
+                        item.getContentid(),
+                        e.getMessage());
             }
         }
 
-        //성능TEST코드: API 시간 호출 시간 (추후 삭제 가능)
+        //성능TEST코드: API 시간 호출 시간
         long dbEnd = System.currentTimeMillis();
         long totalEnd = System.currentTimeMillis();
 
         // 목록 동기화 로그 출력
-        System.out.println("[FestivalSync - List]");
-        System.out.println("목록 조회 건수: " + items.size());
-        System.out.println("목록 생성 건수: " + createdCount);
-        System.out.println("목록 수정 건수: " + updatedCount);
-        System.out.println("목록 실패 건수: " + failedCount);
-        System.out.println("목록 변경 건수: " + changedContentIds.size());
-
-        System.out.println("목록 API 소요시간: " + (apiEnd - apiStart) + "ms");
-        System.out.println("목록 DB 소요시간: " + (dbEnd - dbStart) + "ms");
-        System.out.println("목록 총 소요시간: " + (totalEnd - totalStart) + "ms");
+        log.info("[FestivalSync] 목록 동기화 완료 - total={}, created={}, updated={}, failed={}, changed={}, apiTimeMs={}, dbTimeMs={}, totalTimeMs={}",
+                items.size(),
+                createdCount,
+                updatedCount,
+                failedCount,
+                changedContentIds.size(),
+                apiEnd - apiStart,
+                dbEnd - dbStart,
+                totalEnd - totalStart);
 
         return new FestivalSyncResultResponse(items.size(), createdCount, updatedCount, failedCount, changedContentIds);
     }
@@ -189,19 +192,22 @@ public class FestivalSyncService {
     public List<String> collectDetailEnrichTargetContentIds(List<String> changedContentIds) {
         Set<String> targetContentIds = new LinkedHashSet<>(changedContentIds);
 
-        //성능TEST코드: API 시간 호출 시간 (추후 삭제 가능)
+        //성능TEST코드: API 시간 호출 시간
         long start = System.currentTimeMillis();
 
         // 이전 실행에서 실패/미시도된 상세 보강 대상도 함께 재처리
         targetContentIds.addAll(pendingService.findAllContentIds());
 
-        //성능TEST코드: API 시간 호출 시간 (추후 삭제 가능)
+        //성능TEST코드: API 시간 호출 시간
         long end = System.currentTimeMillis();
-        System.out.println("pending 조회 시간: " + (end - start) + "ms");
+        log.debug("[FestivalSync] pending 조회 완료 - timeMs={}",
+                end - start);
 
         // 상세 보강 대상 조회 로그
-        System.out.println("상세 보강 대상 수: " + targetContentIds.size());
-        System.out.println("상세 보강 대상 contentIds: " + targetContentIds);
+        log.info("[FestivalSync] 상세 보강 대상 수집 완료 - targetCount={}",
+                targetContentIds.size());
+        log.debug("[FestivalSync] 상세 보강 대상 목록 - contentIds={}",
+                targetContentIds);
 
         return new ArrayList<>(targetContentIds);
     }
@@ -224,9 +230,9 @@ public class FestivalSyncService {
 
         int newPendingCount = 0;                            // 이번 실행에서 새로 pending 처리된 건수
 
-        //성능TEST코드: API 시간 호출 시간 (추후 삭제 가능)
+        //성능TEST코드: API 시간 호출 시간
         long totalStart = System.currentTimeMillis();
-        //성능TEST코드: 상세 API 호출 횟수 (추후 삭제 가능)
+        //성능TEST코드: 상세 API 호출 횟수
         int apiCallCount = 0;
         //로그 관리용 변수: 중단 사유
         String stopReason = null;
@@ -241,16 +247,18 @@ public class FestivalSyncService {
 
                 boolean wasDetailIncomplete = festivalApiConverter.isDetailIncomplete(festival);
 
-                //성능TEST코드: API 시간 호출 시간 및 호출 횟수 (추후 삭제 가능)
+                //성능TEST코드: API 시간 호출 시간 및 호출 횟수
                 long apiStart = System.currentTimeMillis();
                 apiCallCount++;
 
                 FestivalApiResponse detailResponse =
                         festivalApiClient.fetchFestivalDetail(contentId);
 
-                //성능TEST코드: API 시간 호출 시간 (추후 삭제 가능)
+                //성능TEST코드: API 시간 호출 시간
                 long apiEnd = System.currentTimeMillis();
-                System.out.println("상세 API 1건: " + (apiEnd - apiStart) + "ms");
+                log.debug("[FestivalSync] 상세 API 호출 완료 - contentId={}, timeMs={}",
+                        contentId,
+                        apiEnd - apiStart);
 
                 // 응답 구조 이상 또는 resultCode 비정상 → 실패 처리 + pending 저장
                 if (detailResponse == null ||
@@ -315,8 +323,10 @@ public class FestivalSyncService {
                     pendingService.saveOrUpdate(contentIds.get(j), DetailSyncPendingReason.UNPROCESSED);
                     newPendingCount++;
                 }
+                log.warn("[FestivalSync] 외부 API 호출 한도 초과로 상세 보강 중단 - contentId={}, remainingCount={}",
+                        contentId,
+                        contentIds.size() - i - 1);
 
-                System.out.println("429 발생 → 상세 보강 전체 중단 contentId=" + contentId);
                 break;
 
             } catch (HttpServerErrorException e) {
@@ -329,8 +339,9 @@ public class FestivalSyncService {
                     stopReason = "5xx 서버 오류 (" + e.getStatusCode() + ")";
                 }
 
-                System.out.println("외부 API 서버 오류 → 상세 보강 실패 contentId=" + contentId
-                        + ", status=" + e.getStatusCode());
+                log.warn("[FestivalSync] 외부 API 서버 오류 - contentId={}, status={}",
+                        contentId,
+                        e.getStatusCode());
 
             } catch (Exception e) {
                 // 기타 예외 → 해당 대상만 실패 처리
@@ -338,12 +349,14 @@ public class FestivalSyncService {
                 pendingService.saveOrUpdate(contentId, DetailSyncPendingReason.EXCEPTION);
                 newPendingCount++;
 
-                System.out.println("상세 보강 실패 contentId=" + contentId
-                        + ", message=" + e.getMessage());
+                log.error("[FestivalSync] 상세 보강 실패 - contentId={}, message={}",
+                        contentId,
+                        e.getMessage(),
+                        e);
             }
         }
 
-        //성능TEST코드: API 시간 호출 시간 (추후 삭제 가능)
+        //성능TEST코드: API 시간 호출 시간
         long totalEnd = System.currentTimeMillis();
         long afterPendingCount = pendingService.count();    // 실행 후 남은 pending 건수
 
@@ -351,30 +364,23 @@ public class FestivalSyncService {
         int totalTargetCount = contentIds.size();   // 전체 대상
         int attemptedCount = apiCallCount;  // 실제 호출
         int skippedCount = totalTargetCount - attemptedCount;   // 미시도
-        int successCount = updatedCount;    // 성공
         int failureCount = failedCount; // 실패 (시도했지만 실패한 건)
         int unprocessedCount = failureCount + skippedCount; // 미처리 (실패 + 미시도)
         String finalStopReason = (stopReason == null) ? "없음 (정상 처리 또는 일부 실패)" : stopReason; // 중단 사유 (없으면 정상 종료)
 
         // 상세 정보 동기화 로그 출력
-        System.out.println("[FestivalSync - Detail]");
-        System.out.println("기존 pending 대상 건수: " + beforePendingCount
-                + " (실패 " + beforePendingFailureCount
-                + ", 미시도 " + beforePendingUnprocessedCount + ")");
-        System.out.println("상세 보강 대상 건수: " + totalTargetCount);
-
-        System.out.println("상세 보강 업데이트 건수: " + updatedCount);
-        System.out.println("상세 보강 실패 건수: " + failureCount);
-        System.out.println("상세 보강 미처리 건수: " + unprocessedCount
-                + " (실패 " + failureCount + " + 미시도 " + skippedCount + ")");
-
-        System.out.println("이번 실행 신규 pending 추가 건수: " + newPendingCount);
-        System.out.println("실행 후 남은 pending 건수: " + afterPendingCount);
-
-        System.out.println("상세 API 호출 시도 횟수: " + attemptedCount);
-        System.out.println("상세 API 미시도 횟수: " + skippedCount);
-        System.out.println("중단 사유: " + finalStopReason);
-        System.out.println("상세 보강 총 소요시간: " + (totalEnd - totalStart) + "ms");
+        log.info("[FestivalSync] 상세 보강 완료 - target={}, updated={}, failed={}, unprocessed={}, pendingBefore={}, pendingAdded={}, pendingAfter={}, attempted={}, skipped={}, stopReason={}, totalTimeMs={}",
+                totalTargetCount,
+                updatedCount,
+                failureCount,
+                unprocessedCount,
+                beforePendingCount,
+                newPendingCount,
+                afterPendingCount,
+                attemptedCount,
+                skippedCount,
+                finalStopReason,
+                totalEnd - totalStart);
 
         return new FestivalSyncResultResponse(contentIds.size(), 0, updatedCount, failedCount, contentIds);
         }
@@ -436,7 +442,9 @@ public class FestivalSyncService {
         // 2. 시작일이 오늘이거나 어제인데 아직 UPCOMING인 축제를 ONGOING으로 변경
         int ongoingCount = festivalRepository.updateStatusToOngoing(FestivalStatus.ONGOING, FestivalStatus.UPCOMING, now);
 
-        System.out.println("[FestivalStatus] 상태 업데이트 완료: 진행중 전환 " + ongoingCount + "건, 종료 전환 " + endedCount + "건");
+        log.info("[FestivalStatus] 상태 업데이트 완료 - ongoing={}, ended={}",
+                ongoingCount,
+                endedCount);
     }
 
     // 목록 결과만으로 Slack 알림 보내는 메서드
