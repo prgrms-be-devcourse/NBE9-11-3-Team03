@@ -15,6 +15,7 @@ import com.example.domain.review.repository.ReviewRepository;
 import com.example.domain.reviewlike.repository.ReviewLikeRepository;
 import com.example.global.exception.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final MemberRepository memberRepository;
@@ -123,7 +125,6 @@ public class ReviewService {
     }
 
 
-
     //리뷰 수정
     @Transactional
     public ReviewUpdateResponse updateReview(Long reviewId, String loginId, ReviewUpdateRequest requestDto, MultipartFile imageFile) {
@@ -157,7 +158,7 @@ public class ReviewService {
         }
 
 
-        String updateImagePath = review.getImage(); 
+        String updateImagePath = review.getImage();
 
         // 케이스 1: 클라이언트가 "기존 이미지를 삭제해달라"고 요청한 경우
         if (requestDto.isDeleteImage()) {
@@ -191,7 +192,6 @@ public class ReviewService {
     //리뷰 삭제
     @Transactional
     public ReviewDeleteResponse deleteReview(Long reviewId, String loginId) {
-
 
 
         // 2. 로그인한 회원 조회
@@ -229,11 +229,9 @@ public class ReviewService {
     }
 
 
-
-
     // 신고횟수가 5이상인 review리스트를 DTO로 반환하여 주는 함수
     public AdminReviewReportPageResponse getReportReview(Pageable pageable) {
-        Page<Review> reviews = reviewRepository.findAllByReportCountGreaterThanEqualAndStatus(5,ReviewStatus.ACTIVE,pageable);
+        Page<Review> reviews = reviewRepository.findAllByReportCountGreaterThanEqualAndStatus(5, ReviewStatus.ACTIVE, pageable);
         return AdminReviewReportPageResponse.from(reviews);
     }
 
@@ -241,32 +239,34 @@ public class ReviewService {
     @Transactional
     public AdminReviewBlindResponse processReviewAction(Long reviewId, String action) {
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(()->new CustomNotFoundException("404","존재하지 않는 리뷰입니다."));//추후 변경 예정
-        if(review.getStatus()==ReviewStatus.DELETED){
+                .orElseThrow(() ->
+                {
+                    return new CustomNotFoundException("404", "존재하지 않는 리뷰입니다.");
+                });
+        if (review.getStatus() == ReviewStatus.DELETED) {
             throw new BadRequestException("삭제된 리뷰는 상태를 변경할 수 없습니다.");
         }
-        int updatedCount =0 ;
+        int updatedCount = 0;
 
         if ("BLIND".equalsIgnoreCase(action)) {
-            updatedCount= reviewRepository.updateStatusToBlindActive(reviewId);
-            if(updatedCount>0){
+            updatedCount = reviewRepository.updateStatusToBlindActive(reviewId);
+            if (updatedCount > 0) {
                 Member author = review.getMember();
-                if(author!=null){
+                if (author != null) {
                     memberRepository.incrementReportCount(author.getId());
                 }
                 review.reviewBlind();
             }
-        }
-        else if ("DISMISS".equalsIgnoreCase(action)) {
+        } else if ("DISMISS".equalsIgnoreCase(action)) {
             updatedCount = reviewRepository.resetReportCountIfActive(reviewId);
-            if(updatedCount>0){
+            if (updatedCount > 0) {
                 review.reportCountReset();
             }
-        }
-        else {
+        } else {
             throw new IllegalArgumentException("허용되지 않은 리뷰 상태입니다.: " + action);
         }
-        if(updatedCount==0){
+        if (updatedCount == 0) {
+            log.warn("[ADMIN] 리뷰 상태 변경 실패(이미 처리된 리뷰 또는 동시성 충돌) - reviewId={}, action={}", reviewId, action);
             throw new ConflictException("이미 다른 관리자가 처리한 리뷰입니다.");
         }
         return new AdminReviewBlindResponse(
