@@ -17,6 +17,7 @@ import com.example.domain.member.repository.RefreshTokenRepository;
 import com.example.global.exception.*;
 import com.example.global.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 // 회원가입과 로그인의 비즈니스 흐름을 담당하는 서비스다.
 // 컨트롤러는 요청을 받고, 실제 처리 순서는 이 서비스가 조합한다.
@@ -56,6 +58,7 @@ public class AuthService {
         );
 
         Member savedMember = memberRepository.save(member);
+        log.info("[Member] 회원가입 완료 - loginId={}", savedMember.getLoginId());
         return SignupResponse.from(savedMember);
     }
 
@@ -65,11 +68,12 @@ public class AuthService {
     public LoginResponse login(LoginRequest request) {
         Member member = findMemberByLoginId(request.getLoginId());
         validateMemberCanLogin(member);
-        validatePassword(request.getPassword(), member.getPassword());
+        validateLoginPassword(request.getLoginId(), request.getPassword(), member.getPassword());
 
         String accessToken = createAccessToken(member);
         String refreshToken = createAndSaveRefreshToken(member);
 
+        log.info("[Member] 로그인 성공 - loginId={}", member.getLoginId());
         return LoginResponse.of(accessToken, refreshToken, member);
     }
 
@@ -96,6 +100,7 @@ public class AuthService {
         String newRefreshToken = jwtUtil.createRefreshToken(member);
         refreshToken.update(newRefreshToken, jwtUtil.getExpirationDateTime(newRefreshToken));
 
+        log.info("[Member] 토큰 재발급 완료 - loginId={}", member.getLoginId());
         return TokenReissueResponse.of(newAccessToken, newRefreshToken);
     }
 
@@ -107,6 +112,7 @@ public class AuthService {
         refreshTokenRepository.findByMemberId(member.getId())
                 .ifPresent(RefreshToken::logout);
         saveAccessTokenBlacklist(accessToken);
+        log.info("[Member] 로그아웃 처리 - loginId={}", member.getLoginId());
     }
 
     private void saveAccessTokenBlacklist(String accessToken) {
@@ -168,6 +174,13 @@ public class AuthService {
     }
     // 토큰을 만드는 세부 로직은 JwtUtil에 맡긴다.
     // 이렇게 분리하면 AuthService는 로그인 흐름에만 집중할 수 있다.
+    private void validateLoginPassword(String loginId, String rawPassword, String encodedPassword) {
+        if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
+            log.warn("[Member] 로그인 실패 - loginId={}", loginId);
+            throw new UnauthorizedException("비밀번호가 일치하지 않습니다.");
+        }
+    }
+
     private String createAccessToken(Member member) {
         return jwtUtil.createAccessToken(member);
     }
@@ -209,6 +222,7 @@ public class AuthService {
     // 만료된 refresh token은 삭제하고 재발급을 막음.
     private void validateRefreshTokenNotExpired(RefreshToken refreshToken) {
         if (refreshToken.isExpired()) {
+            log.warn("[Member] 만료된 리프레시 토큰 - memberId={}", refreshToken.getMember().getId());
             refreshTokenRepository.delete(refreshToken);
             throw new UnauthorizedException("만료된 refresh token입니다.");
         }
@@ -229,6 +243,7 @@ public class AuthService {
                 .ifPresent(RefreshToken::logout);
         // 탈퇴 요청에 사용한 access token도 즉시 다시 인증되지 않도록 차단 목록에 저장.
         saveAccessTokenBlacklist(accessToken);
+        log.info("[Member] 회원 탈퇴 처리 - loginId={}", loginId);
         return new WithdrawResponse(member.getId(),member.getStatus());
     }
 }
