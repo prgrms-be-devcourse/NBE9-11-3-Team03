@@ -5,7 +5,7 @@ import com.example.domain.member.repository.MemberRepository;
 import com.example.domain.review.entity.Review;
 import com.example.domain.review.entity.ReviewStatus;
 import com.example.domain.review.repository.ReviewRepository;
-import com.example.domain.reviewreport.dto.ReviewReportResponse;
+import com.example.domain.reviewreport.dto.response.ReviewReportResponse;
 import com.example.domain.reviewreport.entity.ReviewReport;
 import com.example.domain.reviewreport.repository.ReviewReportRepository;
 import com.example.global.exception.BadRequestException;

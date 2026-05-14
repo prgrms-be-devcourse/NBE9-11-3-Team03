@@ -6,7 +6,7 @@ import com.example.domain.member.dto.request.TokenReissueRequest;
 import com.example.domain.member.dto.response.LoginResponse;
 import com.example.domain.member.dto.response.SignupResponse;
 import com.example.domain.member.dto.response.TokenReissueResponse;
-import com.example.domain.member.dto.response.WithdrawRes;
+import com.example.domain.member.dto.response.WithdrawResponse;
 import com.example.domain.member.entity.AccessTokenBlacklist;
 import com.example.domain.member.entity.Member;
 import com.example.domain.member.entity.MemberStatus;
@@ -216,7 +216,7 @@ public class AuthService {
 
     //회원 스스로 탈퇴하는 메서드
     @Transactional
-    public WithdrawRes selfWithdraw(String loginId, String password, String accessToken) {
+    public WithdrawResponse selfWithdraw(String loginId, String password, String accessToken) {
         Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new CustomNotFoundException("회원을 찾을 수 없습니다."));
         if (member.getStatus() == MemberStatus.WITHDRAWN) {
@@ -229,6 +229,6 @@ public class AuthService {
                 .ifPresent(RefreshToken::logout);
         // 탈퇴 요청에 사용한 access token도 즉시 다시 인증되지 않도록 차단 목록에 저장.
         saveAccessTokenBlacklist(accessToken);
-        return new WithdrawRes(member.getId(),member.getStatus());
+        return new WithdrawResponse(member.getId(),member.getStatus());
     }
 }

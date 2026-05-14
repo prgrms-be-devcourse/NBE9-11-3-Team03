@@ -1,6 +1,10 @@
 package com.example.domain.admin.controller;
 
-import com.example.domain.admin.dto.*;
+import com.example.domain.admin.dto.request.ReviewProcessRequest;
+import com.example.domain.admin.dto.response.AdminMemberWithdrawnResponse;
+import com.example.domain.admin.dto.response.AdminReviewBlindResponse;
+import com.example.domain.admin.dto.response.AdminReviewReportPageResponse;
+import com.example.domain.admin.dto.response.MemberPageResponse;
 import com.example.domain.member.service.MemberService;
 import com.example.domain.review.service.ReviewService;
 import com.example.global.rsData.RsData;
@@ -81,9 +85,9 @@ public class AdminController {
      */
     @GetMapping("/reviews/reported")
     @Operation(summary = "누적신고된 리뷰 조회", description = "신고횟수가 N개 이상인 리뷰를 조회합니다.")
-    public ResponseEntity<RsData<AdminReviewReportPageRes>> getReportReview(
+    public ResponseEntity<RsData<AdminReviewReportPageResponse>> getReportReview(
             @PageableDefault(size = 10, sort = "reportCount", direction = Sort.Direction.DESC) Pageable pageable) {
-        AdminReviewReportPageRes reviewList = reviewService.getReportReview(pageable);
+        AdminReviewReportPageResponse reviewList = reviewService.getReportReview(pageable);
         return ResponseEntity.ok(
                 new RsData<>(
                         "200",
@@ -101,11 +105,11 @@ public class AdminController {
      */
     @PatchMapping("/reviews/{reviewId}/status")
     @Operation(summary = "악성리뷰 블라인드처리", description = "관리자가 악성리뷰를 블라인드처리할 수 있습니다.")
-    public ResponseEntity<RsData<AdminReviewBlindRes>> processReview(
+    public ResponseEntity<RsData<AdminReviewBlindResponse>> processReview(
             @PathVariable Long reviewId,
             @RequestBody ReviewProcessRequest req
     ) {
-        AdminReviewBlindRes res = reviewService.processReviewAction(reviewId, req.action());
+        AdminReviewBlindResponse res = reviewService.processReviewAction(reviewId, req.action());
 
         String msg = "Blind".equalsIgnoreCase(req.action())
                 ? "리뷰가 블라인드 처리되었습니다."
@@ -126,10 +130,10 @@ public class AdminController {
      */
     @PatchMapping("/members/{memberId}/withdraw")
     @Operation(summary = "회원 강제 탈퇴 처리", description = "관리자가 회원을 강제 탈퇴처리할 수 있습니다.")
-    public ResponseEntity<RsData<AdminMemberWithdrawnRes>> memberWithdraw(
+    public ResponseEntity<RsData<AdminMemberWithdrawnResponse>> memberWithdraw(
             @PathVariable Long memberId
     ){
-        AdminMemberWithdrawnRes res= memberService.memberWithdraw(memberId);
+        AdminMemberWithdrawnResponse res= memberService.memberWithdraw(memberId);
         return ResponseEntity.ok(
                 new RsData<>(
                         "200",
@@ -138,6 +142,4 @@ public class AdminController {
                 )
         );
     }
-
-
 }

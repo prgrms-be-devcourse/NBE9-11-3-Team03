@@ -5,7 +5,7 @@ import com.example.domain.member.repository.MemberRepository;
 import com.example.domain.review.entity.Review;
 import com.example.domain.review.repository.ReviewRepository;
 import com.example.domain.review.service.ReviewLikeService;
-import com.example.domain.reviewlike.dto.ReviewLikeResponseDto;
+import com.example.domain.reviewlike.dto.response.ReviewLikeResponse;
 import com.example.domain.reviewlike.entity.ReviewLike;
 import com.example.domain.reviewlike.repository.ReviewLikeRepository;
 import com.example.global.exception.BadRequestException;
@@ -66,7 +66,7 @@ class ReviewLikeServiceTest {
             when(reviewLikeRepository.existsByMemberIdAndReviewId(1L, reviewId)).thenReturn(false);
 
             // when
-            ReviewLikeResponseDto result = reviewLikeService.likeReview(reviewId, loginId);
+            ReviewLikeResponse result = reviewLikeService.likeReview(reviewId, loginId);
 
             // then
             assertThat(result.getReviewId()).isEqualTo(reviewId);
@@ -164,7 +164,7 @@ class ReviewLikeServiceTest {
             when(reviewLikeRepository.findByMemberIdAndReviewId(1L, reviewId)).thenReturn(Optional.of(reviewLike));
 
             // when
-            ReviewLikeResponseDto result = reviewLikeService.cancelLikeReview(reviewId, loginId);
+            ReviewLikeResponse result = reviewLikeService.cancelLikeReview(reviewId, loginId);
 
             // then
             assertThat(result.getReviewId()).isEqualTo(reviewId);

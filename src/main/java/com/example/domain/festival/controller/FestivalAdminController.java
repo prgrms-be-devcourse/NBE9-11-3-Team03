@@ -1,8 +1,8 @@
 package com.example.domain.festival.controller;
 
-import com.example.domain.festival.dto.response.FestivalSyncResponseDto;
-import com.example.domain.festival.dto.response.FestivalSyncResult;
-import com.example.domain.festival.dto.response.FestivalSyncStatusResponseDto;
+import com.example.domain.festival.dto.response.FestivalSyncResponse;
+import com.example.domain.festival.dto.response.FestivalSyncResultResponse;
+import com.example.domain.festival.dto.response.FestivalSyncStatusResponse;
 import com.example.domain.festival.service.FestivalDetailSyncPendingService;
 import com.example.domain.festival.service.FestivalSyncService;
 import com.example.global.rsData.RsData;
@@ -33,7 +33,7 @@ public class FestivalAdminController {
     @PostMapping("/sync-and-enrich")
     @Operation(summary = "축제 목록 동기화 및 상세 정보 수집",
             description = "공공 API에서 축제 목록을 동기화한 후, 변경된 축제들의 상세 정보 보강을 비동기로 수행합니다. 응답은 목록 동기화 결과만 포함합니다.")
-    public RsData<FestivalSyncResponseDto> syncAndEnrichFestivals(
+    public RsData<FestivalSyncResponse> syncAndEnrichFestivals(
             @RequestParam(defaultValue = "1") int pageNo,
             @RequestParam(defaultValue = "200") int numOfRows,
             @RequestParam(defaultValue = "20260101") String eventStartDate
@@ -41,7 +41,7 @@ public class FestivalAdminController {
         // API 전체 응답 시간 측정 시작
         long apiStart = System.currentTimeMillis();
 
-        FestivalSyncResult listResult =
+        FestivalSyncResultResponse listResult =
                 festivalSyncService.syncFestivalList(pageNo, numOfRows, eventStartDate);
 
         // 이번 목록 변경분 + 이전 상세 실패/미시도 대상까지 합쳐 상세 보강 대상으로 수집
@@ -51,7 +51,7 @@ public class FestivalAdminController {
         // 수집된 대상 기준으로 상세 보강 이벤트 발행
         festivalSyncService.publishSyncCompletedEvent(targetContentIds);
 
-        FestivalSyncResponseDto response = new FestivalSyncResponseDto(
+        FestivalSyncResponse response = new FestivalSyncResponse(
                 listResult.getTotalCount(),
                 listResult.getCreatedCount(),
                 listResult.getUpdatedCount(),
@@ -85,15 +85,15 @@ public class FestivalAdminController {
     //축제 목록 데이터를 수동 동기화한다. (공공 API 목록 조회 -> contentId 기준으로 insert / 변경사항 확인 후 ,update 수행)
     @PostMapping("/sync-list")
     @Operation(summary = "축제 목록만 동기화", description = "공공 API에서 축제 목록만 동기화합니다. 상세 정보는 동기화하지 않습니다. 디버깅 및 상세 보강 문제 확인용입니다.")
-    public RsData<FestivalSyncResponseDto> syncFestivals(
+    public RsData<FestivalSyncResponse> syncFestivals(
             @RequestParam(defaultValue = "1") int pageNo,
             @RequestParam(defaultValue = "10") int numOfRows,
             @RequestParam(defaultValue = "20260101") String eventStartDate
     ) {
-        FestivalSyncResult result =
+        FestivalSyncResultResponse result =
                 festivalSyncService.syncFestivalList(pageNo, numOfRows, eventStartDate);
 
-        FestivalSyncResponseDto response = new FestivalSyncResponseDto(
+        FestivalSyncResponse response = new FestivalSyncResponse(
                 result.getTotalCount(),
                 result.getCreatedCount(),
                 result.getUpdatedCount(),
@@ -106,21 +106,21 @@ public class FestivalAdminController {
     //이전 실행에서 실패하거나 미시도된 pending 대상 축제를 기준으로 상세 보강 재처리를 수행한다. (축제 상세 정보 재동기화 목적)
     @PostMapping("/enrich-pending")
     @Operation(summary = "미처리 축제 상세 보강 재처리", description = "이전 동기화에서 실패하거나 미처리된 축제들의 상세 정보를 다시 보강합니다.")
-    public RsData<FestivalSyncResponseDto> enrichAllFestivalDetails() {
+    public RsData<FestivalSyncResponse> enrichAllFestivalDetails() {
         List<String> targetContentIds =
                 festivalSyncService.collectDetailEnrichTargetContentIds(List.of());
 
         if (targetContentIds.isEmpty()) {
             return RsData.success(
                     "상세 보강 재처리 대상 축제가 없습니다.",
-                    new FestivalSyncResponseDto(0, 0, 0, 0)
+                    new FestivalSyncResponse(0, 0, 0, 0)
             );
         }
 
-        FestivalSyncResult result =
+        FestivalSyncResultResponse result =
                 festivalSyncService.enrichFestivalDetailsByContentIds(targetContentIds);
 
-        FestivalSyncResponseDto response = new FestivalSyncResponseDto(
+        FestivalSyncResponse response = new FestivalSyncResponse(
                 result.getTotalCount(),
                 result.getCreatedCount(),
                 result.getUpdatedCount(),
@@ -150,8 +150,8 @@ public class FestivalAdminController {
 
     @GetMapping("/sync-status")
     @Operation(summary = "축제 동기화 상태 조회", description = "현재 진행 중인 축제 상세 동기화의 상태를 조회합니다. 실패 및 미처리 대상 개수를 포함합니다.")
-    public RsData<FestivalSyncStatusResponseDto> getFestivalSyncStatus() {
-        FestivalSyncStatusResponseDto response = pendingService.getSyncStatus();
+    public RsData<FestivalSyncStatusResponse> getFestivalSyncStatus() {
+        FestivalSyncStatusResponse response = pendingService.getSyncStatus();
 
         Map<String, Long> breakdown = response.getPendingBreakdown();
 

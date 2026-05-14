@@ -3,7 +3,7 @@ package com.example.domain.festival.service;
 import com.example.domain.festival.client.FestivalApiClient;
 import com.example.domain.festival.converter.FestivalApiConverter;
 import com.example.domain.festival.dto.external.*;
-import com.example.domain.festival.dto.response.FestivalSyncResult;
+import com.example.domain.festival.dto.response.FestivalSyncResultResponse;
 import com.example.domain.festival.entity.DetailSyncPendingReason;
 import com.example.domain.festival.entity.Festival;
 import com.example.domain.festival.entity.FestivalStatus;
@@ -75,7 +75,7 @@ class FestivalSyncServiceTest {
             when(festivalRepository.findAllByContentIdIn(List.of("1001"))).thenReturn(List.of());
             when(festivalApiConverter.toEntityFromListItem(item)).thenReturn(newFestival);
 
-            FestivalSyncResult result = festivalSyncService.syncFestivalList(1, 10, "20260101");
+            FestivalSyncResultResponse result = festivalSyncService.syncFestivalList(1, 10, "20260101");
 
             assertThat(result.getTotalCount()).isEqualTo(1);
             assertThat(result.getCreatedCount()).isEqualTo(1);
@@ -115,7 +115,7 @@ class FestivalSyncServiceTest {
                     .thenReturn(List.of(existingFestival));
             when(festivalApiConverter.hasListChanges(existingFestival, item)).thenReturn(true);
 
-            FestivalSyncResult result = festivalSyncService.syncFestivalList(1, 10, "20260101");
+            FestivalSyncResultResponse result = festivalSyncService.syncFestivalList(1, 10, "20260101");
 
             assertThat(result.getTotalCount()).isEqualTo(1);
             assertThat(result.getCreatedCount()).isEqualTo(0);
@@ -155,7 +155,7 @@ class FestivalSyncServiceTest {
                     .thenReturn(List.of(existingFestival));
             when(festivalApiConverter.hasListChanges(existingFestival, item)).thenReturn(false);
 
-            FestivalSyncResult result = festivalSyncService.syncFestivalList(1, 10, "20260101");
+            FestivalSyncResultResponse result = festivalSyncService.syncFestivalList(1, 10, "20260101");
 
             assertThat(result.getTotalCount()).isEqualTo(1);
             assertThat(result.getCreatedCount()).isEqualTo(0);
@@ -203,7 +203,7 @@ class FestivalSyncServiceTest {
             when(festivalApiConverter.toEntityFromListItem(item2))
                     .thenThrow(new RuntimeException("변환 실패"));
 
-            FestivalSyncResult result = festivalSyncService.syncFestivalList(1, 10, "20260101");
+            FestivalSyncResultResponse result = festivalSyncService.syncFestivalList(1, 10, "20260101");
 
             assertThat(result.getTotalCount()).isEqualTo(2);
             assertThat(result.getCreatedCount()).isEqualTo(1);
@@ -290,7 +290,7 @@ class FestivalSyncServiceTest {
             when(festivalApiConverter.isDetailIncomplete(festival)).thenReturn(false);
             when(festivalApiConverter.hasDetailChanges(festival, detailItem)).thenReturn(true);
 
-            FestivalSyncResult result =
+            FestivalSyncResultResponse result =
                     festivalSyncService.enrichFestivalDetailsByContentIds(List.of("694576"));
 
             assertThat(result.getTotalCount()).isEqualTo(1);
@@ -325,7 +325,7 @@ class FestivalSyncServiceTest {
             when(festivalApiConverter.isDetailIncomplete(festival)).thenReturn(false);
             when(festivalApiConverter.hasDetailChanges(festival, detailItem)).thenReturn(false);
 
-            FestivalSyncResult result =
+            FestivalSyncResultResponse result =
                     festivalSyncService.enrichFestivalDetailsByContentIds(List.of("1001"));
 
             assertThat(result.getUpdatedCount()).isEqualTo(0);
@@ -380,7 +380,7 @@ class FestivalSyncServiceTest {
                             null
                     ));
 
-            FestivalSyncResult result =
+            FestivalSyncResultResponse result =
                     festivalSyncService.enrichFestivalDetailsByContentIds(List.of("1001", "1002"));
 
             assertThat(result.getTotalCount()).isEqualTo(2);
@@ -437,7 +437,7 @@ class FestivalSyncServiceTest {
 
             when(festivalApiConverter.hasDetailChanges(festival2, detailItem)).thenReturn(true);
 
-            FestivalSyncResult result =
+            FestivalSyncResultResponse result =
                     festivalSyncService.enrichFestivalDetailsByContentIds(List.of("1001", "1002"));
 
             assertThat(result.getTotalCount()).isEqualTo(2);
@@ -468,7 +468,7 @@ class FestivalSyncServiceTest {
             when(festivalApiClient.fetchFestivalDetail("1001")).thenReturn(null);
             when(festivalApiConverter.isDetailIncomplete(festival)).thenReturn(false);
 
-            FestivalSyncResult result =
+            FestivalSyncResultResponse result =
                     festivalSyncService.enrichFestivalDetailsByContentIds(List.of("1001"));
 
             assertThat(result.getUpdatedCount()).isEqualTo(0);
