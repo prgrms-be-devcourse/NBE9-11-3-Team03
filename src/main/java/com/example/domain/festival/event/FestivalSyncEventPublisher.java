@@ -1,5 +1,6 @@
 package com.example.domain.festival.event;
 
+import com.example.domain.festival.dto.response.FestivalSyncResultResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -15,7 +16,12 @@ public class FestivalSyncEventPublisher {
     private final ApplicationEventPublisher applicationEventPublisher;
 
     //목록 동기화 완료 후, 변경된 contentId 목록을 이벤트로 발행한다.
-    public void publishSyncCompleted(List<String> changedContentIds) {
-        applicationEventPublisher.publishEvent(new FestivalSyncCompletedEvent(changedContentIds));
+    public void publishSyncCompleted(
+            List<String> changedContentIds,
+            FestivalSyncResultResponse listResult
+    ) {
+        applicationEventPublisher.publishEvent(
+                new FestivalSyncCompletedEvent(changedContentIds, listResult)
+        );
     }
 }

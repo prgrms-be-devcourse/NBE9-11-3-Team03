@@ -1,5 +1,6 @@
 package com.example.domain.festival.event;
 
+import com.example.domain.festival.dto.response.FestivalSyncResult;
 import com.example.domain.festival.service.FestivalSyncService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,45 +17,50 @@ class FestivalSyncEventListenerTest {
             new FestivalSyncEventListener(festivalSyncService);
 
     @Test
-    @DisplayName("이벤트 수신 시 상세 보강을 수행한다")
+    @DisplayName("이벤트 수신 시 상세 보강 후 Slack 알림을 수행한다")
     void handle_success_test() {
-        // given
         List<String> contentIds = List.of("1001", "1002");
-        FestivalSyncCompletedEvent event = new FestivalSyncCompletedEvent(contentIds);
 
-        // when
+        FestivalSyncResult listResult = new FestivalSyncResult(
+                2, 1, 1, 0, contentIds
+        );
+
+        FestivalSyncCompletedEvent event =
+                new FestivalSyncCompletedEvent(contentIds, listResult);
+
         listener.handleFestivalSyncCompleted(event);
 
-        // then
         verify(festivalSyncService, times(1))
-                .enrichFestivalDetailsByContentIds(contentIds);
+                .enrichFestivalDetailsAndNotify(contentIds, listResult);
     }
 
     @Test
     @DisplayName("contentId가 비어있으면 상세 보강을 수행하지 않는다")
     void handle_empty_test() {
-        // given
-        FestivalSyncCompletedEvent event = new FestivalSyncCompletedEvent(List.of());
+        FestivalSyncResult listResult =
+                new FestivalSyncResult(0, 0, 0, 0, List.of());
 
-        // when
+        FestivalSyncCompletedEvent event =
+                new FestivalSyncCompletedEvent(List.of(), listResult);
+
         listener.handleFestivalSyncCompleted(event);
 
-        // then
         verify(festivalSyncService, never())
-                .enrichFestivalDetailsByContentIds(anyList());
+                .enrichFestivalDetailsAndNotify(anyList(), any());
     }
 
     @Test
     @DisplayName("contentId가 null이면 상세 보강을 수행하지 않는다")
     void handle_null_test() {
-        // given
-        FestivalSyncCompletedEvent event = new FestivalSyncCompletedEvent(null);
+        FestivalSyncResult listResult =
+                new FestivalSyncResult(0, 0, 0, 0, List.of());
 
-        // when
+        FestivalSyncCompletedEvent event =
+                new FestivalSyncCompletedEvent(null, listResult);
+
         listener.handleFestivalSyncCompleted(event);
 
-        // then
         verify(festivalSyncService, never())
-                .enrichFestivalDetailsByContentIds(anyList());
+                .enrichFestivalDetailsAndNotify(anyList(), any());
     }
 }
