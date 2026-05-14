@@ -29,13 +29,13 @@ public class ReviewController {
     @Operation(summary = "축제 리뷰 작성", description = "특정 축제에 리뷰와 사진을 함께 작성합니다.")
     public ResponseEntity<ApiRes<ReviewResponseDto>> createReview(
             @PathVariable Long festivalId,
-            @Valid @RequestPart("requestDto") ReviewCreateRequestDto requestDto, // @RequestBody 대신 @RequestPart 사용
+            @Valid @RequestPart("requestDto") ReviewCreateRequestDto requestDto,
             @RequestPart(value = "image", required = false) MultipartFile image, // 이미지 파일 추가
             Authentication authentication
     ){
         String loginId = authentication.getName();
 
-        // 서비스 메서드에 image 파일 추가 전달
+
         ReviewResponseDto response = reviewService.createReview(festivalId, loginId, requestDto, image);
 
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -72,7 +72,6 @@ public class ReviewController {
             Authentication authentication
     ){
         String loginId = authentication.getName();
-        // 서비스에 image 파일도 같이 넘겨줍니다.
         ReviewUpdateResponseDto response = reviewService.updateReview(reviewId, loginId, requestDto, image);
         return ResponseEntity.ok(new ApiRes<>(200, "리뷰 수정 완료", response));
     }

@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+
 import java.util.NoSuchElementException;
 
 @RestControllerAdvice
@@ -174,6 +176,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(new RsData<>("409", "데이터 무결성 위반이 발생했습니다.", null));
+    }
+    //413에러 사진용량초과
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<RsData<Void>> handleMaxSizeException(MaxUploadSizeExceededException e) {
+        return ResponseEntity
+                .status(HttpStatus.PAYLOAD_TOO_LARGE) // 413
+                .body(new RsData<>("413","사진용량이 초과되었습니다.5MB미만으로 다시올려주세요"));
     }
 
     //처리되지 않은 예외의 최종 방어 (500 Internal Server Error)
