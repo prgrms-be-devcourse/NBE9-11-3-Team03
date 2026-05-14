@@ -1,5 +1,6 @@
 package com.example.domain.festival.controller;
 
+import com.example.domain.festival.dto.response.FestivalSyncResult;
 import com.example.domain.festival.dto.response.FestivalSyncStatusResponseDto;
 import com.example.domain.festival.service.FestivalDetailSyncPendingService;
 import com.example.domain.festival.service.FestivalSyncService;
@@ -9,12 +10,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 class FestivalAdminControllerTest {
 
@@ -84,5 +89,46 @@ class FestivalAdminControllerTest {
                 .andExpect(jsonPath("$.data.needsRetry").value(true))
                 .andExpect(jsonPath("$.data.pendingBreakdown.RATE_LIMIT").value(1))
                 .andExpect(jsonPath("$.data.pendingBreakdown.UNPROCESSED").value(2));
+    }
+
+    @Test
+    @DisplayName("sync-and-enrich 호출 시 목록 동기화 결과를 반환하고 상세 보강 이벤트를 발행한다")
+    void syncAndEnrichFestivals_success_test() throws Exception {
+        // given
+        FestivalSyncResult listResult = new FestivalSyncResult(
+                2,
+                1,
+                1,
+                0,
+                List.of("1001", "1002")
+        );
+
+        given(festivalSyncService.syncFestivalList(1, 200, "20260101"))
+                .willReturn(listResult);
+
+        given(festivalSyncService.collectDetailEnrichTargetContentIds(List.of("1001", "1002")))
+                .willReturn(List.of("1001", "1002"));
+
+        // when & then
+        mockMvc.perform(post("/api/admin/festivals/sync-and-enrich")
+                        .param("pageNo", "1")
+                        .param("numOfRows", "200")
+                        .param("eventStartDate", "20260101"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("200"))
+                .andExpect(jsonPath("$.message").value("축제 목록 동기화가 완료되었고, 변경 또는 재처리 대상 축제의 상세 보강이 후속 처리됩니다."))
+                .andExpect(jsonPath("$.data.totalCount").value(2))
+                .andExpect(jsonPath("$.data.createdCount").value(1))
+                .andExpect(jsonPath("$.data.updatedCount").value(1))
+                .andExpect(jsonPath("$.data.failedCount").value(0));
+
+        verify(festivalSyncService, times(1))
+                .syncFestivalList(1, 200, "20260101");
+
+        verify(festivalSyncService, times(1))
+                .collectDetailEnrichTargetContentIds(List.of("1001", "1002"));
+
+        verify(festivalSyncService, times(1))
+                .publishSyncCompletedEvent(List.of("1001", "1002"));
     }
 }
