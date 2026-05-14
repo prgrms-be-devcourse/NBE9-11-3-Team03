@@ -1,16 +1,18 @@
-
 package com.example.domain.festival.service;
 
 import com.example.domain.festival.client.FestivalApiClient;
 import com.example.domain.festival.converter.FestivalApiConverter;
 import com.example.domain.festival.dto.external.FestivalApiItem;
 import com.example.domain.festival.dto.external.FestivalApiResponse;
+import com.example.domain.festival.dto.response.FestivalSyncStatusResponse;
 import com.example.domain.festival.dto.response.FestivalSyncResultResponse;
 import com.example.domain.festival.entity.DetailSyncPendingReason;
 import com.example.domain.festival.entity.Festival;
 import com.example.domain.festival.entity.FestivalStatus;
 import com.example.domain.festival.event.FestivalSyncEventPublisher;
+import com.example.domain.festival.notification.FestivalSyncSlackMessageFactory;
 import com.example.domain.festival.repository.FestivalRepository;
+import com.example.global.notification.SlackNotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,9 @@ public class FestivalSyncService {
     private final FestivalSyncEventPublisher festivalSyncEventPublisher;
     private final FestivalDetailSyncPendingService pendingService;
 
+    private final SlackNotificationService slackNotificationService;
+    private final FestivalSyncSlackMessageFactory festivalSyncSlackMessageFactory;
+
     /// 스케줄러 전용 실행 메서드 (로그 도입 X => 추후 확장 예정)
     @Transactional
     public void runScheduledSync(String eventStartDate, int pageNo, int numOfRows) {
@@ -52,7 +57,7 @@ public class FestivalSyncService {
 
             System.out.println("[FestivalScheduler] 상세 보강 대상 건수: " + detailTargetContentIds.size());
 
-            enrichFestivalDetailsByContentIds(detailTargetContentIds);
+            enrichFestivalDetailsAndNotify(detailTargetContentIds, syncResult);
 
             System.out.println("[FestivalScheduler] 상세 보강 완료");
 
@@ -168,12 +173,15 @@ public class FestivalSyncService {
 
 
     //목록 동기화 완료 후, 변경된 contentId 목록에 대한 상세 보강 이벤트를 발행함
-    public void publishSyncCompletedEvent(List<String> changedContentIds) {
+    public void publishSyncCompletedEvent(
+            List<String> changedContentIds,
+            FestivalSyncResultResponse listResult
+    ) {
         if (changedContentIds == null || changedContentIds.isEmpty()) {
             return;
         }
 
-        festivalSyncEventPublisher.publishSyncCompleted(changedContentIds);
+        festivalSyncEventPublisher.publishSyncCompleted(changedContentIds, listResult);
     }
 
     //상세 보강 대상 contentId 수집 (이번 목록 동기화에서 변경된 축제 + 기존 pending 대상)
@@ -429,6 +437,43 @@ public class FestivalSyncService {
         int ongoingCount = festivalRepository.updateStatusToOngoing(FestivalStatus.ONGOING, FestivalStatus.UPCOMING, now);
 
         System.out.println("[FestivalStatus] 상태 업데이트 완료: 진행중 전환 " + ongoingCount + "건, 종료 전환 " + endedCount + "건");
+    }
+
+    // 목록 결과만으로 Slack 알림 보내는 메서드
+    public void notifyFestivalSyncResultOnly(FestivalSyncResultResponse listResult) {
+        FestivalSyncResultResponse emptyDetailResult =
+                new FestivalSyncResultResponse(0, 0, 0, 0, List.of());
+
+        FestivalSyncStatusResponse status = pendingService.getSyncStatus();
+
+        String message = festivalSyncSlackMessageFactory.createMessage(
+                listResult,
+                emptyDetailResult,
+                status
+        );
+
+        slackNotificationService.sendMessage(message);
+    }
+
+    //상세 보강 완료 후 Slack 전송 메서드 (목록 결과까지 포함한 알림)
+    public void enrichFestivalDetailsAndNotify(
+            List<String> contentIds,
+            FestivalSyncResultResponse listResult
+    ) {
+        FestivalSyncResultResponse detailResult =
+                enrichFestivalDetailsByContentIds(contentIds);
+
+        FestivalSyncStatusResponse status =
+                pendingService.getSyncStatus();
+
+        String message =
+                festivalSyncSlackMessageFactory.createMessage(
+                        listResult,
+                        detailResult,
+                        status
+                );
+
+        slackNotificationService.sendMessage(message);
     }
 }
 

@@ -26,6 +26,9 @@ public class FestivalSyncEventListener {
             return;
         }
 
-        festivalSyncService.enrichFestivalDetailsByContentIds(changedContentIds);
+        festivalSyncService.enrichFestivalDetailsAndNotify(
+                changedContentIds,
+                event.getListResult()
+        );
     }
 }

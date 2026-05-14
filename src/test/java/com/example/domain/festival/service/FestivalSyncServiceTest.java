@@ -4,11 +4,14 @@ import com.example.domain.festival.client.FestivalApiClient;
 import com.example.domain.festival.converter.FestivalApiConverter;
 import com.example.domain.festival.dto.external.*;
 import com.example.domain.festival.dto.response.FestivalSyncResultResponse;
+import com.example.domain.festival.dto.response.FestivalSyncStatusResponse;
 import com.example.domain.festival.entity.DetailSyncPendingReason;
 import com.example.domain.festival.entity.Festival;
 import com.example.domain.festival.entity.FestivalStatus;
 import com.example.domain.festival.event.FestivalSyncEventPublisher;
+import com.example.domain.festival.notification.FestivalSyncSlackMessageFactory;
 import com.example.domain.festival.repository.FestivalRepository;
+import com.example.global.notification.SlackNotificationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -20,11 +23,12 @@ import org.springframework.web.client.HttpServerErrorException;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 class FestivalSyncServiceTest {
@@ -34,15 +38,18 @@ class FestivalSyncServiceTest {
     private final FestivalRepository festivalRepository = mock(FestivalRepository.class);
     private final FestivalSyncEventPublisher festivalSyncEventPublisher = mock(FestivalSyncEventPublisher.class);
     private final FestivalDetailSyncPendingService pendingService = mock(FestivalDetailSyncPendingService.class);
+    private final SlackNotificationService slackNotificationService = mock(SlackNotificationService.class);
+    private final FestivalSyncSlackMessageFactory festivalSyncSlackMessageFactory = mock(FestivalSyncSlackMessageFactory.class);
 
-    private final FestivalSyncService festivalSyncService =
-            new FestivalSyncService(
-                    festivalApiClient,
-                    festivalApiConverter,
-                    festivalRepository,
-                    festivalSyncEventPublisher,
-                    pendingService
-            );
+    private final FestivalSyncService festivalSyncService = new FestivalSyncService(
+            festivalApiClient,
+            festivalApiConverter,
+            festivalRepository,
+            festivalSyncEventPublisher,
+            pendingService,
+            slackNotificationService,
+            festivalSyncSlackMessageFactory
+    );
 
     @Nested
     @DisplayName("목록 동기화 테스트")
@@ -111,8 +118,7 @@ class FestivalSyncServiceTest {
                     .build();
 
             when(festivalApiClient.fetchFestivalList(1, 10, "20260101")).thenReturn(response);
-            when(festivalRepository.findAllByContentIdIn(List.of("1001")))
-                    .thenReturn(List.of(existingFestival));
+            when(festivalRepository.findAllByContentIdIn(List.of("1001"))).thenReturn(List.of(existingFestival));
             when(festivalApiConverter.hasListChanges(existingFestival, item)).thenReturn(true);
 
             FestivalSyncResultResponse result = festivalSyncService.syncFestivalList(1, 10, "20260101");
@@ -151,8 +157,7 @@ class FestivalSyncServiceTest {
                     .build();
 
             when(festivalApiClient.fetchFestivalList(1, 10, "20260101")).thenReturn(response);
-            when(festivalRepository.findAllByContentIdIn(List.of("1001")))
-                    .thenReturn(List.of(existingFestival));
+            when(festivalRepository.findAllByContentIdIn(List.of("1001"))).thenReturn(List.of(existingFestival));
             when(festivalApiConverter.hasListChanges(existingFestival, item)).thenReturn(false);
 
             FestivalSyncResultResponse result = festivalSyncService.syncFestivalList(1, 10, "20260101");
@@ -200,8 +205,7 @@ class FestivalSyncServiceTest {
             when(festivalApiClient.fetchFestivalList(1, 10, "20260101")).thenReturn(response);
             when(festivalRepository.findAllByContentIdIn(List.of("1001", "1002"))).thenReturn(List.of());
             when(festivalApiConverter.toEntityFromListItem(item1)).thenReturn(newFestival);
-            when(festivalApiConverter.toEntityFromListItem(item2))
-                    .thenThrow(new RuntimeException("변환 실패"));
+            when(festivalApiConverter.toEntityFromListItem(item2)).thenThrow(new RuntimeException("변환 실패"));
 
             FestivalSyncResultResponse result = festivalSyncService.syncFestivalList(1, 10, "20260101");
 
@@ -220,120 +224,125 @@ class FestivalSyncServiceTest {
     class PublishSyncCompletedEventTest {
 
         @Test
-        @DisplayName("변경된 contentId가 있으면 동기화 완료 이벤트를 발행한다")
+        @DisplayName("변경된 contentId가 있으면 목록 결과와 함께 동기화 완료 이벤트를 발행한다")
         void publishSyncCompletedEvent_success_test() {
             List<String> changedContentIds = List.of("1001", "1002");
 
-            festivalSyncService.publishSyncCompletedEvent(changedContentIds);
+            FestivalSyncResultResponse listResult =
+                    new FestivalSyncResultResponse(2, 1, 1, 0, changedContentIds);
 
-            verify(festivalSyncEventPublisher).publishSyncCompleted(changedContentIds);
+            festivalSyncService.publishSyncCompletedEvent(changedContentIds, listResult);
+
+            verify(festivalSyncEventPublisher, times(1))
+                    .publishSyncCompleted(changedContentIds, listResult);
         }
 
         @Test
         @DisplayName("변경된 contentId가 없으면 동기화 완료 이벤트를 발행하지 않는다")
         void publishSyncCompletedEvent_empty_test() {
-            festivalSyncService.publishSyncCompletedEvent(List.of());
+            FestivalSyncResultResponse listResult =
+                    new FestivalSyncResultResponse(0, 0, 0, 0, List.of());
 
-            verify(festivalSyncEventPublisher, never()).publishSyncCompleted(anyList());
+            festivalSyncService.publishSyncCompletedEvent(List.of(), listResult);
+
+            verify(festivalSyncEventPublisher, never())
+                    .publishSyncCompleted(anyList(), any());
         }
     }
 
-    @Nested
-    @DisplayName("상세 보강 대상 수집 테스트")
-    class CollectDetailEnrichTargetContentIdsTest {
+    @Test
+    @DisplayName("상세 보강 대상이 없으면 목록 결과만으로 Slack 알림을 전송한다")
+    void notifyFestivalSyncResultOnly_test() {
+        FestivalSyncResultResponse listResult =
+                new FestivalSyncResultResponse(200, 0, 0, 0, List.of());
 
-        @Test
-        @DisplayName("목록 변경 대상과 pending 대상을 중복 없이 합쳐 반환한다")
-        void collectDetailEnrichTargetContentIds_merge_changed_and_pending_test() {
-            when(pendingService.findAllContentIds()).thenReturn(List.of("1002", "1003"));
+        FestivalSyncStatusResponse status =
+                new FestivalSyncStatusResponse(
+                        0L,
+                        Map.of(
+                                "RATE_LIMIT", 0L,
+                                "SERVER_ERROR", 0L,
+                                "EXCEPTION", 0L,
+                                "UNPROCESSED", 0L
+                        ),
+                        false
+                );
 
-            List<String> result =
-                    festivalSyncService.collectDetailEnrichTargetContentIds(List.of("1001", "1002"));
+        String message = "[축제 데이터 동기화 결과] 변경 없음";
 
-            assertThat(result).containsExactly("1001", "1002", "1003");
-            verify(pendingService).findAllContentIds();
-        }
+        given(pendingService.getSyncStatus()).willReturn(status);
+        given(festivalSyncSlackMessageFactory.createMessage(
+                eq(listResult),
+                any(FestivalSyncResultResponse.class),
+                eq(status)
+        )).willReturn(message);
+
+        festivalSyncService.notifyFestivalSyncResultOnly(listResult);
+
+        verify(pendingService, times(1)).getSyncStatus();
+
+        verify(festivalSyncSlackMessageFactory, times(1))
+                .createMessage(
+                        eq(listResult),
+                        argThat(detailResult ->
+                                detailResult.getTotalCount() == 0
+                                        && detailResult.getCreatedCount() == 0
+                                        && detailResult.getUpdatedCount() == 0
+                                        && detailResult.getFailedCount() == 0
+                                        && detailResult.getChangedContentIds().isEmpty()
+                        ),
+                        eq(status)
+                );
+
+        verify(slackNotificationService, times(1)).sendMessage(message);
     }
 
-    @Nested
-    @DisplayName("상세 보강 테스트")
-    class EnrichFestivalDetailsByContentIdsTest {
+    @Test
+    @DisplayName("상세 보강 완료 후 목록 결과와 상세 결과를 포함해 Slack 알림을 전송한다")
+    void enrichFestivalDetailsAndNotify_test() {
+        List<String> contentIds = List.of();
 
-        @Test
-        @DisplayName("상세 API 성공 응답이고 상세 정보가 변경된 경우 보강 후 pending 제거")
-        void enrichFestivalDetailsByContentIds_success_test() throws Exception {
-            Festival festival = Festival.builder()
-                    .contentId("694576")
-                    .title("가야문화축제")
-                    .overview("기존 상세 설명")
-                    .contactNumber(null)
-                    .firstImageUrl("image1.jpg")
-                    .thumbnailUrl("image2.jpg")
-                    .address("경상남도 김해시 대성동")
-                    .homepageUrl("https://old.com")
-                    .startDate(LocalDateTime.of(2026, 4, 30, 0, 0))
-                    .endDate(LocalDateTime.of(2026, 5, 3, 23, 59, 59))
-                    .mapX(128.87)
-                    .mapY(35.23)
-                    .lDongRegnCd("48")
-                    .status(FestivalStatus.UPCOMING)
-                    .build();
+        FestivalSyncResultResponse listResult =
+                new FestivalSyncResultResponse(200, 3, 2, 0, List.of("1001", "1002"));
 
-            FestivalApiItem detailItem = createApiItem("694576", "가야문화축제");
-            setField(detailItem, "overview", "상세 설명");
-            setField(detailItem, "homepage", "https://gcfkorea.com/");
+        FestivalSyncStatusResponse status =
+                new FestivalSyncStatusResponse(
+                        0L,
+                        Map.of(
+                                "RATE_LIMIT", 0L,
+                                "SERVER_ERROR", 0L,
+                                "EXCEPTION", 0L,
+                                "UNPROCESSED", 0L
+                        ),
+                        false
+                );
 
-            FestivalApiResponse detailResponse = createResponse(List.of(detailItem));
+        String message = "[축제 데이터 동기화 결과] 성공";
 
-            when(festivalRepository.findByContentId("694576")).thenReturn(Optional.of(festival));
-            when(festivalApiClient.fetchFestivalDetail("694576")).thenReturn(detailResponse);
-            when(festivalApiConverter.isDetailIncomplete(festival)).thenReturn(false);
-            when(festivalApiConverter.hasDetailChanges(festival, detailItem)).thenReturn(true);
+        given(pendingService.getSyncStatus()).willReturn(status);
+        given(festivalSyncSlackMessageFactory.createMessage(
+                eq(listResult),
+                any(FestivalSyncResultResponse.class),
+                eq(status)
+        )).willReturn(message);
 
-            FestivalSyncResultResponse result =
-                    festivalSyncService.enrichFestivalDetailsByContentIds(List.of("694576"));
+        festivalSyncService.enrichFestivalDetailsAndNotify(contentIds, listResult);
 
-            assertThat(result.getTotalCount()).isEqualTo(1);
-            assertThat(result.getCreatedCount()).isEqualTo(0);
-            assertThat(result.getUpdatedCount()).isEqualTo(1);
-            assertThat(result.getFailedCount()).isEqualTo(0);
+        verify(pendingService, times(1)).getSyncStatus();
 
-            verify(festivalApiConverter).updateDetailFields(festival, detailItem);
-            verify(pendingService).remove("694576");
-        }
+        verify(festivalSyncSlackMessageFactory, times(1))
+                .createMessage(
+                        eq(listResult),
+                        argThat(detailResult ->
+                                detailResult.getTotalCount() == 0
+                                        && detailResult.getCreatedCount() == 0
+                                        && detailResult.getUpdatedCount() == 0
+                                        && detailResult.getFailedCount() == 0
+                        ),
+                        eq(status)
+                );
 
-        @Test
-        @DisplayName("상세 API 성공이지만 변경이 없더라도 pending 제거")
-        void enrichFestivalDetailsByContentIds_success_no_change_remove_pending_test() throws Exception {
-            Festival festival = Festival.builder()
-                    .contentId("1001")
-                    .title("축제1")
-                    .overview("기존 상세 설명")
-                    .address("서울")
-                    .startDate(LocalDateTime.now())
-                    .endDate(LocalDateTime.now().plusDays(1))
-                    .mapX(127.0)
-                    .mapY(37.0)
-                    .status(FestivalStatus.UPCOMING)
-                    .build();
-
-            FestivalApiItem detailItem = createApiItem("1001", "축제1");
-            FestivalApiResponse detailResponse = createResponse(List.of(detailItem));
-
-            when(festivalRepository.findByContentId("1001")).thenReturn(Optional.of(festival));
-            when(festivalApiClient.fetchFestivalDetail("1001")).thenReturn(detailResponse);
-            when(festivalApiConverter.isDetailIncomplete(festival)).thenReturn(false);
-            when(festivalApiConverter.hasDetailChanges(festival, detailItem)).thenReturn(false);
-
-            FestivalSyncResultResponse result =
-                    festivalSyncService.enrichFestivalDetailsByContentIds(List.of("1001"));
-
-            assertThat(result.getUpdatedCount()).isEqualTo(0);
-            assertThat(result.getFailedCount()).isEqualTo(0);
-
-            verify(festivalApiConverter, never()).updateDetailFields(any(), any());
-            verify(pendingService).remove("1001");
-        }
+        verify(slackNotificationService, times(1)).sendMessage(message);
     }
 
     @Nested
@@ -481,6 +490,7 @@ class FestivalSyncServiceTest {
 
     private FestivalApiItem createApiItem(String contentId, String title) throws Exception {
         FestivalApiItem item = new FestivalApiItem();
+
         setField(item, "contentid", contentId);
         setField(item, "title", title);
         setField(item, "overview", "상세 설명 없음");
@@ -495,11 +505,13 @@ class FestivalSyncServiceTest {
         setField(item, "lDongRegnCd", "48");
         setField(item, "eventstartdate", "20260430");
         setField(item, "eventenddate", "20260503");
+
         return item;
     }
 
     private FestivalApiResponse createResponse(List<FestivalApiItem> itemList) throws Exception {
         FestivalApiHeader header = new FestivalApiHeader();
+
         setField(header, "resultCode", "0000");
         setField(header, "resultMsg", "OK");
 
@@ -513,10 +525,12 @@ class FestivalSyncServiceTest {
         setField(body, "totalCount", itemList.size());
 
         FestivalApiResponse.Response responseInner = new FestivalApiResponse.Response();
+
         setField(responseInner, "header", header);
         setField(responseInner, "body", body);
 
         FestivalApiResponse response = new FestivalApiResponse();
+
         setField(response, "response", responseInner);
 
         return response;

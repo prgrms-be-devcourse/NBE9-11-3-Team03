@@ -21,20 +21,29 @@ public class SlackNotificationService {
     @Value("${slack.webhook.url:}")
     private String webhookUrl;
 
-    public void send(String message) {
+    public void sendMessage(String message) {
         if (webhookUrl == null || webhookUrl.isBlank()) {
             log.debug("[Slack] webhook URL 미설정 → 전송 건너뜀");
             return;
         }
+
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, String>> entity = new HttpEntity<>(Map.of("text", message), headers);
 
-            restTemplate.postForEntity(webhookUrl, entity, String.class);
-            log.info("[Slack] 전송 성공");
+            HttpEntity<Map<String, String>> entity =
+                    new HttpEntity<>(Map.of("text", message), headers);
+
+            restTemplate.postForEntity(
+                    webhookUrl,
+                    entity,
+                    String.class
+            );
+
+            log.info("[Slack] 알림 전송 완료");
+
         } catch (Exception e) {
-            log.error("[Slack] 전송 실패: {}", e.getMessage());
+            log.error("[Slack] 알림 전송 실패: {}", e.getMessage());
         }
     }
 }

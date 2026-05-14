@@ -14,12 +14,10 @@ import java.util.List;
 import java.util.Map;
 
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class FestivalAdminControllerTest {
 
@@ -66,7 +64,7 @@ class FestivalAdminControllerTest {
     }
 
     @Test
-    @DisplayName("sync-status 조회 시 재처리 대상이 있으면 재처리 필요 메시지를 반환한다")
+    @DisplayName("sync-status 조회 시 RATE_LIMIT 대상이 있으면 API 호출 제한 메시지를 반환한다")
     void getFestivalSyncStatus_need_retry_test() throws Exception {
         FestivalSyncStatusResponse response = new FestivalSyncStatusResponse(
                 3L,
@@ -129,6 +127,6 @@ class FestivalAdminControllerTest {
                 .collectDetailEnrichTargetContentIds(List.of("1001", "1002"));
 
         verify(festivalSyncService, times(1))
-                .publishSyncCompletedEvent(List.of("1001", "1002"));
+                .publishSyncCompletedEvent(List.of("1001", "1002"), listResult);
     }
 }
