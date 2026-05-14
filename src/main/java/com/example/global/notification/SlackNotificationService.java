@@ -1,13 +1,17 @@
 package com.example.global.notification;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SlackNotificationService {
@@ -18,18 +22,28 @@ public class SlackNotificationService {
     private String webhookUrl;
 
     public void sendMessage(String message) {
-        if (!StringUtils.hasText(webhookUrl)) {
-            System.out.println("[Slack] webhook url이 설정되지 않아 알림을 생략합니다.");
+        if (webhookUrl == null || webhookUrl.isBlank()) {
+            log.debug("[Slack] webhook URL 미설정 → 전송 건너뜀");
             return;
         }
 
-        Map<String, String> request = Map.of("text", message);
-
         try {
-            restTemplate.postForEntity(webhookUrl, request, String.class);
-            System.out.println("[Slack] 알림 전송 완료");
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<Map<String, String>> entity =
+                    new HttpEntity<>(Map.of("text", message), headers);
+
+            restTemplate.postForEntity(
+                    webhookUrl,
+                    entity,
+                    String.class
+            );
+
+            log.info("[Slack] 알림 전송 완료");
+
         } catch (Exception e) {
-            System.out.println("[Slack] 알림 전송 실패: " + e.getMessage());
+            log.error("[Slack] 알림 전송 실패: {}", e.getMessage());
         }
     }
 }

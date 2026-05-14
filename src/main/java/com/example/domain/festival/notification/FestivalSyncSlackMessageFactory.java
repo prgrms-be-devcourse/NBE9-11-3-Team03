@@ -1,7 +1,7 @@
 package com.example.domain.festival.notification;
 
-import com.example.domain.festival.dto.response.FestivalSyncResult;
-import com.example.domain.festival.dto.response.FestivalSyncStatusResponseDto;
+import com.example.domain.festival.dto.response.FestivalSyncResultResponse;
+import com.example.domain.festival.dto.response.FestivalSyncStatusResponse;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -14,9 +14,9 @@ public class FestivalSyncSlackMessageFactory {
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public String createMessage(
-            FestivalSyncResult listResult,
-            FestivalSyncResult detailResult,
-            FestivalSyncStatusResponseDto status
+            FestivalSyncResultResponse listResult,
+            FestivalSyncResultResponse detailResult,
+            FestivalSyncStatusResponse status
     ) {
         String syncStatus = resolveStatus(listResult, detailResult, status);
 
@@ -55,9 +55,9 @@ public class FestivalSyncSlackMessageFactory {
     }
 
     private String resolveStatus(
-            FestivalSyncResult listResult,
-            FestivalSyncResult detailResult,
-            FestivalSyncStatusResponseDto status
+            FestivalSyncResultResponse listResult,
+            FestivalSyncResultResponse detailResult,
+            FestivalSyncStatusResponse status
     ) {
         if (listResult.getCreatedCount() == 0
                 && listResult.getUpdatedCount() == 0

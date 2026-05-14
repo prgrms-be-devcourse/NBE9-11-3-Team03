@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -22,6 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
+import com.jayway.jsonpath.JsonPath;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
@@ -193,6 +197,27 @@ public class AuthControllerTest {
                 .andExpect(jsonPath("$.status").value("401"));
     }
 
+    @Test
+    @DisplayName("회원 탈퇴 성공 후 기존 access token 인증 실패")
+    void selfWithdraw_success_thenAccessTokenCannotAuthenticate() throws Exception {
+        saveMember("withdrawUser1", "withdraw1@test.com", "탈퇴테스트1", "1234");
+        // 탈퇴 전에 발급받은 access token을 준비.
+        String accessToken = loginAndGetAccessToken("withdrawUser1", "1234");
+
+        // 현재 access token으로 회원 탈퇴를 요청.
+        mockMvc.perform(delete("/api/users/me/withdraw")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(withdrawRequest("1234", "1234")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("WITHDRAWN"));
+
+        // 탈퇴 후 같은 access token으로 인증 요청을 하면 실패해야 함.
+        mockMvc.perform(get("/api/users/me")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .andExpect(status().isUnauthorized());
+    }
+
     private Member saveMember(String loginId, String email, String nickname, String password) {
         return memberRepository.save(new Member(
                 "테스트회원",
@@ -214,6 +239,17 @@ public class AuthControllerTest {
         return loginResult.getResponse().getCookie("refreshToken");
     }
 
+    // 로그인 응답 body에서 access token만 꺼내 테스트에 사용.
+    private String loginAndGetAccessToken(String loginId, String password) throws Exception {
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginRequest(loginId, password)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        return JsonPath.read(loginResult.getResponse().getContentAsString(), "$.data.accessToken");
+    }
+
     private String signupRequest(String loginId, String email, String nickname) {
         return """
                 {
@@ -233,5 +269,15 @@ public class AuthControllerTest {
                   "password": "%s"
                 }
                 """.formatted(loginId, password);
+    }
+
+    // 회원 탈퇴 요청 body를 생성.
+    private String withdrawRequest(String password, String passwordConfirm) {
+        return """
+                {
+                  "password": "%s",
+                  "passwordConfirm": "%s"
+                }
+                """.formatted(password, passwordConfirm);
     }
 }

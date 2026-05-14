@@ -1,12 +1,11 @@
-
 package com.example.domain.festival.service;
 
 import com.example.domain.festival.client.FestivalApiClient;
 import com.example.domain.festival.converter.FestivalApiConverter;
 import com.example.domain.festival.dto.external.FestivalApiItem;
 import com.example.domain.festival.dto.external.FestivalApiResponse;
-import com.example.domain.festival.dto.response.FestivalSyncResult;
-import com.example.domain.festival.dto.response.FestivalSyncStatusResponseDto;
+import com.example.domain.festival.dto.response.FestivalSyncStatusResponse;
+import com.example.domain.festival.dto.response.FestivalSyncResultResponse;
 import com.example.domain.festival.entity.DetailSyncPendingReason;
 import com.example.domain.festival.entity.Festival;
 import com.example.domain.festival.entity.FestivalStatus;
@@ -46,7 +45,7 @@ public class FestivalSyncService {
         System.out.println("pageNo=" + pageNo + ", numOfRows=" + numOfRows + ", eventStartDate=" + eventStartDate);
 
         try {
-            FestivalSyncResult syncResult = syncFestivalList(pageNo, numOfRows, eventStartDate);
+            FestivalSyncResultResponse syncResult = syncFestivalList(pageNo, numOfRows, eventStartDate);
 
             System.out.println("[FestivalScheduler] 목록 동기화 완료");
             System.out.println("생성 건수: " + syncResult.getCreatedCount());
@@ -71,7 +70,7 @@ public class FestivalSyncService {
     }
 
     // 목록 API 기반 기본 축제 데이터 저장/수정
-    public FestivalSyncResult syncFestivalList(int pageNo, int numOfRows, String eventStartDate) {
+    public FestivalSyncResultResponse syncFestivalList(int pageNo, int numOfRows, String eventStartDate) {
 
         //성능 TEST코드: API 시간 호출 시간 (추후 삭제 가능)
         long totalStart = System.currentTimeMillis();
@@ -90,7 +89,7 @@ public class FestivalSyncService {
                 response.getResponse().getBody().getItems() == null ||
                 response.getResponse().getBody().getItems().getItem() == null ||
                 response.getResponse().getBody().getItems().getItem().isEmpty()) {
-            return new FestivalSyncResult(0, 0, 0, 0, List.of());
+            return new FestivalSyncResultResponse(0, 0, 0, 0, List.of());
         }
 
         List<FestivalApiItem> items = response.getResponse()
@@ -169,14 +168,14 @@ public class FestivalSyncService {
         System.out.println("목록 DB 소요시간: " + (dbEnd - dbStart) + "ms");
         System.out.println("목록 총 소요시간: " + (totalEnd - totalStart) + "ms");
 
-        return new FestivalSyncResult(items.size(), createdCount, updatedCount, failedCount, changedContentIds);
+        return new FestivalSyncResultResponse(items.size(), createdCount, updatedCount, failedCount, changedContentIds);
     }
 
 
     //목록 동기화 완료 후, 변경된 contentId 목록에 대한 상세 보강 이벤트를 발행함
     public void publishSyncCompletedEvent(
             List<String> changedContentIds,
-            FestivalSyncResult listResult
+            FestivalSyncResultResponse listResult
     ) {
         if (changedContentIds == null || changedContentIds.isEmpty()) {
             return;
@@ -210,7 +209,7 @@ public class FestivalSyncService {
 
     //상세 API 기반 상세 정보 보강 (변경된 contentId 목록만 변경 대상<ex. 초기적재 or 실제 변경> + 이전 실행에서 실패/미시도된 pending 축제)
     //
-    public FestivalSyncResult enrichFestivalDetailsByContentIds(List<String> contentIds) {
+    public FestivalSyncResultResponse enrichFestivalDetailsByContentIds(List<String> contentIds) {
         int updatedCount = 0;
         int failedCount = 0;
 
@@ -377,7 +376,7 @@ public class FestivalSyncService {
         System.out.println("중단 사유: " + finalStopReason);
         System.out.println("상세 보강 총 소요시간: " + (totalEnd - totalStart) + "ms");
 
-        return new FestivalSyncResult(contentIds.size(), 0, updatedCount, failedCount, contentIds);
+        return new FestivalSyncResultResponse(contentIds.size(), 0, updatedCount, failedCount, contentIds);
         }
 
 
@@ -440,12 +439,12 @@ public class FestivalSyncService {
         System.out.println("[FestivalStatus] 상태 업데이트 완료: 진행중 전환 " + ongoingCount + "건, 종료 전환 " + endedCount + "건");
     }
 
-    //목록 결과만으로 Slac 알림 보내는 메서드
-    public void notifyFestivalSyncResultOnly(FestivalSyncResult listResult) {
-        FestivalSyncResult emptyDetailResult =
-                new FestivalSyncResult(0, 0, 0, 0, List.of());
+    // 목록 결과만으로 Slack 알림 보내는 메서드
+    public void notifyFestivalSyncResultOnly(FestivalSyncResultResponse listResult) {
+        FestivalSyncResultResponse emptyDetailResult =
+                new FestivalSyncResultResponse(0, 0, 0, 0, List.of());
 
-        FestivalSyncStatusResponseDto status = pendingService.getSyncStatus();
+        FestivalSyncStatusResponse status = pendingService.getSyncStatus();
 
         String message = festivalSyncSlackMessageFactory.createMessage(
                 listResult,
@@ -459,12 +458,12 @@ public class FestivalSyncService {
     //상세 보강 완료 후 Slack 전송 메서드 (목록 결과까지 포함한 알림)
     public void enrichFestivalDetailsAndNotify(
             List<String> contentIds,
-            FestivalSyncResult listResult
+            FestivalSyncResultResponse listResult
     ) {
-        FestivalSyncResult detailResult =
+        FestivalSyncResultResponse detailResult =
                 enrichFestivalDetailsByContentIds(contentIds);
 
-        FestivalSyncStatusResponseDto status =
+        FestivalSyncStatusResponse status =
                 pendingService.getSyncStatus();
 
         String message =

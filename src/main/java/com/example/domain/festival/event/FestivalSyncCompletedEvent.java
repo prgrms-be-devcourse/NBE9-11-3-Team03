@@ -1,6 +1,6 @@
 package com.example.domain.festival.event;
 
-import com.example.domain.festival.dto.response.FestivalSyncResult;
+import com.example.domain.festival.dto.response.FestivalSyncResultResponse;
 import lombok.Getter;
 
 import java.util.List;
@@ -10,11 +10,11 @@ import java.util.List;
 public class FestivalSyncCompletedEvent {
 
     private final List<String> changedContentIds;
-    private final FestivalSyncResult listResult;
+    private final FestivalSyncResultResponse listResult;
 
     public FestivalSyncCompletedEvent(
             List<String> changedContentIds,
-            FestivalSyncResult listResult
+            FestivalSyncResultResponse listResult
     ) {
         this.changedContentIds = changedContentIds;
         this.listResult = listResult;

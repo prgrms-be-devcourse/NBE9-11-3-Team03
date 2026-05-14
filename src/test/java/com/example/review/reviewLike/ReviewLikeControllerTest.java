@@ -1,22 +1,16 @@
 package com.example.review.reviewLike;
 
-import com.example.domain.review.controller.ReviewLikeController;
 import com.example.domain.review.service.ReviewLikeService;
-import com.example.domain.reviewlike.dto.ReviewLikeResponseDto;
+import com.example.domain.reviewlike.dto.response.ReviewLikeResponse;
 import com.example.global.exception.BadRequestException;
 import com.example.global.exception.ConflictException;
-import com.example.global.security.JwtAuthenticationFilter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.eq;
@@ -40,7 +34,7 @@ class ReviewLikeControllerTest {
     @DisplayName("좋아요 성공")
     void likeReview_success() throws Exception {
         Long reviewId = 1L;
-        ReviewLikeResponseDto response = new ReviewLikeResponseDto(reviewId, 100L, true, 1);
+        ReviewLikeResponse response = new ReviewLikeResponse(reviewId, 100L, true, 1);
 
         when(reviewLikeService.likeReview(eq(reviewId), eq("user1")))
                 .thenReturn(response);
@@ -77,7 +71,7 @@ class ReviewLikeControllerTest {
     @DisplayName("좋아요 취소 성공")
     void cancelLikeReview_success() throws Exception {
         Long reviewId = 1L;
-        ReviewLikeResponseDto response = new ReviewLikeResponseDto(reviewId, 100L, false, 0);
+        ReviewLikeResponse response = new ReviewLikeResponse(reviewId, 100L, false, 0);
 
         when(reviewLikeService.cancelLikeReview(eq(reviewId), eq("user1")))
                 .thenReturn(response);

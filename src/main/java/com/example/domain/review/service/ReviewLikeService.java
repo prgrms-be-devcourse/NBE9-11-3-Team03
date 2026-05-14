@@ -5,7 +5,7 @@ import com.example.domain.member.repository.MemberRepository;
 import com.example.domain.review.entity.Review;
 import com.example.domain.review.entity.ReviewStatus;
 import com.example.domain.review.repository.ReviewRepository;
-import com.example.domain.reviewlike.dto.ReviewLikeResponseDto;
+import com.example.domain.reviewlike.dto.response.ReviewLikeResponse;
 import com.example.domain.reviewlike.entity.ReviewLike;
 import com.example.domain.reviewlike.repository.ReviewLikeRepository;
 import com.example.global.exception.BadRequestException;
@@ -26,7 +26,7 @@ public class ReviewLikeService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public ReviewLikeResponseDto likeReview(Long reviewId, String loginId) {
+    public ReviewLikeResponse likeReview(Long reviewId, String loginId) {
 
         // 1. 로그인 회원 조회
         Member member = memberRepository.findByLoginId(loginId)
@@ -55,7 +55,7 @@ public class ReviewLikeService {
         reviewRepository.increaseLikeCount(reviewId);
 
         // 7. 응답 반환
-        return new ReviewLikeResponseDto(
+        return new ReviewLikeResponse(
                 review.getId(),
                 member.getId(),
                 true,
@@ -64,7 +64,7 @@ public class ReviewLikeService {
     }
 
     @Transactional
-    public ReviewLikeResponseDto cancelLikeReview(Long reviewId, String loginId) {
+    public ReviewLikeResponse cancelLikeReview(Long reviewId, String loginId) {
 
         // 1. 로그인 회원 조회
         Member member = memberRepository.findByLoginId(loginId)
@@ -86,7 +86,7 @@ public class ReviewLikeService {
         reviewRepository.decreaseLikeCount(reviewId);
 
         // 6. 응답 반환
-        return new ReviewLikeResponseDto(
+        return new ReviewLikeResponse(
                 review.getId(),
                 member.getId(),
                 false,

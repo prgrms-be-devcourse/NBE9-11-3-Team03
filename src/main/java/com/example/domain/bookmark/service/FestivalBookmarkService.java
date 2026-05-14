@@ -1,6 +1,6 @@
 package com.example.domain.bookmark.service;
 
-import com.example.domain.bookmark.dto.FestivalBookmarkResponseDto;
+import com.example.domain.bookmark.dto.response.FestivalBookmarkResponse;
 import com.example.domain.bookmark.entity.FestivalBookmark;
 import com.example.domain.bookmark.repository.FestivalBookmarkRepository;
 import com.example.domain.festival.entity.Festival;
@@ -25,7 +25,7 @@ public class FestivalBookmarkService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public FestivalBookmarkResponseDto bookmarkFestival(Long festivalId, String loginId) {
+    public FestivalBookmarkResponse bookmarkFestival(Long festivalId, String loginId) {
 
         // 필요 없을시 ux에서 안보이게 제한 하겠습니다.
         Member member = memberRepository.findByLoginId(loginId)
@@ -46,7 +46,7 @@ public class FestivalBookmarkService {
 
         festivalRepository.increaseBookmarkCount(festivalId);
 
-        return new FestivalBookmarkResponseDto(
+        return new FestivalBookmarkResponse(
                 festival.getId(),
                 member.getId(),
                 true,
@@ -55,7 +55,7 @@ public class FestivalBookmarkService {
     }
 
     @Transactional
-    public FestivalBookmarkResponseDto cancelBookmark(Long festivalId, String loginId) {
+    public FestivalBookmarkResponse cancelBookmark(Long festivalId, String loginId) {
 
         Member member = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new UnauthorizedException("로그인이 필요한 서비스입니다."));
@@ -72,7 +72,7 @@ public class FestivalBookmarkService {
 
         festivalRepository.decreaseBookmarkCount(festivalId);
 
-        return new FestivalBookmarkResponseDto(
+        return new FestivalBookmarkResponse(
                 festival.getId(),
                 member.getId(),
                 false,

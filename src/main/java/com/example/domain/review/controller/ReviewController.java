@@ -1,6 +1,11 @@
 package com.example.domain.review.controller;
 
-import com.example.domain.review.dto.*;
+import com.example.domain.review.dto.request.ReviewCreateRequest;
+import com.example.domain.review.dto.request.ReviewUpdateRequest;
+import com.example.domain.review.dto.response.ReviewDeleteResponse;
+import com.example.domain.review.dto.response.ReviewPageResponse;
+import com.example.domain.review.dto.response.ReviewResponse;
+import com.example.domain.review.dto.response.ReviewUpdateResponse;
 import com.example.domain.review.service.ReviewService;
 import com.example.global.response.ApiRes;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,16 +32,16 @@ public class ReviewController {
 
     @PostMapping(value = "/festivals/{festivalId}/reviews", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "축제 리뷰 작성", description = "특정 축제에 리뷰와 사진을 함께 작성합니다.")
-    public ResponseEntity<ApiRes<ReviewResponseDto>> createReview(
+    public ResponseEntity<ApiRes<ReviewResponse>> createReview(
             @PathVariable Long festivalId,
-            @Valid @RequestPart("requestDto") ReviewCreateRequestDto requestDto,
+            @Valid @RequestPart("requestDto") ReviewCreateRequest requestDto,
             @RequestPart(value = "image", required = false) MultipartFile image, // 이미지 파일 추가
             Authentication authentication
     ){
         String loginId = authentication.getName();
 
 
-        ReviewResponseDto response = reviewService.createReview(festivalId, loginId, requestDto, image);
+        ReviewResponse response = reviewService.createReview(festivalId, loginId, requestDto, image);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiRes<>(201, "리뷰 작성이 완료 되었습니다.", response));
@@ -45,7 +50,7 @@ public class ReviewController {
 
     @GetMapping("/festivals/{festivalId}/reviews")
     @Operation(summary = "축제 리뷰 목록 조회", description = "특정 축제의 리뷰 목록을 페이징하여 조회합니다.")
-    public ResponseEntity<ApiRes<ReviewPageResponseDto>> getReviewList(
+    public ResponseEntity<ApiRes<ReviewPageResponse>> getReviewList(
             @PathVariable Long festivalId,
             @Parameter(description = "페이지 번호", example = "0")
             @RequestParam(defaultValue = "0") int page,
@@ -55,7 +60,7 @@ public class ReviewController {
     ) {
         String loginId = authentication.getName();
 
-        ReviewPageResponseDto response = reviewService.getReviewList(festivalId, loginId, page, size);
+        ReviewPageResponse response = reviewService.getReviewList(festivalId, loginId, page, size);
 
         return ResponseEntity.ok(
                 new ApiRes<>(200, "축제 리뷰 목록 조회 성공", response)
@@ -65,27 +70,27 @@ public class ReviewController {
     //리뷰수정
     @PatchMapping(value = "/reviews/{reviewId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "축제 리뷰 수정", description = "본인이 작성한 리뷰를 수정합니다.")
-    public ResponseEntity<ApiRes<ReviewUpdateResponseDto>> updateReview(
+    public ResponseEntity<ApiRes<ReviewUpdateResponse>> updateReview(
             @PathVariable Long reviewId,
-            @Valid @RequestPart("requestDto") ReviewUpdateRequestDto requestDto,
+            @Valid @RequestPart("requestDto") ReviewUpdateRequest requestDto,
             @RequestPart(value = "image", required = false) MultipartFile image,
             Authentication authentication
     ){
         String loginId = authentication.getName();
-        ReviewUpdateResponseDto response = reviewService.updateReview(reviewId, loginId, requestDto, image);
+        ReviewUpdateResponse response = reviewService.updateReview(reviewId, loginId, requestDto, image);
         return ResponseEntity.ok(new ApiRes<>(200, "리뷰 수정 완료", response));
     }
 
 
     @DeleteMapping("/reviews/{reviewId}")
     @Operation(summary = "축제 리뷰 삭제", description = "본인이 작성한 리뷰를 삭제합니다.")
-    public ResponseEntity<ApiRes<ReviewDeleteResponseDto>> deleteReview(
+    public ResponseEntity<ApiRes<ReviewDeleteResponse>> deleteReview(
             @PathVariable Long reviewId,
             Authentication authentication
     ) {
         String loginId = authentication.getName();
 
-        ReviewDeleteResponseDto response = reviewService.deleteReview(reviewId, loginId);
+        ReviewDeleteResponse response = reviewService.deleteReview(reviewId, loginId);
 
         return ResponseEntity.ok(
                 new ApiRes<>(200, "리뷰 삭제가 완료되었습니다.", response)
