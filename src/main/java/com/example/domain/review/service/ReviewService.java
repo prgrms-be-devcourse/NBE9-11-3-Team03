@@ -58,7 +58,7 @@ public class ReviewService {
         }
 
         // 4. Review 객체 생성 (저장된 파일 경로 사용)
-        Review review = Review.builder() // @Builder 사용 권장
+        Review review = Review.builder()
                 .member(member)
                 .festival(festival)
                 .content(requestDto.getContent())
@@ -155,7 +155,7 @@ public class ReviewService {
         }
 
 
-        String updateImagePath = review.getImage(); // 기본값은 '기존 이미지 유지'
+        String updateImagePath = review.getImage(); 
 
         // 케이스 1: 클라이언트가 "기존 이미지를 삭제해달라"고 요청한 경우
         if (requestDto.isDeleteImage()) {
