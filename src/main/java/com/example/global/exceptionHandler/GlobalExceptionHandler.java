@@ -4,6 +4,7 @@ import com.example.global.exception.*;
 import com.example.global.rsData.RsData;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,11 +24,13 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import java.util.NoSuchElementException;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     //400 Bad Request (잘못된 요청값, 비즈니스상 잘못된 인자)
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<com.example.global.rsData.RsData<Void>> handleIllegalArgumentException(IllegalArgumentException e) {
+        log.error("[Exception] 서버 오류 발생 - message={}", e.getMessage(), e);
         return ResponseEntity
                 .badRequest()
                 .body(RsData.fail(e.getMessage()));
@@ -44,6 +47,7 @@ public class GlobalExceptionHandler {
     // 404 Not Found (요청한 데이터를 찾을 수 없을 때 사용합니다.)
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<RsData<Void>> handleEntityNotFoundException(EntityNotFoundException e) {
+
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
                 .body(new RsData<>("404", e.getMessage(), null));

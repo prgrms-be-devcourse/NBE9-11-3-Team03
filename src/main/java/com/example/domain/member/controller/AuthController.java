@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
+@Slf4j
 @Tag(name = "Auth", description = "회원 인증 API")
 public class AuthController {
 
@@ -54,7 +56,6 @@ public class AuthController {
         LoginResponse response = authService.login(request);
         // refresh token만 HttpOnly 쿠키로 내려줌.
         tokenCookieManager.addRefreshTokenCookie(httpResponse, response.getRefreshToken());
-
         return ResponseEntity.ok(new ApiRes<>(200, "로그인 성공", response));
     }
 
