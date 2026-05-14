@@ -17,26 +17,16 @@ public class FestivalSyncScheduler {
 
     private final FestivalSyncService festivalSyncService;
 
+
     @Scheduled(cron = "0 0 0 * * *")
     public void syncFestivalData() {
 
         String eventStartDate =
                 LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
 
-        try {
-            log.info("[FestivalScheduler] 스케줄러 실행 시작 - eventStartDate={}",
-                    eventStartDate);
+        log.info("[FestivalScheduler] 스케줄러 실행 요청 - eventStartDate={}",
+                eventStartDate);
 
-            festivalSyncService.runScheduledSync(eventStartDate, 1, 200);
-
-            log.info("[FestivalScheduler] 스케줄러 실행 완료 - eventStartDate={}",
-                    eventStartDate);
-
-        } catch (Exception e) {
-            log.error("[FestivalScheduler] 스케줄러 실행 실패 - eventStartDate={}, message={}",
-                    eventStartDate,
-                    e.getMessage(),
-                    e);
-        }
+        festivalSyncService.runScheduledSync(eventStartDate, 1, 200);
     }
 }
