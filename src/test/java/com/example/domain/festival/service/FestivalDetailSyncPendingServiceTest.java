@@ -1,6 +1,6 @@
 package com.example.domain.festival.service;
 
-import com.example.domain.festival.dto.response.FestivalSyncStatusResponseDto;
+import com.example.domain.festival.dto.response.FestivalSyncStatusResponse;
 import com.example.domain.festival.entity.DetailSyncPendingReason;
 import com.example.domain.festival.entity.FestivalDetailSyncPending;
 import com.example.domain.festival.repository.FestivalDetailSyncPendingRepository;
@@ -78,7 +78,7 @@ class FestivalDetailSyncPendingServiceTest {
         when(repository.countByReason(DetailSyncPendingReason.EXCEPTION)).thenReturn(0L);
         when(repository.countByReason(DetailSyncPendingReason.UNPROCESSED)).thenReturn(0L);
 
-        FestivalSyncStatusResponseDto result = service.getSyncStatus();
+        FestivalSyncStatusResponse result = service.getSyncStatus();
 
         assertThat(result.getPendingCount()).isEqualTo(0L);
         assertThat(result.isNeedsRetry()).isFalse();
@@ -97,7 +97,7 @@ class FestivalDetailSyncPendingServiceTest {
         when(repository.countByReason(DetailSyncPendingReason.EXCEPTION)).thenReturn(0L);
         when(repository.countByReason(DetailSyncPendingReason.UNPROCESSED)).thenReturn(2L);
 
-        FestivalSyncStatusResponseDto result = service.getSyncStatus();
+        FestivalSyncStatusResponse result = service.getSyncStatus();
 
         assertThat(result.getPendingCount()).isEqualTo(3L);
         assertThat(result.isNeedsRetry()).isTrue();

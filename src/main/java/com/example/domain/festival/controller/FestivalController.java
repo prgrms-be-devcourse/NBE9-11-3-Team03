@@ -1,6 +1,10 @@
 package com.example.domain.festival.controller;
 
-import com.example.domain.festival.dto.*;
+import com.example.domain.festival.dto.request.FestivalSearchRequest;
+import com.example.domain.festival.dto.response.FestivalDetailResponse;
+import com.example.domain.festival.dto.response.FestivalListResponse;
+import com.example.domain.festival.dto.response.FestivalMarkerResponse;
+import com.example.domain.festival.dto.response.FestivalPageResponse;
 import com.example.domain.festival.entity.Festival;
 import com.example.domain.festival.service.FestivalService;
 import com.example.global.rsData.RsData;
@@ -28,18 +32,18 @@ public class FestivalController {
     @GetMapping
     @Operation(summary = "축제 목록 조회",
             description = "지역, 상태, 월, 키워드 등으로 축제를 검색하고 목록을 반환합니다. 로그인 시 찜 여부(isBookmarked)가 포함됩니다.")
-    public ResponseEntity<RsData<FestivalPageResponseDto<FestivalListResponseDto>>> searchFestivals(
-            @ParameterObject @ModelAttribute FestivalSearchRequestDto searchDto,
+    public ResponseEntity<RsData<FestivalPageResponse<FestivalListResponse>>> searchFestivals(
+            @ParameterObject @ModelAttribute FestivalSearchRequest searchDto,
             @ParameterObject @PageableDefault(size = 10) Pageable pageable,
             Authentication authentication){
 
         String loginId = resolveLoginId(authentication);
 
-        Page<FestivalListResponseDto> dtopage =
+        Page<FestivalListResponse> dtopage =
                 festivalService.searchFestivalsDto(searchDto, pageable, loginId);
 
-        FestivalPageResponseDto<FestivalListResponseDto> pageData =
-                FestivalPageResponseDto.from(dtopage);
+        FestivalPageResponse<FestivalListResponse> pageData =
+                FestivalPageResponse.from(dtopage);
 
         return ResponseEntity.ok(RsData.success("축제 목록 조회 성공", pageData));
     }
@@ -47,12 +51,12 @@ public class FestivalController {
     @GetMapping("/{id}")
     @Operation(summary = "축제 상세 조회",
             description = "특정 축제의 상세 정보를 조회합니다. 조회 시 viewCount가 1 증가합니다. 로그인 시 찜 여부(isBookmarked)가 포함됩니다.")
-    public ResponseEntity<RsData<FestivalDetailResponseDto>> getFestivalDetail(
+    public ResponseEntity<RsData<FestivalDetailResponse>> getFestivalDetail(
             @PathVariable Long id,
             Authentication authentication
     ){
         String loginId = resolveLoginId(authentication);
-        FestivalDetailResponseDto responseDto = festivalService.getFestivalDetail(id, loginId);
+        FestivalDetailResponse responseDto = festivalService.getFestivalDetail(id, loginId);
 
         return ResponseEntity.ok(new RsData<>("200", "축제 상세 조회 성공", responseDto));
     }
@@ -60,17 +64,17 @@ public class FestivalController {
     @GetMapping("/nearby")
     @Operation(summary = "위치기반 주변 축제 검색",
             description = "내 위치(mapX, mapY) 기준으로 반경 내의 축제 목록을 반환합니다.")
-    public ResponseEntity<RsData<List<FestivalMarkerResponseDto>>> getNearbyFestivals(
-            @ParameterObject @ModelAttribute FestivalSearchRequestDto searchDto
+    public ResponseEntity<RsData<List<FestivalMarkerResponse>>> getNearbyFestivals(
+            @ParameterObject @ModelAttribute FestivalSearchRequest searchDto
     ){
-        FestivalSearchRequestDto mapSearchDto = searchDto.applyMapDefaults();
+        FestivalSearchRequest mapSearchDto = searchDto.applyMapDefaults();
         List<Festival> festivals = festivalService.getNearbyMarkers(mapSearchDto);
 
-        List<FestivalMarkerResponseDto> markerDtoList = festivals.stream()
-                .map(FestivalMarkerResponseDto::from)
+        List<FestivalMarkerResponse> markerDtoList = festivals.stream()
+                .map(FestivalMarkerResponse::from)
                 .toList();
 
-        RsData<List<FestivalMarkerResponseDto>> rsData = new RsData<>("200", "주변 축제 조회 성공", markerDtoList);
+        RsData<List<FestivalMarkerResponse>> rsData = new RsData<>("200", "주변 축제 조회 성공", markerDtoList);
         return ResponseEntity.ok(rsData);
     }
 

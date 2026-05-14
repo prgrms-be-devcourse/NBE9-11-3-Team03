@@ -1,7 +1,7 @@
 package com.example.domain.festival.controller;
 
-import com.example.domain.festival.dto.response.FestivalSyncResult;
-import com.example.domain.festival.dto.response.FestivalSyncStatusResponseDto;
+import com.example.domain.festival.dto.response.FestivalSyncResultResponse;
+import com.example.domain.festival.dto.response.FestivalSyncStatusResponse;
 import com.example.domain.festival.service.FestivalDetailSyncPendingService;
 import com.example.domain.festival.service.FestivalSyncService;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +42,7 @@ class FestivalAdminControllerTest {
     @Test
     @DisplayName("sync-status 조회 시 재처리 대상이 없으면 정상 상태 메시지를 반환한다")
     void getFestivalSyncStatus_no_retry_test() throws Exception {
-        FestivalSyncStatusResponseDto response = new FestivalSyncStatusResponseDto(
+        FestivalSyncStatusResponse response = new FestivalSyncStatusResponse(
                 0L,
                 Map.of(
                         "RATE_LIMIT", 0L,
@@ -68,7 +68,7 @@ class FestivalAdminControllerTest {
     @Test
     @DisplayName("sync-status 조회 시 재처리 대상이 있으면 재처리 필요 메시지를 반환한다")
     void getFestivalSyncStatus_need_retry_test() throws Exception {
-        FestivalSyncStatusResponseDto response = new FestivalSyncStatusResponseDto(
+        FestivalSyncStatusResponse response = new FestivalSyncStatusResponse(
                 3L,
                 Map.of(
                         "RATE_LIMIT", 1L,
@@ -95,7 +95,7 @@ class FestivalAdminControllerTest {
     @DisplayName("sync-and-enrich 호출 시 목록 동기화 결과를 반환하고 상세 보강 이벤트를 발행한다")
     void syncAndEnrichFestivals_success_test() throws Exception {
         // given
-        FestivalSyncResult listResult = new FestivalSyncResult(
+        FestivalSyncResultResponse listResult = new FestivalSyncResultResponse(
                 2,
                 1,
                 1,

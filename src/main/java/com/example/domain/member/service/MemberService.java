@@ -1,7 +1,7 @@
 package com.example.domain.member.service;
 
-import com.example.domain.admin.dto.AdminMemberWithdrawnRes;
-import com.example.domain.admin.dto.MemberPageResponse;
+import com.example.domain.admin.dto.response.AdminMemberWithdrawnResponse;
+import com.example.domain.admin.dto.response.MemberPageResponse;
 import com.example.domain.member.entity.Member;
 import com.example.domain.member.entity.MemberStatus;
 import com.example.domain.member.entity.RefreshToken;
@@ -38,7 +38,7 @@ public class MemberService {
 
     //회원을 강제 탈퇴처리하는 메서드
     @Transactional
-    public AdminMemberWithdrawnRes memberWithdraw(Long memberId) {
+    public AdminMemberWithdrawnResponse memberWithdraw(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(()->new CustomNotFoundException("404","존재하지 않는 회원입니다."));
         if(member.getStatus()==MemberStatus.WITHDRAWN){
@@ -48,7 +48,7 @@ public class MemberService {
         // 강제 탈퇴된 회원의 refresh token도 재발급에 사용할 수 없도록 비활성화.
         refreshTokenRepository.findByMemberId(member.getId())
                 .ifPresent(RefreshToken::logout);
-        return AdminMemberWithdrawnRes.from(member);
+        return AdminMemberWithdrawnResponse.from(member);
     }
 
 }

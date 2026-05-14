@@ -1,6 +1,6 @@
 package com.example.domain.bookmark.controller;
 
-import com.example.domain.bookmark.dto.FestivalBookmarkResponseDto;
+import com.example.domain.bookmark.dto.response.FestivalBookmarkResponse;
 import com.example.domain.bookmark.service.FestivalBookmarkService;
 import com.example.global.response.ApiRes;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,13 +20,13 @@ public class FestivalBookmarkController {
 
     @PostMapping("/festivals/{festivalId}/bookmark")
     @Operation(summary = "축제 찜(북마크) 수행", description = "특정 축제를 찜 처리(북마크) 합니다.")
-    public ResponseEntity<ApiRes<FestivalBookmarkResponseDto>> bookmarkFestival(
+    public ResponseEntity<ApiRes<FestivalBookmarkResponse>> bookmarkFestival(
             @PathVariable Long festivalId,
             Authentication authentication
     ) {
         String loginId = authentication.getName();
 
-        FestivalBookmarkResponseDto response =
+        FestivalBookmarkResponse response =
                 festivalBookmarkService.bookmarkFestival(festivalId, loginId);
 
         return ResponseEntity.ok(
@@ -36,13 +36,13 @@ public class FestivalBookmarkController {
 
     @DeleteMapping("/festivals/{festivalId}/bookmark")
     @Operation(summary = "축제 찜(북마크) 취소", description = "특정 축제의 찜 처리(북마크)를 취소합니다.")
-    public ResponseEntity<ApiRes<FestivalBookmarkResponseDto>> cancelBookmark(
+    public ResponseEntity<ApiRes<FestivalBookmarkResponse>> cancelBookmark(
             @PathVariable Long festivalId,
             Authentication authentication
     ) {
         String loginId = authentication.getName();
 
-        FestivalBookmarkResponseDto response =
+        FestivalBookmarkResponse response =
                 festivalBookmarkService.cancelBookmark(festivalId, loginId);
 
         return ResponseEntity.ok(

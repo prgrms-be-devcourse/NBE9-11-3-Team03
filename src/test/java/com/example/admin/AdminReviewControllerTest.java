@@ -1,6 +1,6 @@
 package com.example.admin;
 
-import com.example.domain.admin.dto.ReviewProcessRequest;
+import com.example.domain.admin.dto.request.ReviewProcessRequest;
 import com.example.domain.festival.entity.Festival;
 import com.example.domain.festival.repository.FestivalRepository;
 import com.example.domain.member.entity.Member;
@@ -9,7 +9,6 @@ import com.example.domain.review.entity.Review;
 import com.example.domain.review.entity.ReviewStatus;
 import com.example.domain.review.repository.ReviewRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

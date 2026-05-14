@@ -1,6 +1,6 @@
 package com.example.review.reviewReport;
 
-import com.example.domain.reviewreport.dto.ReviewReportResponse;
+import com.example.domain.reviewreport.dto.response.ReviewReportResponse;
 import com.example.domain.reviewreport.service.ReviewReportService;
 import com.example.global.exception.BadRequestException;
 import com.example.global.exception.ConflictException;

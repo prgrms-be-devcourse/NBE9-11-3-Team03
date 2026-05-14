@@ -1,6 +1,6 @@
 package com.example.domain.reviewreport.controller;
 
-import com.example.domain.reviewreport.dto.ReviewReportResponse;
+import com.example.domain.reviewreport.dto.response.ReviewReportResponse;
 import com.example.domain.reviewreport.service.ReviewReportService;
 import com.example.global.response.ApiRes;
 import io.swagger.v3.oas.annotations.Operation;

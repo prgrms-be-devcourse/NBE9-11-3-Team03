@@ -5,7 +5,7 @@ import com.example.domain.festival.client.FestivalApiClient;
 import com.example.domain.festival.converter.FestivalApiConverter;
 import com.example.domain.festival.dto.external.FestivalApiItem;
 import com.example.domain.festival.dto.external.FestivalApiResponse;
-import com.example.domain.festival.dto.response.FestivalSyncResult;
+import com.example.domain.festival.dto.response.FestivalSyncResultResponse;
 import com.example.domain.festival.entity.DetailSyncPendingReason;
 import com.example.domain.festival.entity.Festival;
 import com.example.domain.festival.entity.FestivalStatus;
@@ -40,7 +40,7 @@ public class FestivalSyncService {
         System.out.println("pageNo=" + pageNo + ", numOfRows=" + numOfRows + ", eventStartDate=" + eventStartDate);
 
         try {
-            FestivalSyncResult syncResult = syncFestivalList(pageNo, numOfRows, eventStartDate);
+            FestivalSyncResultResponse syncResult = syncFestivalList(pageNo, numOfRows, eventStartDate);
 
             System.out.println("[FestivalScheduler] 목록 동기화 완료");
             System.out.println("생성 건수: " + syncResult.getCreatedCount());
@@ -65,7 +65,7 @@ public class FestivalSyncService {
     }
 
     // 목록 API 기반 기본 축제 데이터 저장/수정
-    public FestivalSyncResult syncFestivalList(int pageNo, int numOfRows, String eventStartDate) {
+    public FestivalSyncResultResponse syncFestivalList(int pageNo, int numOfRows, String eventStartDate) {
 
         //성능 TEST코드: API 시간 호출 시간 (추후 삭제 가능)
         long totalStart = System.currentTimeMillis();
@@ -84,7 +84,7 @@ public class FestivalSyncService {
                 response.getResponse().getBody().getItems() == null ||
                 response.getResponse().getBody().getItems().getItem() == null ||
                 response.getResponse().getBody().getItems().getItem().isEmpty()) {
-            return new FestivalSyncResult(0, 0, 0, 0, List.of());
+            return new FestivalSyncResultResponse(0, 0, 0, 0, List.of());
         }
 
         List<FestivalApiItem> items = response.getResponse()
@@ -163,7 +163,7 @@ public class FestivalSyncService {
         System.out.println("목록 DB 소요시간: " + (dbEnd - dbStart) + "ms");
         System.out.println("목록 총 소요시간: " + (totalEnd - totalStart) + "ms");
 
-        return new FestivalSyncResult(items.size(), createdCount, updatedCount, failedCount, changedContentIds);
+        return new FestivalSyncResultResponse(items.size(), createdCount, updatedCount, failedCount, changedContentIds);
     }
 
 
@@ -201,7 +201,7 @@ public class FestivalSyncService {
 
     //상세 API 기반 상세 정보 보강 (변경된 contentId 목록만 변경 대상<ex. 초기적재 or 실제 변경> + 이전 실행에서 실패/미시도된 pending 축제)
     //
-    public FestivalSyncResult enrichFestivalDetailsByContentIds(List<String> contentIds) {
+    public FestivalSyncResultResponse enrichFestivalDetailsByContentIds(List<String> contentIds) {
         int updatedCount = 0;
         int failedCount = 0;
 
@@ -368,7 +368,7 @@ public class FestivalSyncService {
         System.out.println("중단 사유: " + finalStopReason);
         System.out.println("상세 보강 총 소요시간: " + (totalEnd - totalStart) + "ms");
 
-        return new FestivalSyncResult(contentIds.size(), 0, updatedCount, failedCount, contentIds);
+        return new FestivalSyncResultResponse(contentIds.size(), 0, updatedCount, failedCount, contentIds);
         }
 
 
