@@ -30,7 +30,6 @@ public class GlobalExceptionHandler {
     //400 Bad Request (잘못된 요청값, 비즈니스상 잘못된 인자)
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<com.example.global.rsData.RsData<Void>> handleIllegalArgumentException(IllegalArgumentException e) {
-        log.error("[Exception] 서버 오류 발생 - message={}", e.getMessage(), e);
         return ResponseEntity
                 .badRequest()
                 .body(RsData.fail(e.getMessage()));
