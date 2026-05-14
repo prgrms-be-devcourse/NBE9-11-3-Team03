@@ -119,7 +119,8 @@ public class AdminController {
         String msg = "Blind".equalsIgnoreCase(req.action())
                 ? "리뷰가 블라인드 처리되었습니다."
                 : "리뷰 신고횟수가 초기화 되었습니다.";
-        log.info("[ADMIN] 리뷰 상태 변경 완료 - adminLoginId={}, reviewId={}, action={}, result={}", adminLoginId, reviewId, req.action(), msg);        return ResponseEntity.ok(
+        log.info("[ADMIN] 리뷰 상태 변경 완료 - adminLoginId={}, reviewId={}, action={}, result={}", adminLoginId, reviewId, req.action(), msg);
+        return ResponseEntity.ok(
                 new RsData<>(
                         "200",
                         msg,
@@ -142,7 +143,7 @@ public class AdminController {
         String adminLoginId=authentication.getName();
         log.info("[ADMIN] 회원 강제 탈퇴 요청 - adminLoginId={}, memberId={}", adminLoginId, memberId);
         AdminMemberWithdrawnResponse res= memberService.memberWithdraw(memberId);
-        log.info("[ADMIN] 회원 강제 탈퇴 요청 - adminLoginId={}, memberId={}", adminLoginId, memberId);
+        log.info("[ADMIN] 회원 강제 탈퇴 완료 - adminLoginId={} memberId={}", adminLoginId,memberId);
         return ResponseEntity.ok(
                 new RsData<>(
                         "200",

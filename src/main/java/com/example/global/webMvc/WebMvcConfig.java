@@ -28,13 +28,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     // 로컬 저장소의 파일을 외부에서 URL로 접근 가능하게 매핑합니다.
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 1. OS 환경에 맞춰 안전한 절대 경로 URI (file:///...) 형식으로 자동 변환합니다.
+        // OS 환경에 맞춰 안전한 절대 경로 URI (file:///...) 형식으로 자동 변환합니다.
         String uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize().toUri().toString();
-
-        // 2. 서버 실행 시 콘솔에 찍어서 실제 경로가 맞는지 눈으로 확인합니다.
-        System.out.println("✅ [정적 리소스 매핑 경로] : " + uploadPath);
-
-        // 3. 리소스 핸들러 등록
+        //  리소스 핸들러 등록
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations(uploadPath);
     }
