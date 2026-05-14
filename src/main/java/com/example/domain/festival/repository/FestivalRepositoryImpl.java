@@ -40,7 +40,11 @@ public class FestivalRepositoryImpl implements FestivalRepositoryCustom{
                         statusEquals(searchDto.status()),
                         monthEquals(searchDto.month()),
                         keywordContains(searchDto.keyword()),
-                        nearBy(searchDto.mapX(), searchDto.mapY(), searchDto.radiusKm())
+                        nearBy(
+                                searchDto.mapX(),
+                                searchDto.mapY(),
+                                searchDto.radiusKm()
+                        )
                 )
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -55,7 +59,11 @@ public class FestivalRepositoryImpl implements FestivalRepositoryCustom{
                         statusEquals(searchDto.status()),
                         monthEquals(searchDto.month()),
                         keywordContains(searchDto.keyword()),
-                        nearBy(searchDto.mapX(), searchDto.mapY(), searchDto.radiusKm())
+                        nearBy(
+                                searchDto.mapX(),
+                                searchDto.mapY(),
+                                searchDto.radiusKm()
+                        )
                 );
 
         return PageableExecutionUtils.getPage(content, pageable, contentQuery::fetchOne);
@@ -67,7 +75,11 @@ public class FestivalRepositoryImpl implements FestivalRepositoryCustom{
                 .selectFrom(festival)
                 .where(
                         festival.status.in(FestivalStatus.ONGOING, FestivalStatus.UPCOMING),
-                        nearBy(searchDto.mapX(), searchDto.mapY(), searchDto.radiusKm())
+                        nearBy(
+                                searchDto.mapX(),
+                                searchDto.mapY(),
+                                searchDto.radiusKm()
+                        )
                 )
                 .fetch();
     }
