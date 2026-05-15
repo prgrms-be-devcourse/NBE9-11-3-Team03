@@ -41,7 +41,6 @@ public class FestivalAdminController {
         // API 전체 응답 시간 측정 시작
         long apiStart = System.currentTimeMillis();
 
-
         FestivalSyncResultResponse listResult =
                 festivalSyncService.syncFestivalList(pageNo, numOfRows, eventStartDate);
 
@@ -50,11 +49,7 @@ public class FestivalAdminController {
                 festivalSyncService.collectDetailEnrichTargetContentIds(listResult.getChangedContentIds());
 
         // 수집된 대상 기준으로 상세 보강 이벤트 발행
-        if (targetContentIds == null || targetContentIds.isEmpty()) {
-            festivalSyncService.notifyFestivalSyncResultOnly(listResult);
-        } else {
-            festivalSyncService.publishSyncCompletedEvent(targetContentIds, listResult);
-        }
+        festivalSyncService.publishSyncCompletedEvent(targetContentIds, listResult);
 
         FestivalSyncResponse response = new FestivalSyncResponse(
                 listResult.getTotalCount(),
