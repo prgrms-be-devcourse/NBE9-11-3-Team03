@@ -118,12 +118,12 @@ public class MyPageController {
             HttpServletResponse response
     ) {
         //비밀번호, 비밀번호 확인이 맞나 확인
-        if (!req.password().equals(req.passwordConfirm())) {
+        if (!req.getPassword().equals(req.getPasswordConfirm())) {
             throw new BadRequestException("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
         }
         WithdrawResponse res = authService.selfWithdraw(
                 authentication.getName(),
-                req.password(),
+                req.getPassword(),
                 // 탈퇴 요청에 사용된 access token을 blacklist 처리하기 위해 전달.
                 tokenCookieManager.resolveAccessToken(request)
         );
