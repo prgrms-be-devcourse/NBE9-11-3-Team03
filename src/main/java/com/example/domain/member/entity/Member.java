@@ -11,7 +11,6 @@ import lombok.*;
 
 @Entity
 @Table(name = "member")
-@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 @AllArgsConstructor
@@ -99,6 +98,38 @@ public class Member extends BaseEntity {
         this.role = role;
     }
 
+    public String getMemberName() {
+        return memberName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getLoginId() {
+        return loginId;
+    }
+
+    public Integer getReportCount() {
+        return reportCount;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public MemberStatus getStatus() {
+        return status;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
     public static Member create(
             String userName,
             String password,
@@ -125,9 +156,7 @@ public class Member extends BaseEntity {
         this.email = "withdrawn_" + this.getId() + "@deleted.local";
         this.nickname = "탈퇴한회원_" + this.getId();
     }
-
     //신고횟수 증가
     public void increaseReportCount() {
         this.reportCount++;
-    }
-}
+    }}

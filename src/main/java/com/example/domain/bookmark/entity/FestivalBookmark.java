@@ -17,8 +17,6 @@ import lombok.NoArgsConstructor;
                 )
         }
 )
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FestivalBookmark extends BaseCreatedEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
@@ -27,6 +25,18 @@ public class FestivalBookmark extends BaseCreatedEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "festival_id", nullable = false)
     private Festival festival;
+
+    //기본 생성자
+    public FestivalBookmark() {
+    }
+
+    public Festival getFestival() {
+        return festival;
+    }
+
+    public Member getMember() {
+        return member;
+    }
 
     //TODOS 생성자 구현
     public FestivalBookmark(Member member, Festival festival) {
