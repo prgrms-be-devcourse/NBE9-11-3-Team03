@@ -29,10 +29,12 @@ public class Member extends BaseEntity {
     private String email;
 
     @Column(name = "report_count", nullable = false)
+    @Builder.Default
     private Integer reportCount = 0;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
     private MemberStatus status = MemberStatus.ACTIVE;
 
     @Column(nullable = false, unique = true)
@@ -40,6 +42,7 @@ public class Member extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @Builder.Default
     private Role role = Role.USER;
 
     public Member(
