@@ -12,8 +12,8 @@ data class ReviewUpdateRequest(
 
     val isDeleteImage: Boolean = false,
 
-    @field:NotNull(message = "평점은 필수입니다.")
+
     @field:Min(value = 1, message = "평점은 1점부터 5점까지 입력 가능합니다.")
     @field:Max(value = 5, message = "평점은 1점부터 5점까지 입력 가능합니다.")
-    val rating: Int
+    val rating: Int = 1
 )

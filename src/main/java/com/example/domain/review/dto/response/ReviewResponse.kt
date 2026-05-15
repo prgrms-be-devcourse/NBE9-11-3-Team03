@@ -15,7 +15,7 @@ data class ReviewResponse(
     val reportCount: Int,
     val status: String,
     val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime?
+    val updatedAt: LocalDateTime
 ) {
     constructor(review: Review) : this(
         reviewId = review.id,

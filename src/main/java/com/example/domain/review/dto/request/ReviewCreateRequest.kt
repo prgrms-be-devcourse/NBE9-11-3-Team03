@@ -17,5 +17,5 @@ data class ReviewCreateRequest(
     @field:Min(value = 1, message = "평점은 1점부터 5점까지 입력 가능합니다.")
     @field:Max(value = 5, message = "평점은 1점부터 5점까지 입력 가능합니다.")
     @field:Schema(description = "별점", example = "5")
-    val rating: Int? = null
+    val rating: Int = 1
 )
