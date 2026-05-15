@@ -29,8 +29,6 @@ class FestivalApiBody {
         items = try {
             OBJECT_MAPPER.treeToValue(itemsNode, FestivalApiItems::class.java)
         } catch (e: Exception) {
-            println("items 파싱 실패: $itemsNode")
-            e.printStackTrace()
             null
         }
     }
