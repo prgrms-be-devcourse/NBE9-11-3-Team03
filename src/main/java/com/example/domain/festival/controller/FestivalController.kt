@@ -23,7 +23,6 @@ class FestivalController(
     private val festivalService: FestivalService,
 ) {
 
-
     @GetMapping
     @Operation(
         summary = "축제 목록 조회",
@@ -33,17 +32,15 @@ class FestivalController(
         @ParameterObject @ModelAttribute searchDto: FestivalSearchRequest,
         @ParameterObject @PageableDefault(size = 10) pageable: Pageable,
         authentication: Authentication?
-    ): ResponseEntity<RsData<FestivalPageResponse<FestivalListResponse>>> {
-        val loginId = resolveLoginId(authentication)
+    ): ResponseEntity<RsData<FestivalPageResponse<FestivalListResponse>>> = ResponseEntity.ok(
+        RsData.success(
+            "축제 목록 조회 성공",
+            FestivalPageResponse.from(
+                festivalService.searchFestivalsDto(searchDto, pageable, resolveLoginId(authentication))
 
-        val dtoPage = festivalService.searchFestivalsDto(searchDto, pageable, loginId)
-
-        val pageData = FestivalPageResponse.from(dtoPage)
-
-
-        return ResponseEntity.ok(RsData.success("축제 목록 조회 성공", pageData))
-
-    }
+            )
+        )
+    )
 
     @GetMapping("/{id}")
     @Operation(
@@ -53,34 +50,31 @@ class FestivalController(
     fun getFestivalDetail(
         @PathVariable id: Long,
         authentication: Authentication?
-    ): ResponseEntity<RsData<FestivalDetailResponse>> {
-        val loginId = resolveLoginId(authentication)
-        val responseDto = festivalService.getFestivalDetail(id, loginId)
+    ): ResponseEntity<RsData<FestivalDetailResponse>> = ResponseEntity.ok(
+        RsData.success(
+            "축제 상세 조회 성공",
+            festivalService.getFestivalDetail(id, resolveLoginId(authentication))
+        )
+    )
 
-        return ResponseEntity.ok(RsData.success("축제 상세 조회 성공", responseDto))
-
-
-    }
 
     @GetMapping("/nearby")
     @Operation(summary = "위치기반 주변 축제 검색", description = "내 위치(mapX, mapY) 기준으로 반경 내의 축제 목록을 반환합니다.")
     fun getNearbyFestivals(
         @ParameterObject @ModelAttribute searchDto: FestivalSearchRequest
-    ): ResponseEntity<RsData<List<FestivalMarkerResponse>>> {
-        val mapSearchDto = searchDto.applyMapDefaults()
-        val festivals = festivalService.getNearbyMarkers(mapSearchDto)
+    ): ResponseEntity<RsData<List<FestivalMarkerResponse>>> = ResponseEntity.ok(
+        RsData.success(
+            "주변 축제 조회 성공",
+            festivalService.getNearbyMarkers(searchDto.applyMapDefaults())
+                .map(FestivalMarkerResponse::from)
+        )
+    )
 
-        val markerDtoList = festivals.map(FestivalMarkerResponse::from)
-
-        return ResponseEntity.ok(RsData.success( "주변 축제 조회 성공", markerDtoList))
-
-    }
 
     // 비로그인 요청이면 null을 돌려주어 서비스가 찜 여부를 false로 처리하도록 한다.
-    private fun resolveLoginId(authentication: Authentication?): String? {
-        if (authentication == null || !authentication.isAuthenticated) return null
-        val name = authentication.name
-        return if (name == null || name == "anonymousUser") null else name
-
-    }
+    private fun resolveLoginId(authentication: Authentication?): String? =
+        authentication
+            ?.takeIf { it.isAuthenticated }    // 인증된 사용자만 처리
+            ?.name                             // 로그인한 사용자의 ID (예: "user123")
+            ?.takeUnless { it == "anonymousUser" } // 익명 사용자가 아닌 경우만 통과
 }
