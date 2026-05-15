@@ -3,7 +3,6 @@ package com.example.domain.admin.dto.response
 import com.example.domain.member.entity.Member
 import java.time.LocalDateTime
 
-@JvmRecord
 data class MemberDetailResponse(
     val memberId: Long,
     val loginId: String,
