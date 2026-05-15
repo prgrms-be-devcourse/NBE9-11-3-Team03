@@ -1,6 +1,6 @@
-package com.example.domain.admin.dto.request;
+package com.example.domain.admin.dto.request
 
-public record ReviewProcessRequest(
-        String action //BLIND, DISMISS
-) {
-}
+@JvmRecord
+data class ReviewProcessRequest(
+    @JvmField val action: String //BLIND, DISMISS
+)

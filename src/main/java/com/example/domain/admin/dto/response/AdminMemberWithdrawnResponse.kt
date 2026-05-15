@@ -1,16 +1,20 @@
-package com.example.domain.admin.dto.response;
+package com.example.domain.admin.dto.response
 
-import com.example.domain.member.entity.Member;
-import com.example.domain.member.entity.MemberStatus;
+import com.example.domain.member.entity.Member
+import com.example.domain.member.entity.MemberStatus
 
-public record AdminMemberWithdrawnResponse(
-        Long memberId,
-        MemberStatus status
+@JvmRecord
+data class AdminMemberWithdrawnResponse(
+    val memberId: Long,
+    val status: MemberStatus
 ) {
-    public static AdminMemberWithdrawnResponse from(Member member){
-        return new AdminMemberWithdrawnResponse(
+    companion object {
+        @JvmStatic
+        fun from(member: Member): AdminMemberWithdrawnResponse {
+            return AdminMemberWithdrawnResponse(
                 member.getId(),
                 member.getStatus()
-        );
+            )
+        }
     }
 }

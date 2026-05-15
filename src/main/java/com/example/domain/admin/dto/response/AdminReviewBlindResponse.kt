@@ -1,10 +1,10 @@
-package com.example.domain.admin.dto.response;
+package com.example.domain.admin.dto.response
 
-import com.example.domain.review.entity.ReviewStatus;
+import com.example.domain.review.entity.ReviewStatus
 
-public record AdminReviewBlindResponse(
-        Long reviewId,
-        ReviewStatus status,
-        Integer reportCount
-) {
-}
+@JvmRecord
+data class AdminReviewBlindResponse(
+    val reviewId: Long,
+    val status: ReviewStatus,
+    val reportCount: Int
+)

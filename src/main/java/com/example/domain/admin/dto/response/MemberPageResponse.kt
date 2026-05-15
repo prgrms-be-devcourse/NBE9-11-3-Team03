@@ -1,27 +1,26 @@
-package com.example.domain.admin.dto.response;
+package com.example.domain.admin.dto.response
 
-import com.example.domain.member.entity.Member;
-import org.springframework.data.domain.Page;
+import com.example.domain.member.entity.Member
+import org.springframework.data.domain.Page
 
-import java.util.List;
-
-public record MemberPageResponse(
-        List<MemberDetailResponse> content,
-        int page,
-        int size,
-        long totalElements,
-        int totalPages
+data class MemberPageResponse(
+    val content: List<MemberDetailResponse>,
+    val page: Int,
+    val size: Int,
+    val totalElements: Long,
+    val totalPages: Int
 ) {
-    public static MemberPageResponse from(Page<Member> memberPage){
-        return new MemberPageResponse(
-                memberPage.getContent().stream()
-                        .map(MemberDetailResponse::from)
-                        .toList()
-                ,
-                memberPage.getNumber(),
-                memberPage.getSize(),
-                memberPage.getTotalElements(),
-                memberPage.getTotalPages()
-        );
+    companion object {
+        @JvmStatic
+        fun from(memberPage: Page<Member>): MemberPageResponse {
+            return MemberPageResponse(
+                content = memberPage.content
+                    .map { MemberDetailResponse.from(it) },
+                page = memberPage.number,
+                size = memberPage.size,
+                totalElements = memberPage.totalElements,
+                totalPages = memberPage.totalPages
+            )
+        }
     }
 }

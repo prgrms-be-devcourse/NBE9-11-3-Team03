@@ -12,8 +12,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Review extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -29,6 +27,7 @@ public class Review extends BaseEntity {
 
     private String image;
 
+
     @Min(value = 1, message = "평점은 최소 1점입니다.")
     @Max(value = 5, message = "평점은 최대 5점입니다.")
     @Column(nullable = false)
@@ -43,6 +42,42 @@ public class Review extends BaseEntity {
 
     @Column(nullable = false)
     private Integer reportCount = 0;
+
+
+    public Review() {
+    }
+
+    public Member getMember() {
+        return member;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public Festival getFestival() {
+        return festival;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public Integer getRating() {
+        return rating;
+    }
+
+    public ReviewStatus getStatus() {
+        return status;
+    }
+
+    public Integer getReportCount() {
+        return reportCount;
+    }
+
+    public Integer getLikeCount() {
+        return likeCount;
+    }
 
     @Builder
     public Review(Member member, Festival festival, String content, String image, Integer rating) {

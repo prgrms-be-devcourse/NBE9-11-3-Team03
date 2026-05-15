@@ -1,30 +1,36 @@
-package com.example.domain.admin.dto.response;
+package com.example.domain.admin.dto.response
 
-import com.example.domain.review.entity.Review;
-import com.example.domain.review.entity.ReviewStatus;
+import com.example.domain.review.entity.Review
+import com.example.domain.review.entity.ReviewStatus
+import java.time.LocalDateTime
 
-import java.time.LocalDateTime;
-
-public record AdminReviewReportResponse(
-        Long reviewId,
-        Long festivalId,
-        Long memberId,
-        String authorNickname,
-        String content,
-        Integer reportCount,
-        LocalDateTime createdAt,
-        ReviewStatus status
+/**
+ * 관리자용 리뷰 신고 응답 DTO
+ */
+@JvmRecord
+data class AdminReviewReportResponse(
+    val reviewId: Long,
+    val festivalId: Long,
+    val memberId: Long,
+    val authorNickname: String,
+    val content: String,
+    val reportCount: Int,
+    val createdAt: LocalDateTime,
+    val status: ReviewStatus
 ) {
-    public static AdminReviewReportResponse from(Review review){
-        return new AdminReviewReportResponse(
-                review.getId(),
-                review.getFestival().getId(),
-                review.getMember().getId(),
-                review.getMember().getNickname(),
-                review.getContent(),
-                review.getReportCount(),
-                review.getCreatedAt(),
-                review.getStatus()
-        );
+    companion object {
+        @JvmStatic
+        fun from(review: Review): AdminReviewReportResponse {
+            return AdminReviewReportResponse(
+                reviewId = review.id,
+                festivalId = review.festival.id,
+                memberId = review.member.id,
+                authorNickname = review.member.nickname,
+                content = review.content,
+                reportCount = review.reportCount,
+                createdAt = review.createdAt,
+                status = review.status
+            )
+        }
     }
 }
