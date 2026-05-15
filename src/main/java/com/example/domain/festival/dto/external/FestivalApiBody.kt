@@ -26,11 +26,7 @@ class FestivalApiBody {
             return
         }
 
-        items = try {
-            OBJECT_MAPPER.treeToValue(itemsNode, FestivalApiItems::class.java)
-        } catch (e: Exception) {
-            null
-        }
+        items = OBJECT_MAPPER.treeToValue(itemsNode, FestivalApiItems::class.java)
     }
 
     companion object {

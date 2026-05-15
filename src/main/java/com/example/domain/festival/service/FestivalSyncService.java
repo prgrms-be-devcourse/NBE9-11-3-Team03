@@ -54,6 +54,15 @@ public class FestivalSyncService {
                     syncResult.getUpdatedCount(),
                     syncResult.getFailedCount());
 
+            if (syncResult.getTotalCount() == 0 && syncResult.getFailedCount() > 0) {
+                log.warn("[FestivalScheduler] 목록 동기화 실패로 상세 보강을 건너뜁니다. failed={}",
+                        syncResult.getFailedCount());
+
+                notifyFestivalSyncResultOnly(syncResult);
+                log.info("[FestivalScheduler] 축제 동기화 종료");
+                return;
+            }
+
             List<String> detailTargetContentIds =
                     collectDetailEnrichTargetContentIds(syncResult.getChangedContentIds());
 
@@ -79,8 +88,23 @@ public class FestivalSyncService {
         long totalStart = System.currentTimeMillis();
         long apiStart = System.currentTimeMillis();
 
-        FestivalApiResponse response =
-                festivalApiClient.fetchFestivalList(pageNo, numOfRows, eventStartDate);
+        FestivalApiResponse response;
+
+        try {
+            response = festivalApiClient.fetchFestivalList(pageNo, numOfRows, eventStartDate);
+        } catch (Exception e) {
+            long apiEnd = System.currentTimeMillis();
+
+            log.error("[FestivalSync] 목록 API 응답 처리 실패 - pageNo={}, numOfRows={}, eventStartDate={}, apiTimeMs={}, message={}",
+                    pageNo,
+                    numOfRows,
+                    eventStartDate,
+                    apiEnd - apiStart,
+                    e.getMessage(),
+                    e);
+
+            return new FestivalSyncResultResponse(0, 0, 0, 1, List.of());
+        }
 
         // 동기화 소요 시간 측정
         long apiEnd = System.currentTimeMillis();
