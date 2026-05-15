@@ -43,7 +43,9 @@ public class SlackNotificationService {
             log.info("[Slack] 알림 전송 완료");
 
         } catch (Exception e) {
-            log.error("[Slack] 알림 전송 실패: {}", e.getMessage());
+            log.error("[Slack] 알림 전송 실패 - message={}",
+                    e.getMessage(),
+                    e);
         }
     }
 }
