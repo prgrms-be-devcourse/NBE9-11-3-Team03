@@ -1,19 +1,22 @@
-package com.example.domain.festival.dto.response;
+package com.example.domain.festival.dto.response
 
-import com.example.domain.festival.entity.Festival;
+import com.example.domain.festival.entity.Festival
 
-public record FestivalMarkerResponse(
-        Long id,
-        String title,
-        Double mapX,
-        Double mapY
+data class FestivalMarkerResponse(
+    val id: Long,
+    val title: String,
+    val mapX: Double,
+    val mapY: Double,
 ) {
-    public static FestivalMarkerResponse from(Festival festival) {
-        return new FestivalMarkerResponse(
-                festival.getId(),
-                festival.getTitle(),
-                festival.getMapX(),
-                festival.getMapY()
-        );
+    companion object {
+        @JvmStatic
+        fun from(festival: Festival) = FestivalMarkerResponse(
+            id = festival.id,
+            title = festival.title,
+            mapX = festival.mapX,
+            mapY = festival.mapY,
+
+            )
+
     }
 }

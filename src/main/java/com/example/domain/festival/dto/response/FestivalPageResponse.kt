@@ -1,25 +1,23 @@
-package com.example.domain.festival.dto.response;
+package com.example.domain.festival.dto.response
 
-import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Page
 
-import java.util.List;
-
-public record FestivalPageResponse<T>(
-        int page,
-        int size,
-        long totalElements,
-        int totalPages,
-        boolean hasNext,
-        List<T> content
+data class FestivalPageResponse<T>(
+    val page: Int,
+    val size: Int,
+    val totalElements: Long,
+    val totalPages: Int,
+    val hasNext: Boolean,
+    val content: List<T>,
 ) {
-    public static <T> FestivalPageResponse<T> from(Page<T> page) {
-        return new FestivalPageResponse<>(
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.getTotalPages(),
-                page.hasNext(), // 💡 다음 페이지 존재 여부 추가
-                page.getContent()
-        );
+    companion object {
+        fun <T> from(page: Page<T>) = FestivalPageResponse(
+            page = page.number,
+            size = page.size,
+            totalElements = page.totalElements,
+            totalPages = page.totalPages,
+            hasNext = page.hasNext(),
+            content = page.content,
+        )
     }
 }

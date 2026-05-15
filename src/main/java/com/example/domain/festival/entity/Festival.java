@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
-@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -105,6 +104,74 @@ public class Festival extends BaseEntity {
     }
     public void updateAverageRating(Double averageRating) {
         this.averageRate = averageRating;
+    }
+
+    public String getContentId() {
+        return contentId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getOverview() {
+        return overview;
+    }
+
+    public String getContactNumber() {
+        return contactNumber;
+    }
+
+    public String getFirstImageUrl() {
+        return firstImageUrl;
+    }
+
+    public String getThumbnailUrl() {
+        return thumbnailUrl;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public String getHomepageUrl() {
+        return homepageUrl;
+    }
+
+    public LocalDateTime getStartDate() {
+        return startDate;
+    }
+
+    public LocalDateTime getEndDate() {
+        return endDate;
+    }
+
+    public Double getMapX() {
+        return mapX;
+    }
+
+    public Double getMapY() {
+        return mapY;
+    }
+
+    public String getlDongRegnCd() {
+        return lDongRegnCd;
+    }
+
+    public FestivalStatus getStatus() {
+        return status;
+    }
+
+    public Integer getViewCount() {
+        return viewCount;
+    }
+
+    public Integer getBookMarkCount() {
+        return bookMarkCount;
+    }
+
+    public Double getAverageRate() {
+        return averageRate;
     }
 
     //기존 축제 데이터 갱신용 메서드 (목록동기화)

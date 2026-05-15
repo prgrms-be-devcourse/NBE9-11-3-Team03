@@ -1,46 +1,47 @@
-package com.example.domain.festival.dto.response;
+package com.example.domain.festival.dto.response
 
-import com.example.domain.festival.entity.Festival;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.example.domain.festival.entity.Festival
+import com.fasterxml.jackson.annotation.JsonProperty
+import java.time.LocalDate
 
-import java.time.LocalDate;
-
-public record FestivalDetailResponse(
-        Long id,
-        String title,
-        String firstImageUrl,
-        LocalDate startDate,
-        LocalDate endDate,
-        String address,
-        String contactNumber,
-        String homepageUrl,
-        String status,
-        String overview,
-        Double mapX,
-        Double mapY,
-        Integer viewCount,
-        Integer bookMarkCount,
-        Double averageRate,
-        @JsonProperty("isBookmarked") boolean isBookmarked
+data class FestivalDetailResponse(
+    val id: Long,
+    val title: String,
+    val firstImageUrl: String?,
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+    val address: String,
+    val contactNumber: String?,
+    val homepageUrl: String?,
+    val status: String,
+    val overview: String,
+    val mapX: Double,
+    val mapY: Double,
+    val viewCount: Int,
+    val bookMarkCount: Int,
+    val averageRate: Double,
+    @get:JsonProperty("isBookmarked")
+    val isBookmarked: Boolean,
 ) {
-    public static FestivalDetailResponse from(Festival festival, boolean isBookmarked) {
-        return new FestivalDetailResponse(
-                festival.getId(),
-                festival.getTitle(),
-                festival.getFirstImageUrl(),
-                festival.getStartDate().toLocalDate(),
-                festival.getEndDate().toLocalDate(),
-                festival.getAddress(),
-                festival.getContactNumber(),
-                festival.getHomepageUrl(),
-                festival.getStatus().name(),
-                festival.getOverview(),
-                festival.getMapX(),
-                festival.getMapY(),
-                festival.getViewCount(),
-                festival.getBookMarkCount(),
-                festival.getAverageRate(),
-                isBookmarked
-        );
+    companion object {
+        @JvmStatic
+        fun from(festival: Festival, isBookmarked: Boolean) = FestivalDetailResponse(
+            id = festival.id,
+            title = festival.title,
+            firstImageUrl = festival.firstImageUrl,
+            startDate = festival.startDate.toLocalDate(),
+            endDate = festival.endDate.toLocalDate(),
+            address = festival.address,
+            contactNumber = festival.contactNumber,
+            homepageUrl = festival.homepageUrl,
+            status = festival.status.name,
+            overview = festival.overview,
+            mapX = festival.mapX,
+            mapY = festival.mapY,
+            viewCount = festival.viewCount,
+            bookMarkCount = festival.bookMarkCount,
+            averageRate = festival.averageRate,
+            isBookmarked = isBookmarked,
+        )
     }
 }

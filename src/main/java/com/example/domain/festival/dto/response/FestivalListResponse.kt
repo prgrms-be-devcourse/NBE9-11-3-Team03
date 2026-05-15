@@ -1,36 +1,39 @@
-package com.example.domain.festival.dto.response;
+package com.example.domain.festival.dto.response
 
-import com.example.domain.festival.entity.Festival;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.example.domain.festival.entity.Festival
+import com.fasterxml.jackson.annotation.JsonProperty
+import java.time.LocalDate
 
-import java.time.LocalDate;
-
-public record FestivalListResponse(
-        Long id,
-        String title,
-        String thumbnail,
-        LocalDate startDate,
-        LocalDate endDate,
-        String address,
-        String status,
-        Integer viewCount,
-        Integer bookMarkCount,
-        Double averageRate,
-        @JsonProperty("isBookmarked") boolean isBookmarked
+data class FestivalListResponse(
+    val id: Long,
+    val title: String,
+    val thumbnail: String,
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+    val address: String,
+    val status: String,
+    val viewCount: Int,
+    val bookMarkCount: Int,
+    val averageRate: Double,
+    @get:JsonProperty("isBookmarked")
+    val isBookmarked: Boolean,
 ) {
-    public static FestivalListResponse from(Festival festival, boolean isBookmarked) {
-        return new FestivalListResponse(
-                festival.getId(),
-                festival.getTitle(),
-                festival.getThumbnailUrl(),
-                festival.getStartDate().toLocalDate(),
-                festival.getEndDate().toLocalDate(),
-                festival.getAddress(),
-                festival.getStatus().name(),
-                festival.getViewCount(),
-                festival.getBookMarkCount(),
-                festival.getAverageRate(),
-                isBookmarked
-        );
+    companion object {
+        @JvmStatic
+        fun from(festival: Festival, isBookmarked: Boolean): FestivalListResponse {
+            return FestivalListResponse(
+                id = festival.id,
+                title = festival.title,
+                thumbnail = festival.thumbnailUrl,
+                startDate = festival.startDate.toLocalDate(),
+                endDate = festival.endDate.toLocalDate(),
+                address = festival.address,
+                status = festival.status.name,
+                viewCount = festival.viewCount,
+                bookMarkCount = festival.bookMarkCount,
+                averageRate = festival.averageRate,
+                isBookmarked = isBookmarked,
+            )
+        }
     }
 }
