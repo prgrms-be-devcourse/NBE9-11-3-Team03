@@ -10,7 +10,6 @@ import com.example.domain.review.service.ReviewService
 import com.example.global.rsData.RsData
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
-import lombok.extern.slf4j.Slf4j
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
