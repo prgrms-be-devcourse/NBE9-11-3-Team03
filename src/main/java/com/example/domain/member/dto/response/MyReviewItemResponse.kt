@@ -9,6 +9,7 @@ data class MyReviewItemResponse(
     val festivalId: Long,
     val festivalTitle: String,
     val rating: Int,
+
     val content: String,
     val reviewImageUrl: String?,
     val likeCount: Int,
