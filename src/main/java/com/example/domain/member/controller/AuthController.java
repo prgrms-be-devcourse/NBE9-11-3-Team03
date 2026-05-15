@@ -55,7 +55,7 @@ public class AuthController {
     ) {
         LoginResponse response = authService.login(request);
         // refresh token만 HttpOnly 쿠키로 내려줌.
-        tokenCookieManager.addRefreshTokenCookie(httpResponse, response.refreshToken());
+        tokenCookieManager.addRefreshTokenCookie(httpResponse, response.getRefreshToken());
         return ResponseEntity.ok(new ApiRes<>(200, "로그인 성공", response));
     }
 
@@ -70,7 +70,7 @@ public class AuthController {
 
         TokenReissueResponse response = authService.reissue(refreshToken);
         // 새 refresh token도 다시 쿠키에 저장함.
-        tokenCookieManager.addRefreshTokenCookie(httpResponse, response.refreshToken());
+        tokenCookieManager.addRefreshTokenCookie(httpResponse, response.getRefreshToken());
 
         return ResponseEntity.ok(new ApiRes<>(200, "토큰 재발급 성공", response));
     }

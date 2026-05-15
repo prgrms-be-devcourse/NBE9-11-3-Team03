@@ -2,7 +2,6 @@ package com.example.domain.member.dto.response
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 
-@JvmRecord
 data class TokenReissueResponse(
     val accessToken: String,
     @get:JsonIgnore

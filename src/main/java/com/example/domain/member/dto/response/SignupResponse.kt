@@ -4,7 +4,6 @@ import com.example.domain.member.entity.Member
 import com.example.domain.member.entity.MemberStatus
 import com.example.domain.member.entity.Role
 
-@JvmRecord
 data class SignupResponse(
     val memberId: Long,
     val loginId: String,

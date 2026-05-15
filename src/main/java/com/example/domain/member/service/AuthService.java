@@ -47,14 +47,14 @@ public class AuthService {
     public SignupResponse signup(SignupRequest request) {
         validateDuplicateSignupInfo(request);
 
-        String encodedPassword = encodePassword(request.password());
+        String encodedPassword = encodePassword(request.getPassword());
 
         Member member = Member.create(
-                request.userName(),
+                request.getUserName(),
                 encodedPassword,
-                request.loginId(),
-                request.email(),
-                request.nickname()
+                request.getLoginId(),
+                request.getEmail(),
+                request.getNickname()
         );
 
         Member savedMember = memberRepository.save(member);
@@ -66,9 +66,9 @@ public class AuthService {
     // 회원 조회 -> 탈퇴 여부 확인 -> 비밀번호 검증 -> access/refresh token 발급 순서로 진행합니다.
     @Transactional
     public LoginResponse login(LoginRequest request) {
-        Member member = findMemberByLoginId(request.loginId());
+        Member member = findMemberByLoginId(request.getLoginId());
         validateMemberCanLogin(member);
-        validateLoginPassword(request.loginId(), request.password(), member.getPassword());
+        validateLoginPassword(request.getLoginId(), request.getPassword(), member.getPassword());
 
         String accessToken = createAccessToken(member);
         String refreshToken = createAndSaveRefreshToken(member);
@@ -81,7 +81,7 @@ public class AuthService {
     // refresh token이 정상이고 DB에 저장된 값과 같을 때만 새 토큰을 발급함.
     @Transactional
     public TokenReissueResponse reissue(TokenReissueRequest request) {
-        return reissue(request.refreshToken());
+        return reissue(request.getRefreshToken());
     }
 
     @Transactional
@@ -134,15 +134,15 @@ public class AuthService {
     // 지금은 골격 단계이므로 예외는 IllegalArgumentException으로 두고,
     // 이후 커스텀 예외와 전역 예외 처리 단계에서 세분화하면 된다.
     private void validateDuplicateSignupInfo(SignupRequest request) {
-        if (memberRepository.existsByLoginId(request.loginId())) {
+        if (memberRepository.existsByLoginId(request.getLoginId())) {
             throw new DuplicateResourceException("409","이미 사용 중인 아이디입니다.");
         }
 
-        if (memberRepository.existsByEmail(request.email())) {
+        if (memberRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateResourceException("409","이미 사용 중인 이메일입니다.");
         }
 
-        if (memberRepository.existsByNickname(request.nickname())) {
+        if (memberRepository.existsByNickname(request.getNickname())) {
             throw new DuplicateResourceException("409","이미 사용 중인 닉네임입니다.");
         }
     }
