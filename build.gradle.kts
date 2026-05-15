@@ -5,6 +5,7 @@ plugins {
     kotlin("plugin.jpa") version "1.9.25"
     kotlin("plugin.allopen") version "1.9.25"
     kotlin("kapt") version "1.9.25"
+    kotlin("plugin.lombok") version "1.9.25"
 
     id("org.springframework.boot") version "3.5.13"
     id("io.spring.dependency-management") version "1.1.7"
@@ -84,9 +85,9 @@ allOpen {
     annotation("jakarta.persistence.Embeddable")
 }
 
-/*kotlinLombok {
+kotlinLombok {
     lombokConfigurationFile(file("lombok.config"))
-} */
+}
 
 kapt {
     keepJavacAnnotationProcessors = true
