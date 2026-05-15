@@ -41,7 +41,6 @@ public class FestivalAdminController {
         // API 전체 응답 시간 측정 시작
         long apiStart = System.currentTimeMillis();
 
-
         FestivalSyncResultResponse listResult =
                 festivalSyncService.syncFestivalList(pageNo, numOfRows, eventStartDate);
 
