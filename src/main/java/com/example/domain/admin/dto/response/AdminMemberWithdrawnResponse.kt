@@ -3,7 +3,6 @@ package com.example.domain.admin.dto.response
 import com.example.domain.member.entity.Member
 import com.example.domain.member.entity.MemberStatus
 
-@JvmRecord
 data class AdminMemberWithdrawnResponse(
     val memberId: Long,
     val status: MemberStatus

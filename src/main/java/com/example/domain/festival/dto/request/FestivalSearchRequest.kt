@@ -3,28 +3,27 @@ package com.example.domain.festival.dto.request
 import com.example.domain.festival.entity.FestivalStatus
 import io.swagger.v3.oas.annotations.media.Schema
 
-@JvmRecord
 data class FestivalSearchRequest(
     @Schema(description = "지역 코드 (예: 11)", nullable = true)
-    @JvmField val regionCode: String?,
+     val regionCode: String?= null,
 
     @Schema(description = "진행 상태 (예: ONGOING)", nullable = true)
-    @JvmField val status: FestivalStatus?,
+     val status: FestivalStatus?= null,
 
     @Schema(description = "축제 시작 월 (1~12)", nullable = true)
-    @JvmField val month: Int?,
+     val month: Int?= null,
 
     @Schema(description = "검색어", nullable = true)
-    @JvmField val keyword: String?,
+     val keyword: String?= null,
 
     @Schema(description = "내 위치 경도", nullable = true)
-    @JvmField val mapX: Double?,
+     val mapX: Double?= null,
 
     @Schema(description = "내 위치 위도", nullable = true)
-    @JvmField val mapY: Double?,
+     val mapY: Double?= null,
 
     @Schema(description = "검색 반경(km)", nullable = true)
-    @JvmField val radiusKm: Double?
+     val radiusKm: Double?= null,
 ) {
     fun applyMapDefaults() = copy(
         mapX = mapX ?: 126.9780,

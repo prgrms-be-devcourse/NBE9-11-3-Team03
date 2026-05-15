@@ -7,7 +7,6 @@ import java.time.LocalDateTime
 /**
  * 관리자용 리뷰 신고 응답 DTO
  */
-@JvmRecord
 data class AdminReviewReportResponse(
     val reviewId: Long,
     val festivalId: Long,
