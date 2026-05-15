@@ -35,11 +35,7 @@ class SlackNotificationService(
 
             log.info("[Slack] 알림 전송 완료")
         } catch (e: Exception) {
-            log.error(
-                "[Slack] 알림 전송 실패 - message={}",
-                e.message,
-                e
-            )
+            log.error("[Slack] 알림 전송 실패 - message=${e.message}", e)
         }
     }
 

@@ -60,8 +60,6 @@ class FestivalAdminController(
         // API 전체 응답 시간 측정 종료
         val apiEnd = System.currentTimeMillis()
 
-        println("[API 응답 시간] sync-and-enrich : ${apiEnd - apiStart}ms")
-
         val hasFailedItems = listResult.failedCount > 0
         val hasDetailTargets = targetContentIds.isNotEmpty()
 

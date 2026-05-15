@@ -17,10 +17,7 @@ class FestivalSyncScheduler(
         val eventStartDate =
             LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
 
-        log.info(
-            "[FestivalScheduler] 스케줄러 실행 요청 - eventStartDate={}",
-            eventStartDate
-        )
+        log.info("[FestivalScheduler] 스케줄러 실행 요청 - eventStartDate=$eventStartDate")
 
         festivalSyncService.runScheduledSync(eventStartDate, 1, 200)
     }

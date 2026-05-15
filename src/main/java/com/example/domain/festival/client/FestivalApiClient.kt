@@ -63,21 +63,16 @@ class FestivalApiClient(
     private fun executeWithRetry(uri: URI): FestivalApiResponse? {
         for (attempt in 1..MAX_RETRY_COUNT) {
             try {
-                log.debug("[FestivalApi] 외부 API 호출 시도 - attempt={}, uri={}", attempt, uri)
+                log.debug("[FestivalApi] 외부 API 호출 시도 - attempt=$attempt, uri=$uri")
 
                 return restTemplate.getForObject(uri, FestivalApiResponse::class.java)
             } catch (e: TooManyRequests) {
                 // 429는 quota 보호를 위해 즉시 중단
-                log.warn("[FestivalApi] 외부 API 호출 한도 초과 - uri={}", uri)
+                log.warn("[FestivalApi] 외부 API 호출 한도 초과 - uri=$uri")
                 throw e
             } catch (e: HttpServerErrorException) {
                 // 5xx 서버 오류 로그
-                log.warn(
-                    "[FestivalApi] 외부 API 서버 오류 - attempt={}, status={}, uri={}",
-                    attempt,
-                    e.statusCode,
-                    uri
-                )
+                log.warn("[FestivalApi] 외부 API 서버 오류 - attempt=$attempt, status=${e.statusCode}, uri=$uri")
 
                 // 502 / 503 / 504만 재시도
                 if (!isRetryableServerError(e) || attempt == MAX_RETRY_COUNT) {
@@ -107,11 +102,7 @@ class FestivalApiClient(
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
 
-            log.error(
-                "[FestivalApi] 외부 API 재시도 대기 중 인터럽트 발생 - message={}",
-                e.message,
-                e
-            )
+            log.error("[FestivalApi] 외부 API 재시도 대기 중 인터럽트 발생 - message=${e.message}", e)
 
             throw IllegalStateException("외부 API 재시도 대기 중 인터럽트가 발생했습니다.", e)
         }
