@@ -4,7 +4,6 @@ import com.example.domain.member.entity.MemberStatus
 import com.example.domain.member.entity.Role
 import com.fasterxml.jackson.annotation.JsonIgnore
 
-@JvmRecord
 data class LoginResponse(
     val accessToken: String?,
     @get:JsonIgnore

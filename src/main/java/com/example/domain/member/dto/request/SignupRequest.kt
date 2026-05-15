@@ -3,7 +3,6 @@ package com.example.domain.member.dto.request
 import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 
-@JvmRecord
 data class SignupRequest(
     @field:NotBlank(message = "이름을 입력해주세요.")
     val userName: String?,
