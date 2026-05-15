@@ -105,9 +105,9 @@ public class ReviewService {
         Member loginMember = memberRepository.findByLoginId(loginId)
                 .orElseThrow(() -> new UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다."));
 
-        return ReviewPageResponse.builder()
-                .festivalId(festivalId)
-                .content(reviewPage.getContent().stream()
+        return new ReviewPageResponse(
+                festivalId,
+                reviewPage.getContent().stream()
                         .map(review -> {
                             boolean liked = reviewLikeRepository.existsByMemberIdAndReviewId(
                                     loginMember.getId(),
@@ -115,13 +115,13 @@ public class ReviewService {
                             );
                             return ReviewListResponse.from(review, liked);
                         })
-                        .toList())
-                .page(reviewPage.getNumber())
-                .size(reviewPage.getSize())
-                .totalElements(reviewPage.getTotalElements())
-                .totalPages(reviewPage.getTotalPages())
-                .hasNext(reviewPage.hasNext())
-                .build();
+                        .toList(),
+                reviewPage.getNumber(),
+                reviewPage.getSize(),
+                reviewPage.getTotalElements(),
+                reviewPage.getTotalPages(),
+                reviewPage.hasNext()
+        );
     }
 
 
