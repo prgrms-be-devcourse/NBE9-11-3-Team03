@@ -61,11 +61,9 @@ dependencies {
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17")
     // Querydsl (Spring Boot 3.x / Jakarta 환경)
     implementation("com.querydsl:querydsl-jpa:5.0.0:jakarta")
-    kapt("com.querydsl:querydsl-apt:5.0.0:jakarta")
-//    annotationProcessor("jakarta.annotation:jakarta.annotation-api")
-//    annotationProcessor("jakarta.persistence:jakarta.persistence-api")
-    kapt("jakarta.annotation:jakarta.annotation-api")
-    kapt("jakarta.persistence:jakarta.persistence-api")
+    annotationProcessor("com.querydsl:querydsl-apt:5.0.0:jakarta")
+    annotationProcessor("jakarta.annotation:jakarta.annotation-api")
+    annotationProcessor("jakarta.persistence:jakarta.persistence-api")
     implementation("org.jsoup:jsoup:1.17.2") //DB 정제용 의존성추가
 
     runtimeOnly("com.mysql:mysql-connector-j")//mysql 의존성 추가
@@ -75,6 +73,7 @@ dependencies {
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
         freeCompilerArgs.addAll("-Xjsr305=strict")
     }
 }
@@ -90,6 +89,10 @@ kotlinLombok {
 
 kapt {
     keepJavacAnnotationProcessors = true
+    javacOptions {
+        option("-source", "21")
+        option("-target", "21")
+    }
 }
 
 tasks.withType<Test> {

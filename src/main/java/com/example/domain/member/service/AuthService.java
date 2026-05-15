@@ -47,55 +47,41 @@ public class AuthService {
     public SignupResponse signup(SignupRequest request) {
         validateDuplicateSignupInfo(request);
 
-        String encodedPassword = encodePassword(request.getPassword());
+        String encodedPassword = encodePassword(request.password());
 
         Member member = Member.create(
-                request.getUserName(),
+                request.userName(),
                 encodedPassword,
-                request.getLoginId(),
-                request.getEmail(),
-                request.getNickname()
+                request.loginId(),
+                request.email(),
+                request.nickname()
         );
 
         Member savedMember = memberRepository.save(member);
         log.info("[Member] 회원가입 완료 - loginId={}", savedMember.getLoginId());
-        return new SignupResponse(
-                savedMember.getId(),
-                savedMember.getLoginId(),
-                savedMember.getNickname(),
-                savedMember.getRole(),
-                savedMember.getStatus()
-        );
+        return SignupResponse.from(savedMember);
     }
 
     // 2) 로그인
     // 회원 조회 -> 탈퇴 여부 확인 -> 비밀번호 검증 -> access/refresh token 발급 순서로 진행합니다.
     @Transactional
     public LoginResponse login(LoginRequest request) {
-        Member member = findMemberByLoginId(request.getLoginId());
+        Member member = findMemberByLoginId(request.loginId());
         validateMemberCanLogin(member);
-        validateLoginPassword(request.getLoginId(), request.getPassword(), member.getPassword());
+        validateLoginPassword(request.loginId(), request.password(), member.getPassword());
 
         String accessToken = createAccessToken(member);
         String refreshToken = createAndSaveRefreshToken(member);
 
         log.info("[Member] 로그인 성공 - loginId={}", member.getLoginId());
-        return new LoginResponse(
-                accessToken,
-                refreshToken,
-                member.getId(),
-                member.getLoginId(),
-                member.getNickname(),
-                member.getRole(),
-                member.getStatus()
-        );
+        return LoginResponse.of(accessToken, refreshToken, member);
     }
 
     // 3) 토큰 재발급
     // refresh token이 정상이고 DB에 저장된 값과 같을 때만 새 토큰을 발급함.
     @Transactional
     public TokenReissueResponse reissue(TokenReissueRequest request) {
-        return reissue(request.getRefreshToken());
+        return reissue(request.refreshToken());
     }
 
     @Transactional
@@ -148,15 +134,15 @@ public class AuthService {
     // 지금은 골격 단계이므로 예외는 IllegalArgumentException으로 두고,
     // 이후 커스텀 예외와 전역 예외 처리 단계에서 세분화하면 된다.
     private void validateDuplicateSignupInfo(SignupRequest request) {
-        if (memberRepository.existsByLoginId(request.getLoginId())) {
+        if (memberRepository.existsByLoginId(request.loginId())) {
             throw new DuplicateResourceException("409","이미 사용 중인 아이디입니다.");
         }
 
-        if (memberRepository.existsByEmail(request.getEmail())) {
+        if (memberRepository.existsByEmail(request.email())) {
             throw new DuplicateResourceException("409","이미 사용 중인 이메일입니다.");
         }
 
-        if (memberRepository.existsByNickname(request.getNickname())) {
+        if (memberRepository.existsByNickname(request.nickname())) {
             throw new DuplicateResourceException("409","이미 사용 중인 닉네임입니다.");
         }
     }

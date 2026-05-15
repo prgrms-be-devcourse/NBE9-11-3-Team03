@@ -2,7 +2,8 @@ package com.example.domain.member.dto.response
 
 import com.example.domain.member.entity.MemberStatus
 
+@JvmRecord
 data class WithdrawResponse(
-    val memberId: Long?,
-    val status: MemberStatus?,
+    val memberId: Long,
+    val status: MemberStatus
 )
