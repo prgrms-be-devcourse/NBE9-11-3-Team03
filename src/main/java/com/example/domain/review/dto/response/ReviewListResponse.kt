@@ -5,15 +5,15 @@ import com.example.domain.review.entity.Review
 import java.time.LocalDateTime
 
 data class ReviewListResponse(
-    val reviewId: Long?,
-    val memberId: Long?,
-    val festivalId: Long?,
-    val nickname: String?,
-    val content: String?,
-    val rating: Int?,
+    val reviewId: Long,
+    val memberId: Long,
+    val festivalId: Long,
+    val nickname: String,
+    val content: String,
+    val rating: Int,
     val image: String?,
-    val likeCount: Int?,
-    val reportCount: Int?,
+    val likeCount: Int,
+    val reportCount: Int,
     val createdAt: LocalDateTime?,
     val liked: Boolean
 ) {

@@ -4,17 +4,17 @@ import com.example.domain.review.entity.Review
 import java.time.LocalDateTime
 
 data class ReviewResponse(
-    val reviewId: Long?,
-    val festivalId: Long?,
-    val memberId: Long?,
-    val nickname: String?,
-    val content: String?,
+    val reviewId: Long,
+    val festivalId: Long,
+    val memberId: Long,
+    val nickname: String,
+    val content: String,
     val image: String?,
-    val rating: Int?,
-    val likeCount: Int?,
-    val reportCount: Int?,
-    val status: String?,
-    val createdAt: LocalDateTime?,
+    val rating: Int,
+    val likeCount: Int,
+    val reportCount: Int,
+    val status: String,
+    val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime?
 ) {
     constructor(review: Review) : this(

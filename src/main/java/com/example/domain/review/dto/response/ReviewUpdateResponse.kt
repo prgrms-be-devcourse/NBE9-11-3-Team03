@@ -4,12 +4,12 @@ import com.example.domain.review.entity.Review
 import java.time.LocalDateTime
 
 data class ReviewUpdateResponse(
-    val reviewId: Long?,
-    val festivalId: Long?,
-    val rating: Int?,
-    val content: String?,
+    val reviewId: Long,
+    val festivalId: Long,
+    val rating: Int,
+    val content: String,
     val image: String?,
-    val updatedAt: LocalDateTime?
+    val updatedAt: LocalDateTime
 ) {
     companion object {
         @JvmStatic
