@@ -1,13 +1,11 @@
-package com.example.domain.festival.repository;
+package com.example.domain.festival.repository
 
-import com.example.domain.festival.dto.request.FestivalSearchRequest;
-import com.example.domain.festival.entity.Festival;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.example.domain.festival.dto.request.FestivalSearchRequest
+import com.example.domain.festival.entity.Festival
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 
-import java.util.List;
-
-public interface FestivalRepositoryCustom {
-    Page<Festival> searchFestivals(FestivalSearchRequest searchDto, Pageable pageable);
-    List<Festival> findNearbyFestivals(FestivalSearchRequest searchDto);
+interface FestivalRepositoryCustom {
+    fun searchFestivals(searchDto: FestivalSearchRequest, pageable: Pageable): Page<Festival>
+    fun findNearbyFestivals(searchDto: FestivalSearchRequest): List<Festival>
 }
