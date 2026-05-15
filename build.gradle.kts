@@ -60,8 +60,7 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17")
     // Querydsl (Spring Boot 3.x / Jakarta 환경)
-//    implementation("com.querydsl:querydsl-jpa:5.0.0:jakarta")
-//    annotationProcessor("com.querydsl:querydsl-apt:5.0.0:jakarta")
+    implementation("com.querydsl:querydsl-jpa:5.0.0:jakarta")
     kapt("com.querydsl:querydsl-apt:5.0.0:jakarta")
 //    annotationProcessor("jakarta.annotation:jakarta.annotation-api")
 //    annotationProcessor("jakarta.persistence:jakarta.persistence-api")
@@ -76,7 +75,7 @@ dependencies {
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     compilerOptions {
-        freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
+        freeCompilerArgs.addAll("-Xjsr305=strict")
     }
 }
 allOpen {
