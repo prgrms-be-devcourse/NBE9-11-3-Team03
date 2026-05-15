@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.NotNull
 
 data class ReviewCreateRequest(
 
@@ -14,6 +15,7 @@ data class ReviewCreateRequest(
     @field:Schema(description = "리뷰 이미지 URL", example = "https://example.com/review-image.jpg")
     val image: String? = null,
 
+    @field:NotNull(message = "평점은 필수입니다.")
     @field:Min(value = 1, message = "평점은 1점부터 5점까지 입력 가능합니다.")
     @field:Max(value = 5, message = "평점은 1점부터 5점까지 입력 가능합니다.")
     @field:Schema(description = "별점", example = "5")
