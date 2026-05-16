@@ -56,7 +56,7 @@ class FileStorageService {
             val filePath = Paths.get(uploadDir).toAbsolutePath().normalize().resolve(fileName)
             Files.deleteIfExists(filePath)
         } catch (e: IOException) {
-            log.error("파일 삭제 실패: $fileName", e)
+            log.error("파일 삭제 실패: {}", fileName, e);
         }
     }
 

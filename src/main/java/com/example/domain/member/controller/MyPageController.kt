@@ -99,7 +99,7 @@ class MyPageController(
         val res = authService.selfWithdraw(
             authentication.name,
             //Dto에서 검즘을 완료하였으므로, null이 아님을 보장
-            req.password!!,
+            req.password,
             tokenCookieManager.resolveAccessToken(request)
         )
 
