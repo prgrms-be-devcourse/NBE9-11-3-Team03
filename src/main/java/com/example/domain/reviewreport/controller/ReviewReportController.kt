@@ -22,13 +22,12 @@ class ReviewReportController(private val reviewReportService: ReviewReportServic
         summary = "리뷰 신고",
         description = "부적절한 리뷰를 신고합니다. 같은 리뷰를 중복 신고할 수 없습니다. 신고 누적 시 관리자가 리뷰를 블라인드 처리할 수 있습니다."
     )
+    //리뷰를 신고하는 컨트롤러
     fun reportReview(
         @PathVariable reviewId: Long,
         authentication: Authentication
     ): ResponseEntity<ApiRes<ReviewReportResponse>> {
-        // Security에서 인증된 사용자의 loginId를 꺼내 신고 서비스로 전달합니다.
-        val loginId = authentication.name
-        val response = reviewReportService.reportReview(reviewId, loginId)
+        val response = reviewReportService.reportReview(reviewId, authentication.name)
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(ApiRes(201, "리뷰 신고가 성공적으로 접수되었습니다.", response))
     }
