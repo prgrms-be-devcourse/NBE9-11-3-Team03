@@ -11,7 +11,6 @@ import com.example.global.exception.CustomNotFoundException
 import com.example.global.exception.UnauthorizedException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.function.Supplier
 import kotlin.math.max
 
 @Service
