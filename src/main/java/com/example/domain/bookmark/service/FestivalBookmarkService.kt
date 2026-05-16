@@ -55,8 +55,8 @@ class FestivalBookmarkService(
         // 북마크 삭제 및 카운트 감소
         festivalBookmarkRepository
             .findByMemberIdAndFestivalId(member.id, festivalId)
-            .orElseThrow { BadRequestException("찜하지 않은 축제입니다.") }
-            .also { festivalBookmarkRepository.delete(it) }
+            ?.also { festivalBookmarkRepository.delete(it) }
+            ?: throw BadRequestException("찜하지 않은 축제입니다.")
 
         festivalBookmarkRepository.flush()
         festivalRepository.decreaseBookmarkCount(festivalId)
