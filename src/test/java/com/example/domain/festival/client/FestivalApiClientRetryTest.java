@@ -26,7 +26,7 @@ class FestivalApiClientRetryTest {
     @BeforeEach
     void setUp() {
         restTemplate = mock(RestTemplate.class);
-        festivalApiClient = new FestivalApiClient(restTemplate);
+        festivalApiClient = new FestivalApiClient(restTemplate, "test-key", "https://test.com");
 
         ReflectionTestUtils.setField(festivalApiClient, "serviceKey", "test-key");
         ReflectionTestUtils.setField(festivalApiClient, "baseUrl", "http://test.com");
