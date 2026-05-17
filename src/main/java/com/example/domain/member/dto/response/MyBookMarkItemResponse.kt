@@ -18,11 +18,11 @@ data class MyBookMarkItemResponse(
         fun from(festivalBookmark: FestivalBookmark): MyBookMarkItemResponse {
             return MyBookMarkItemResponse(
                 festivalBookmark.getId(),
-                festivalBookmark.getFestival().getId(),
-                festivalBookmark.getFestival().getTitle(),
-                festivalBookmark.getFestival().getAddress(),
-                festivalBookmark.getFestival().getStartDate(),
-                festivalBookmark.getFestival().getEndDate(),
+                festivalBookmark.festival.getId(),
+                festivalBookmark.festival.getTitle(),
+                festivalBookmark.festival.getAddress(),
+                festivalBookmark.festival.getStartDate(),
+                festivalBookmark.festival.getEndDate(),
                 festivalBookmark.getCreatedAt()
             )
         }

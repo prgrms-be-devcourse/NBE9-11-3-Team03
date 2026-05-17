@@ -73,7 +73,7 @@ class ReviewReportServiceTest {
 
             ReviewReportResponse result = reviewReportService.reportReview(reviewId, loginId);
 
-            assertThat(result.reportId).isEqualTo(100L);
+            assertThat(result.getReportId()).isEqualTo(100L);
             verify(reviewReportRepository).save(any(ReviewReport.class));
             verify(reviewRepository).increaseReportCount(reviewId);
         }
