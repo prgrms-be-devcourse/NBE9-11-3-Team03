@@ -42,11 +42,11 @@ class AuthService(
 
         val encodedPassword = encodePassword(request.password)
         val member = Member.create(
-            request.userName,
+            request.userName!!,
             encodedPassword,
-            request.loginId,
-            request.email,
-            request.nickname
+            request.loginId!!,
+            request.email!!,
+            request.nickname!!
         )
 
         val savedMember = memberRepository.save(member)
@@ -208,13 +208,13 @@ class AuthService(
     }
 
     private fun validateRefreshTokenActive(refreshToken: RefreshToken) {
-        if (!refreshToken.isActive) {
+        if (!refreshToken.isActive()) {
             throw UnauthorizedException("사용할 수 없는 refresh token입니다.")
         }
     }
 
     private fun validateRefreshTokenNotExpired(refreshToken: RefreshToken) {
-        if (refreshToken.isExpired) {
+        if (refreshToken.isExpired()) {
             log.warn("[Member] 만료된 리프레시 토큰 - memberId={}", refreshToken.member.id)
             refreshTokenRepository.delete(refreshToken)
             throw UnauthorizedException("만료된 refresh token입니다.")
