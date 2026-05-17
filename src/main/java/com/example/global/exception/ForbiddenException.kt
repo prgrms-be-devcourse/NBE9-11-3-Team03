@@ -1,7 +1,3 @@
-package com.example.global.exception;
+package com.example.global.exception
 
-public class ForbiddenException extends RuntimeException {
-    public ForbiddenException(String message) {
-        super(message);
-    }
-}
+class ForbiddenException(message: String) : RuntimeException(message)

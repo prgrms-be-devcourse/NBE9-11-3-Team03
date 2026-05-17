@@ -152,7 +152,7 @@ public class GlobalExceptionHandler {
     //404 존재하지않는 엔티티일시
     @ExceptionHandler(CustomNotFoundException.class)
     public ResponseEntity<RsData<Void>> handleCustomNotFoundException(CustomNotFoundException e){
-        RsData res = new RsData<>(e.getStatus(),e.getMessage());
+        RsData res = new RsData<>(e.status,e.getMessage());
         return new ResponseEntity<>(res,HttpStatus.NOT_FOUND);
     }
 
@@ -169,7 +169,7 @@ public class GlobalExceptionHandler {
     // 409 Conflict (데이터 중복)
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<RsData<Void>> handleDuplicateResourceException(DuplicateResourceException e) {
-        RsData res = new RsData<>(e.getStatusCode(),e.getMessage());
+        RsData res = new RsData<>(e.statusCode,e.getMessage());
         return new ResponseEntity<>(res,HttpStatus.CONFLICT);
     }
 

@@ -1,7 +1,3 @@
-package com.example.global.exception;
+package com.example.global.exception
 
-public class BadRequestException extends RuntimeException {
-    public BadRequestException(String message) {
-        super(message);
-    }
-}
+class BadRequestException(message: String) : RuntimeException(message)

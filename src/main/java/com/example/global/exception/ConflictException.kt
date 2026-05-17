@@ -1,7 +1,3 @@
-package com.example.global.exception;
+package com.example.global.exception
 
-public class ConflictException extends RuntimeException {
-    public ConflictException(String message) {
-        super(message);
-    }
-}
+class ConflictException(message: String) : RuntimeException(message)
