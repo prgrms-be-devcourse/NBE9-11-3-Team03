@@ -10,15 +10,12 @@ import com.querydsl.core.types.dsl.BooleanExpression
 import com.querydsl.core.types.dsl.CaseBuilder
 import com.querydsl.core.types.dsl.Expressions
 import com.querydsl.jpa.impl.JPAQueryFactory
-import lombok.AllArgsConstructor
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.support.PageableExecutionUtils
 import org.springframework.stereotype.Repository
-import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 import java.time.YearMonth
-import java.util.function.LongSupplier
 
 @Repository
 class FestivalRepositoryImpl(
@@ -64,7 +61,6 @@ class FestivalRepositoryImpl(
 
     private fun festivalSort(pageable: Pageable): Array<OrderSpecifier<*>> {
         val festival = QFestival.festival
-        val orderSpecifiers: MutableList<OrderSpecifier<*>> = ArrayList<OrderSpecifier<*>>()
         val specs = mutableListOf<OrderSpecifier<*>>()
 
         //1순위 룰 -> sort 조건과 관계없이 상태값 정렬(진행중>예정>종료)
