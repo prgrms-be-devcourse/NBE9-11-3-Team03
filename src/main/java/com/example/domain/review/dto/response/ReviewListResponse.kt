@@ -1,50 +1,46 @@
-package com.example.domain.review.dto.response;
+package com.example.domain.review.dto.response
 
+import com.example.domain.member.entity.MemberStatus
+import com.example.domain.review.entity.Review
+import java.time.LocalDateTime
 
-import com.example.domain.member.entity.Member;
-import com.example.domain.member.entity.MemberStatus;
-import com.example.domain.review.entity.Review;
-import lombok.Builder;
-import lombok.Getter;
+data class ReviewListResponse(
+    val reviewId: Long,
+    val memberId: Long,
+    val festivalId: Long,
+    val nickname: String,
+    val content: String,
+    val rating: Int,
+    val image: String?,
+    val likeCount: Int,
+    val reportCount: Int,
+    val createdAt: LocalDateTime?,
+    val liked: Boolean
+) {
+    companion object {
+        @JvmStatic
+        fun from(review: Review, liked: Boolean): ReviewListResponse {
+            val member = review.member
 
-import java.time.LocalDateTime;
+            val displayName = if (member.status == MemberStatus.WITHDRAWN) {
+                "탈퇴된 회원입니다."
+            } else {
+                member.nickname
+            }
 
-@Getter
-@Builder
-public class ReviewListResponse {
-
-    private Long reviewId;
-    private Long memberId;
-    private Long festivalId;
-    private String nickname;
-    private String content;
-    private Integer rating;
-    private String image;
-    private Integer likeCount;
-    private Integer reportCount;
-    private LocalDateTime createdAt;
-    private boolean liked;
-
-    public static ReviewListResponse from(Review review, boolean liked) {
-        Member member = review.getMember();
-        String displayName = (member.getStatus() == MemberStatus.WITHDRAWN)
-                ? "탈퇴된 회원입니다."
-                : member.getNickname();
-
-        return ReviewListResponse.builder()
-                .reviewId(review.getId())
-                .memberId(review.getMember().getId())
-                .festivalId(review.getFestival().getId())
-                .nickname(displayName)
-                .content(review.getContent())
-                .image(review.getImage())
-                .rating(review.getRating())
-                .likeCount(review.getLikeCount())
-                .reportCount(review.getReportCount())
-                .createdAt(review.getCreatedAt())
-                .liked(liked)
-                .build();
-
-
+            return ReviewListResponse(
+                reviewId = review.id,
+                memberId = member.id,
+                festivalId = review.festival.id,
+                nickname = displayName,
+                content = review.content,
+                image = review.image,
+                rating = review.rating,
+                likeCount = review.likeCount,
+                reportCount = review.reportCount,
+                createdAt = review.createdAt,
+                liked = liked
+            )
+        }
     }
 }

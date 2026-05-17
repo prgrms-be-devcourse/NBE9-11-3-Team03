@@ -1,17 +1,10 @@
-package com.example.domain.festival.dto.response;
+package com.example.domain.festival.dto.response
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-import java.util.List;
-
-//동기화 결과 반환용 DTO
-@Getter
-@AllArgsConstructor
-public class FestivalSyncResultResponse {
-    private int totalCount;
-    private int createdCount;
-    private int updatedCount;
-    private int failedCount;
-    private List<String> changedContentIds;
-}
+// 동기화 결과 반환용 DTO
+data class FestivalSyncResultResponse(
+    val totalCount: Int,
+    val createdCount: Int,
+    val updatedCount: Int,
+    val failedCount: Int,
+    val changedContentIds: List<String>
+)

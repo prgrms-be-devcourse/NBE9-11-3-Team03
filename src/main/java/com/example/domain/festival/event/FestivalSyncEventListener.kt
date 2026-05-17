@@ -1,34 +1,28 @@
-package com.example.domain.festival.event;
+package com.example.domain.festival.event
 
+import com.example.domain.festival.service.FestivalSyncService
+import org.springframework.context.event.EventListener
+import org.springframework.scheduling.annotation.Async
+import org.springframework.stereotype.Component
 
-import com.example.domain.festival.service.FestivalSyncService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
-
-//축제 목록 동기화 완료 이벤트 리스너
+// 축제 목록 동기화 완료 이벤트 리스너
 @Component
-@RequiredArgsConstructor
-public class FestivalSyncEventListener {
-
-    private final FestivalSyncService festivalSyncService;
-
-    //목록 동기화 완료 이벤트를 수신하면, 변경된 contentId에 대해 상세 보강을 수행한다.
+class FestivalSyncEventListener(
+    private val festivalSyncService: FestivalSyncService
+) {
+    // 목록 동기화 완료 이벤트를 수신하면, 변경된 contentId에 대해 상세 보강을 수행한다.
     @Async("festivalDetailTaskExecutor")
     @EventListener
-    public void handleFestivalSyncCompleted(FestivalSyncCompletedEvent event) {
-        List<String> changedContentIds = event.getChangedContentIds();
+    fun handleFestivalSyncCompleted(event: FestivalSyncCompletedEvent) {
+        val changedContentIds = event.changedContentIds
 
-        if (changedContentIds == null || changedContentIds.isEmpty()) {
-            return;
+        if (changedContentIds.isEmpty()) {
+            return
         }
 
         festivalSyncService.enrichFestivalDetailsAndNotify(
-                changedContentIds,
-                event.getListResult()
-        );
+            changedContentIds,
+            event.listResult
+        )
     }
 }

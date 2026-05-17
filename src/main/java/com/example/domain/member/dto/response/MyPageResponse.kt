@@ -1,13 +1,13 @@
-package com.example.domain.member.dto.response;
+package com.example.domain.member.dto.response
 
-import com.example.domain.member.entity.Role;
+import com.example.domain.member.entity.Role
 
-public record MyPageResponse(
-        Long memberId,
-        String email,
-        String nickname,
-        long reviewCount,
-        long bookMarkCount,
-        Role role
-) {
-}
+
+data class MyPageResponse(
+    val memberId: Long,
+    val email: String,
+    val nickname: String,
+    val reviewCount: Long,
+    val bookMarkCount: Long,
+    val role: Role
+)

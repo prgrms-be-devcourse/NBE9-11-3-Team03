@@ -1,6 +1,6 @@
-package com.example.domain.festival.entity;
+package com.example.domain.festival.entity
 
-public enum FestivalStatus {
+enum class FestivalStatus {
     UPCOMING,
     ONGOING,
     ENDED

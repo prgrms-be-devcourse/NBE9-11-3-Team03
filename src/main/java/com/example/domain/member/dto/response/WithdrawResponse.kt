@@ -1,9 +1,8 @@
-package com.example.domain.member.dto.response;
+package com.example.domain.member.dto.response
 
-import com.example.domain.member.entity.MemberStatus;
+import com.example.domain.member.entity.MemberStatus
 
-public record WithdrawResponse(
-        Long memberId,
-        MemberStatus status
-) {
-}
+data class WithdrawResponse(
+    val memberId: Long,
+    val status: MemberStatus
+)

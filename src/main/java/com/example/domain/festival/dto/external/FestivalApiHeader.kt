@@ -1,11 +1,6 @@
-package com.example.domain.festival.dto.external;
+package com.example.domain.festival.dto.external
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-@Getter
-@NoArgsConstructor
-public class FestivalApiHeader {
-    private String resultCode;
-    private String resultMsg;
-}
+data class FestivalApiHeader(
+    var resultCode: String? = null,
+    var resultMsg: String? = null
+)

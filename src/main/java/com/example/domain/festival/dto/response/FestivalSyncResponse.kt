@@ -1,13 +1,8 @@
-package com.example.domain.festival.dto.response;
+package com.example.domain.festival.dto.response
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
-public class FestivalSyncResponse {
-    private int totalCount;
-    private int createdCount;
-    private int updatedCount;
-    private int failedCount;
-}
+data class FestivalSyncResponse(
+    val totalCount: Int,
+    val createdCount: Int,
+    val updatedCount: Int,
+    val failedCount: Int
+)

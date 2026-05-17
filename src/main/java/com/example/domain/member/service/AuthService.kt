@@ -1,249 +1,227 @@
-package com.example.domain.member.service;
+package com.example.domain.member.service
 
-import com.example.domain.member.dto.request.LoginRequest;
-import com.example.domain.member.dto.request.SignupRequest;
-import com.example.domain.member.dto.request.TokenReissueRequest;
-import com.example.domain.member.dto.response.LoginResponse;
-import com.example.domain.member.dto.response.SignupResponse;
-import com.example.domain.member.dto.response.TokenReissueResponse;
-import com.example.domain.member.dto.response.WithdrawResponse;
-import com.example.domain.member.entity.AccessTokenBlacklist;
-import com.example.domain.member.entity.Member;
-import com.example.domain.member.entity.MemberStatus;
-import com.example.domain.member.entity.RefreshToken;
-import com.example.domain.member.repository.AccessTokenBlacklistRepository;
-import com.example.domain.member.repository.MemberRepository;
-import com.example.domain.member.repository.RefreshTokenRepository;
-import com.example.global.exception.*;
-import com.example.global.jwt.JwtUtil;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.time.LocalDateTime;
+import com.example.domain.member.dto.request.LoginRequest
+import com.example.domain.member.dto.request.SignupRequest
+import com.example.domain.member.dto.request.TokenReissueRequest
+import com.example.domain.member.dto.response.LoginResponse
+import com.example.domain.member.dto.response.SignupResponse
+import com.example.domain.member.dto.response.TokenReissueResponse
+import com.example.domain.member.dto.response.WithdrawResponse
+import com.example.domain.member.entity.AccessTokenBlacklist
+import com.example.domain.member.entity.Member
+import com.example.domain.member.entity.MemberStatus
+import com.example.domain.member.entity.RefreshToken
+import com.example.domain.member.repository.AccessTokenBlacklistRepository
+import com.example.domain.member.repository.MemberRepository
+import com.example.domain.member.repository.RefreshTokenRepository
+import com.example.global.exception.BadRequestException
+import com.example.global.exception.CustomNotFoundException
+import com.example.global.exception.DuplicateResourceException
+import com.example.global.exception.ForbiddenException
+import com.example.global.exception.UnauthorizedException
+import com.example.global.jwt.JwtUtil
+import org.slf4j.LoggerFactory
+import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.util.StringUtils
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 @Transactional(readOnly = true)
-// 회원가입과 로그인의 비즈니스 흐름을 담당하는 서비스다.
-// 컨트롤러는 요청을 받고, 실제 처리 순서는 이 서비스가 조합한다.
-public class AuthService {
-
-    private final MemberRepository memberRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final AccessTokenBlacklistRepository accessTokenBlacklistRepository;
-    // 회원가입 때는 비밀번호를 암호화하고, 로그인 때는 입력값과 저장값을 비교한다.
-    private final PasswordEncoder passwordEncoder;
-    // 로그인 성공 후 access token을 만들기 위해 사용하는 JWT 전용 유틸이다.
-    private final JwtUtil jwtUtil;
+class AuthService(
+    private val memberRepository: MemberRepository,
+    private val refreshTokenRepository: RefreshTokenRepository,
+    private val accessTokenBlacklistRepository: AccessTokenBlacklistRepository,
+    private val passwordEncoder: PasswordEncoder,
+    private val jwtUtil: JwtUtil
+) {
 
     @Transactional
-    // 1) 회원가입
-    // 중복 검사 -> 비밀번호 암호화 -> 엔티티 생성 -> 저장 -> 응답 변환 순서로 진행
-    public SignupResponse signup(SignupRequest request) {
-        validateDuplicateSignupInfo(request);
+    fun signup(request: SignupRequest): SignupResponse {
+        validateDuplicateSignupInfo(request)
 
-        String encodedPassword = encodePassword(request.getPassword());
+        val encodedPassword = encodePassword(request.password)
+        val member = Member.create(
+            request.userName,
+            encodedPassword,
+            request.loginId,
+            request.email,
+            request.nickname
+        )
 
-        Member member = Member.create(
-                request.getUserName(),
-                encodedPassword,
-                request.getLoginId(),
-                request.getEmail(),
-                request.getNickname()
-        );
+        val savedMember = memberRepository.save(member)
+        log.info("[Member] 회원가입 완료 - loginId={}", savedMember.loginId)
 
-        Member savedMember = memberRepository.save(member);
-        log.info("[Member] 회원가입 완료 - loginId={}", savedMember.getLoginId());
-        return SignupResponse.from(savedMember);
-    }
-
-    // 2) 로그인
-    // 회원 조회 -> 탈퇴 여부 확인 -> 비밀번호 검증 -> access/refresh token 발급 순서로 진행합니다.
-    @Transactional
-    public LoginResponse login(LoginRequest request) {
-        Member member = findMemberByLoginId(request.getLoginId());
-        validateMemberCanLogin(member);
-        validateLoginPassword(request.getLoginId(), request.getPassword(), member.getPassword());
-
-        String accessToken = createAccessToken(member);
-        String refreshToken = createAndSaveRefreshToken(member);
-
-        log.info("[Member] 로그인 성공 - loginId={}", member.getLoginId());
-        return LoginResponse.of(accessToken, refreshToken, member);
-    }
-
-    // 3) 토큰 재발급
-    // refresh token이 정상이고 DB에 저장된 값과 같을 때만 새 토큰을 발급함.
-    @Transactional
-    public TokenReissueResponse reissue(TokenReissueRequest request) {
-        return reissue(request.getRefreshToken());
+        return SignupResponse.from(savedMember)
     }
 
     @Transactional
-    public TokenReissueResponse reissue(String refreshTokenValue) {
-        validateRefreshToken(refreshTokenValue);
+    fun login(request: LoginRequest): LoginResponse {
+        val member = findMemberByLoginId(request.loginId)
+        validateMemberCanLogin(member)
+        validateLoginPassword(request.loginId, request.password, member.password)
 
-        RefreshToken refreshToken = findRefreshToken(refreshTokenValue);
-        // 사용할 수 없는 refresh token이면 재발급하지 않음.
-        validateRefreshTokenActive(refreshToken);
-        validateRefreshTokenNotExpired(refreshToken);
+        val accessToken = createAccessToken(member)
+        val refreshToken = createAndSaveRefreshToken(member)
 
-        Member member = refreshToken.getMember();
-        validateMemberCanLogin(member);
-
-        String newAccessToken = createAccessToken(member);
-        String newRefreshToken = jwtUtil.createRefreshToken(member);
-        refreshToken.update(newRefreshToken, jwtUtil.getExpirationDateTime(newRefreshToken));
-
-        log.info("[Member] 토큰 재발급 완료 - loginId={}", member.getLoginId());
-        return TokenReissueResponse.of(newAccessToken, newRefreshToken);
+        log.info("[Member] 로그인 성공 - loginId={}", member.loginId)
+        return LoginResponse.of(accessToken, refreshToken, member)
     }
 
-    // 4) 로그아웃
-    // 로그아웃하면 refresh token row는 남기고 token 값만 비워 재발급을 막습니다.
     @Transactional
-    public void logout(String loginId, String accessToken) {
-        Member member = findMemberByLoginId(loginId);
-        refreshTokenRepository.findByMemberId(member.getId())
-                .ifPresent(RefreshToken::logout);
-        saveAccessTokenBlacklist(accessToken);
-        log.info("[Member] 로그아웃 처리 - loginId={}", member.getLoginId());
+    fun reissue(request: TokenReissueRequest): TokenReissueResponse {
+        return reissue(request.refreshToken)
     }
 
-    private void saveAccessTokenBlacklist(String accessToken) {
+    @Transactional
+    fun reissue(refreshTokenValue: String?): TokenReissueResponse {
+        validateRefreshToken(refreshTokenValue)
+
+        val refreshToken = findRefreshToken(refreshTokenValue)
+        validateRefreshTokenActive(refreshToken)
+        validateRefreshTokenNotExpired(refreshToken)
+
+        val member = refreshToken.member
+        validateMemberCanLogin(member)
+
+        val newAccessToken = createAccessToken(member)
+        val newRefreshToken = jwtUtil.createRefreshToken(member)
+        refreshToken.update(newRefreshToken, jwtUtil.getExpirationDateTime(newRefreshToken))
+
+        log.info("[Member] 토큰 재발급 완료 - loginId={}", member.loginId)
+        return TokenReissueResponse.of(newAccessToken, newRefreshToken)
+    }
+
+    @Transactional
+    fun logout(loginId: String, accessToken: String?) {
+        val member = findMemberByLoginId(loginId)
+        refreshTokenRepository.findByMemberId(member.id)
+            .ifPresent(RefreshToken::logout)
+
+        saveAccessTokenBlacklist(accessToken)
+        log.info("[Member] 로그아웃 처리 - loginId={}", member.loginId)
+    }
+
+    @Transactional
+    fun selfWithdraw(loginId: String, password: String?, accessToken: String?): WithdrawResponse {
+        val member = memberRepository.findByLoginId(loginId)
+            .orElseThrow { CustomNotFoundException("회원을 찾을 수 없습니다.") }
+
+        if (member.status == MemberStatus.WITHDRAWN) {
+            throw BadRequestException("이미 탈퇴 처리된 계정입니다.")
+        }
+
+        validatePassword(password, member.password)
+        member.withdraw()
+        refreshTokenRepository.findByMemberId(member.id)
+            .ifPresent(RefreshToken::logout)
+
+        saveAccessTokenBlacklist(accessToken)
+        log.info("[Member] 회원 탈퇴 처리 - loginId={}", loginId)
+
+        return WithdrawResponse(member.id, member.status)
+    }
+
+    private fun saveAccessTokenBlacklist(accessToken: String?) {
         if (accessToken == null || !jwtUtil.validateToken(accessToken) || !jwtUtil.isAccessToken(accessToken)) {
-            return;
+            return
         }
 
         if (accessTokenBlacklistRepository.existsByToken(accessToken)) {
-            return;
+            return
         }
 
-        // 로그아웃된 access token은 만료 시간까지만 차단 목록에 저장함.
         accessTokenBlacklistRepository.save(
-                AccessTokenBlacklist.create(accessToken, jwtUtil.getExpirationDateTime(accessToken))
-        );
+            AccessTokenBlacklist.create(accessToken, jwtUtil.getExpirationDateTime(accessToken))
+        )
     }
 
-    // 5) 회원가입 시 아이디, 이메일, 닉네임 중복 여부를 검사
-    // 지금은 골격 단계이므로 예외는 IllegalArgumentException으로 두고,
-    // 이후 커스텀 예외와 전역 예외 처리 단계에서 세분화하면 된다.
-    private void validateDuplicateSignupInfo(SignupRequest request) {
-        if (memberRepository.existsByLoginId(request.getLoginId())) {
-            throw new DuplicateResourceException("409","이미 사용 중인 아이디입니다.");
+    private fun validateDuplicateSignupInfo(request: SignupRequest) {
+        if (memberRepository.existsByLoginId(request.loginId)) {
+            throw DuplicateResourceException("409", "이미 사용 중인 아이디입니다.")
         }
 
-        if (memberRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateResourceException("409","이미 사용 중인 이메일입니다.");
+        if (memberRepository.existsByEmail(request.email)) {
+            throw DuplicateResourceException("409", "이미 사용 중인 이메일입니다.")
         }
 
-        if (memberRepository.existsByNickname(request.getNickname())) {
-            throw new DuplicateResourceException("409","이미 사용 중인 닉네임입니다.");
+        if (memberRepository.existsByNickname(request.nickname)) {
+            throw DuplicateResourceException("409", "이미 사용 중인 닉네임입니다.")
         }
     }
 
-    // loginId로 회원을 조회한다.
-    // 조회 결과가 없으면 서비스 계층 예외로 전환한다.
-    private Member findMemberByLoginId(String loginId) {
+    private fun findMemberByLoginId(loginId: String?): Member {
         return memberRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new CustomNotFoundException("404","존재하지 않는 계정입니다."));
+            .orElseThrow { CustomNotFoundException("404", "존재하지 않는 계정입니다.") }
     }
 
-    // 탈퇴한 회원은 로그인하지 못하도록 상태값을 검사한다.
-    private void validateMemberCanLogin(Member member) {
-        if (member.getStatus() == MemberStatus.WITHDRAWN) {
-            throw new ForbiddenException("탈퇴된 계정입니다.");
+    private fun validateMemberCanLogin(member: Member) {
+        if (member.status == MemberStatus.WITHDRAWN) {
+            throw ForbiddenException("탈퇴된 계정입니다.")
         }
     }
 
-    // 회원가입 시 비밀번호를 암호화해서 저장한다.
-    private String encodePassword(String rawPassword) {
-        return passwordEncoder.encode(rawPassword);
+    private fun encodePassword(rawPassword: String?): String {
+        return passwordEncoder.encode(rawPassword)
     }
 
-    // 로그인 시 입력한 비밀번호와 저장된 암호화 비밀번호를 비교한다.
-    private void validatePassword(String rawPassword, String encodedPassword) {
+    private fun validatePassword(rawPassword: String?, encodedPassword: String) {
         if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
-            throw new UnauthorizedException("비밀번호가 일치하지 않습니다.");
+            throw UnauthorizedException("비밀번호가 일치하지 않습니다.")
         }
     }
-    // 토큰을 만드는 세부 로직은 JwtUtil에 맡긴다.
-    // 이렇게 분리하면 AuthService는 로그인 흐름에만 집중할 수 있다.
-    private void validateLoginPassword(String loginId, String rawPassword, String encodedPassword) {
+
+    private fun validateLoginPassword(loginId: String?, rawPassword: String?, encodedPassword: String) {
         if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
-            log.warn("[Member] 로그인 실패 - loginId={}", loginId);
-            throw new UnauthorizedException("비밀번호가 일치하지 않습니다.");
+            log.warn("[Member] 로그인 실패 - loginId={}", loginId)
+            throw UnauthorizedException("비밀번호가 일치하지 않습니다.")
         }
     }
 
-    private String createAccessToken(Member member) {
-        return jwtUtil.createAccessToken(member);
+    private fun createAccessToken(member: Member): String {
+        return jwtUtil.createAccessToken(member)
     }
 
-    // refresh token은 DB에 저장하고, 이미 있으면 새 값으로 교체함.
-    private String createAndSaveRefreshToken(Member member) {
-        String refreshTokenValue = jwtUtil.createRefreshToken(member);
-        LocalDateTime expiresAt = jwtUtil.getExpirationDateTime(refreshTokenValue);
+    private fun createAndSaveRefreshToken(member: Member): String {
+        val refreshTokenValue = jwtUtil.createRefreshToken(member)
+        val expiresAt = jwtUtil.getExpirationDateTime(refreshTokenValue)
 
-        refreshTokenRepository.findByMemberId(member.getId())
-                .ifPresentOrElse(
-                        refreshToken -> refreshToken.update(refreshTokenValue, expiresAt),
-                        () -> refreshTokenRepository.save(RefreshToken.create(member, refreshTokenValue, expiresAt))
-                );
+        val refreshToken = refreshTokenRepository.findByMemberId(member.id).orElse(null)
+        if (refreshToken != null) {
+            refreshToken.update(refreshTokenValue, expiresAt)
+        } else {
+            refreshTokenRepository.save(RefreshToken.create(member, refreshTokenValue, expiresAt))
+        }
 
-        return refreshTokenValue;
+        return refreshTokenValue
     }
 
-    // refresh token 형식이 맞는지 먼저 확인함.
-    private void validateRefreshToken(String refreshToken) {
+    private fun validateRefreshToken(refreshToken: String?) {
         if (!StringUtils.hasText(refreshToken) || !jwtUtil.validateToken(refreshToken) || !jwtUtil.isRefreshToken(refreshToken)) {
-            throw new UnauthorizedException("유효하지 않은 refresh token입니다.");
+            throw UnauthorizedException("유효하지 않은 refresh token입니다.")
         }
     }
 
-    // DB에 저장된 refresh token인지 확인함.
-    private RefreshToken findRefreshToken(String refreshToken) {
+    private fun findRefreshToken(refreshToken: String?): RefreshToken {
         return refreshTokenRepository.findByToken(refreshToken)
-                .orElseThrow(() -> new UnauthorizedException("유효하지 않은 refresh token입니다."));
+            .orElseThrow { UnauthorizedException("유효하지 않은 refresh token입니다.") }
     }
 
-    // 사용할 수 없는 refresh token은 다시 재발급에 사용할 수 없음.
-    private void validateRefreshTokenActive(RefreshToken refreshToken) {
-        if (!refreshToken.isActive()) {
-            throw new UnauthorizedException("사용할 수 없는 refresh token입니다.");
+    private fun validateRefreshTokenActive(refreshToken: RefreshToken) {
+        if (!refreshToken.isActive) {
+            throw UnauthorizedException("사용할 수 없는 refresh token입니다.")
         }
     }
 
-    // 만료된 refresh token은 삭제하고 재발급을 막음.
-    private void validateRefreshTokenNotExpired(RefreshToken refreshToken) {
-        if (refreshToken.isExpired()) {
-            log.warn("[Member] 만료된 리프레시 토큰 - memberId={}", refreshToken.getMember().getId());
-            refreshTokenRepository.delete(refreshToken);
-            throw new UnauthorizedException("만료된 refresh token입니다.");
+    private fun validateRefreshTokenNotExpired(refreshToken: RefreshToken) {
+        if (refreshToken.isExpired) {
+            log.warn("[Member] 만료된 리프레시 토큰 - memberId={}", refreshToken.member.id)
+            refreshTokenRepository.delete(refreshToken)
+            throw UnauthorizedException("만료된 refresh token입니다.")
         }
     }
 
-    //회원 스스로 탈퇴하는 메서드
-    @Transactional
-    public WithdrawResponse selfWithdraw(String loginId, String password, String accessToken) {
-        Member member = memberRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new CustomNotFoundException("회원을 찾을 수 없습니다."));
-        if (member.getStatus() == MemberStatus.WITHDRAWN) {
-            throw new BadRequestException("이미 탈퇴 처리된 계정입니다.");
-        }
-        validatePassword(password,member.getPassword());
-        member.withdraw();
-        // 탈퇴 시에도 남아있는 refresh token을 사용 불가 상태로 바꿈.
-        refreshTokenRepository.findByMemberId(member.getId())
-                .ifPresent(RefreshToken::logout);
-        // 탈퇴 요청에 사용한 access token도 즉시 다시 인증되지 않도록 차단 목록에 저장.
-        saveAccessTokenBlacklist(accessToken);
-        log.info("[Member] 회원 탈퇴 처리 - loginId={}", loginId);
-        return new WithdrawResponse(member.getId(),member.getStatus());
+    companion object {
+        private val log = LoggerFactory.getLogger(AuthService::class.java)
     }
 }

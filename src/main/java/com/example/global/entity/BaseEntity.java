@@ -19,8 +19,8 @@ public abstract class BaseEntity {
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
-    // 엔티티가 수정될 때마다 갱신되는 시간
 
+    // 엔티티가 수정될 때마다 갱신되는 시간
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;

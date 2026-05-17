@@ -1,28 +1,25 @@
-package com.example.domain.member.dto.response;
+package com.example.domain.member.dto.response
 
-import com.example.domain.review.entity.Review;
-import org.springframework.data.domain.Page;
+import com.example.domain.review.entity.Review
+import org.springframework.data.domain.Page
 
-import java.util.List;
-
-public record MyReviewPageResponse(
-        List<MyReviewItemResponse> content,
-        int page,
-        int size,
-        long totalElements,
-        int totalPages,
-        boolean hasNext
+data class MyReviewPageResponse(
+    val content: List<MyReviewItemResponse>,
+    val page: Int,
+    val size: Int,
+    val totalElements: Long,
+    val totalPages: Int,
+    val hasNext: Boolean
 ) {
-    public static MyReviewPageResponse from (Page<Review> reviewPageewPage){
-        return new MyReviewPageResponse(
-                reviewPageewPage.getContent().stream()
-                        .map(MyReviewItemResponse::from)
-                        .toList(),
-                reviewPageewPage.getNumber(),
-                reviewPageewPage.getSize(),
-                reviewPageewPage.getTotalElements(),
-                reviewPageewPage.getTotalPages(),
-                reviewPageewPage.hasNext()
-        );
+    companion object {
+        @JvmStatic
+        fun from(reviewPage: Page<Review>) = MyReviewPageResponse(
+            content       = reviewPage.content.map(MyReviewItemResponse::from),
+            page          = reviewPage.number,
+            size          = reviewPage.size,
+            totalElements = reviewPage.totalElements,
+            totalPages    = reviewPage.totalPages,
+            hasNext       = reviewPage.hasNext()
+        )
     }
 }

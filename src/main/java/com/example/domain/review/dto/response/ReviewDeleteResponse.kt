@@ -1,21 +1,19 @@
-package com.example.domain.review.dto.response;
+package com.example.domain.review.dto.response
 
-import com.example.domain.review.entity.Review;
-import com.example.domain.review.entity.ReviewStatus;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import com.example.domain.review.entity.Review
+import com.example.domain.review.entity.ReviewStatus
 
-@Getter
-@AllArgsConstructor
-public class ReviewDeleteResponse {
-
-    private Long reviewId;
-    private ReviewStatus status;
-
-    public static ReviewDeleteResponse from(Review review) {
-        return new ReviewDeleteResponse(
-                review.getId(),
-                review.getStatus()
-        );
+data class ReviewDeleteResponse(
+    val reviewId: Long,
+    val status: ReviewStatus
+) {
+    companion object {
+        @JvmStatic
+        fun from(review: Review): ReviewDeleteResponse {
+            return ReviewDeleteResponse(
+                reviewId = review.id,
+                status = review.status
+            )
+        }
     }
 }

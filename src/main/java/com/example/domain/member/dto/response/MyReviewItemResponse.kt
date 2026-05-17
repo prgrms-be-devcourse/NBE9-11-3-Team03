@@ -1,21 +1,24 @@
-package com.example.domain.member.dto.response;
+package com.example.domain.member.dto.response
 
-import com.example.domain.review.entity.Review;
+import com.example.domain.review.entity.Review
+import java.time.LocalDateTime
 
-import java.time.LocalDateTime;
 
-public record MyReviewItemResponse(
-        Long reviewId,
-        Long festivalId,
-        String festivalTitle,
-        Integer rating,
-        String content,
-        String reviewImageUrl,
-        Integer likeCount,
-        LocalDateTime createdAt
+data class MyReviewItemResponse(
+    val reviewId: Long,
+    val festivalId: Long,
+    val festivalTitle: String,
+    val rating: Int,
+
+    val content: String,
+    val reviewImageUrl: String?,
+    val likeCount: Int,
+    val createdAt: LocalDateTime
 ) {
-    public static MyReviewItemResponse from(Review review){
-        return new MyReviewItemResponse(
+    companion object {
+        @JvmStatic
+        fun from(review: Review): MyReviewItemResponse {
+            return MyReviewItemResponse(
                 review.getId(),
                 review.getFestival().getId(),
                 review.getFestival().getTitle(),
@@ -24,6 +27,7 @@ public record MyReviewItemResponse(
                 review.getImage(),
                 review.getLikeCount(),
                 review.getCreatedAt()
-        );
+            )
+        }
     }
 }

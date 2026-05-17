@@ -1,6 +1,5 @@
-package com.example.domain.reviewreport.dto.response;
+package com.example.domain.reviewreport.dto.response
 
-public record ReviewReportResponse(
-        Long reportId
-) {
-}
+data class ReviewReportResponse(
+    val reportId: Long
+)

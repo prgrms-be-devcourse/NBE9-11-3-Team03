@@ -1,40 +1,36 @@
-package com.example.domain.festival.dto.external;
+package com.example.domain.festival.dto.external
 
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonSetter
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 
-@Getter
-@NoArgsConstructor
-public class FestivalApiBody {
-    private FestivalApiItems items;
-    private int numOfRows;
-    private int pageNo;
-    private int totalCount;
+class FestivalApiBody {
+    private var items: FestivalApiItems? = null
+
+    var numOfRows: Int = 0
+    var pageNo: Int = 0
+    var totalCount: Int = 0
+
+    fun getItems(): FestivalApiItems? = items
 
     @JsonSetter("items")
-    public void setItems(JsonNode itemsNode) {
-        if (itemsNode == null || itemsNode.isNull()) {
-            this.items = null;
-            return;
+    fun setItems(itemsNode: JsonNode?) {
+        if (itemsNode == null || itemsNode.isNull) {
+            items = null
+            return
         }
 
-        // 빈 페이지에서 "items": "" 로 오는 경우
-        if (itemsNode.isTextual() && itemsNode.asText().isBlank()) {
-            this.items = null;
-            return;
+        if (itemsNode.isTextual && itemsNode.asText().isBlank()) {
+            items = null
+            return
         }
 
-        // 정상 페이지에서 객체로 오는 경우
-        try {
-            this.items = new ObjectMapper().treeToValue(itemsNode, FestivalApiItems.class);
-        } catch (Exception e) {
-            System.out.println("items 파싱 실패: " + itemsNode);
-            e.printStackTrace();
-            this.items = null;
-        }
+        items = OBJECT_MAPPER.treeToValue(itemsNode, FestivalApiItems::class.java)
     }
 
+    companion object {
+        private val OBJECT_MAPPER: ObjectMapper = ObjectMapper()
+            .registerKotlinModule()
+    }
 }

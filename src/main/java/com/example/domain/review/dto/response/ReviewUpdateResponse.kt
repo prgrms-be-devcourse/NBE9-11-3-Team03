@@ -1,30 +1,27 @@
-package com.example.domain.review.dto.response;
+package com.example.domain.review.dto.response
 
-import com.example.domain.review.entity.Review;
-import lombok.Builder;
-import lombok.Getter;
+import com.example.domain.review.entity.Review
+import java.time.LocalDateTime
 
-import java.time.LocalDateTime;
-
-@Getter
-@Builder
-public class ReviewUpdateResponse {
-
-    private Long reviewId;
-    private Long festivalId;
-    private Integer rating;
-    private String content;
-    private String image;
-    private LocalDateTime updatedAt;
-
-    public static ReviewUpdateResponse from(Review review) {
-        return ReviewUpdateResponse.builder()
-                .reviewId(review.getId())
-                .festivalId(review.getFestival().getId())
-                .rating(review.getRating())
-                .content(review.getContent())
-                .image(review.getImage())
-                .updatedAt(review.getUpdatedAt())
-                .build();
+data class ReviewUpdateResponse(
+    val reviewId: Long,
+    val festivalId: Long,
+    val rating: Int,
+    val content: String,
+    val image: String?,
+    val updatedAt: LocalDateTime
+) {
+    companion object {
+        @JvmStatic
+        fun from(review: Review): ReviewUpdateResponse {
+            return ReviewUpdateResponse(
+                reviewId = review.id,
+                festivalId = review.festival.id,
+                rating = review.rating,
+                content = review.content,
+                image = review.image,
+                updatedAt = review.updatedAt
+            )
+        }
     }
 }

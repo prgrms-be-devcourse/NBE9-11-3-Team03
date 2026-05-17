@@ -1,32 +1,31 @@
-package com.example.global.scheduler;
+package com.example.global.scheduler
 
-import com.example.domain.festival.service.FestivalSyncService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import com.example.domain.festival.service.FestivalSyncService
+import org.slf4j.LoggerFactory
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
-//@Slf4j 추후 로그 도입 시 적용할 것.
-@Slf4j
+// 축제 동기화 스케줄러
 @Component
-@RequiredArgsConstructor
-public class FestivalSyncScheduler {
-
-    private final FestivalSyncService festivalSyncService;
-
-
+class FestivalSyncScheduler(
+    private val festivalSyncService: FestivalSyncService
+) {
     @Scheduled(cron = "0 0 0 * * *")
-    public void syncFestivalData() {
+    fun syncFestivalData() {
+        val eventStartDate =
+            LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE)
 
-        String eventStartDate =
-                LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+        log.info(
+            "[FestivalScheduler] 스케줄러 실행 요청 - eventStartDate={}",
+            eventStartDate
+        )
 
-        log.info("[FestivalScheduler] 스케줄러 실행 요청 - eventStartDate={}",
-                eventStartDate);
+        festivalSyncService.runScheduledSync(eventStartDate, 1, 200)
+    }
 
-        festivalSyncService.runScheduledSync(eventStartDate, 1, 200);
+    companion object {
+        private val log = LoggerFactory.getLogger(FestivalSyncScheduler::class.java)
     }
 }

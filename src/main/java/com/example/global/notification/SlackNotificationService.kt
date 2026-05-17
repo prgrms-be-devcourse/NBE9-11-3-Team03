@@ -1,51 +1,49 @@
-package com.example.global.notification;
+package com.example.global.notification
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.stereotype.Service
+import org.springframework.web.client.RestTemplate
 
-import java.util.Map;
-
-@Slf4j
 @Service
-@RequiredArgsConstructor
-public class SlackNotificationService {
-
-    private final RestTemplate restTemplate;
-
-    @Value("${slack.webhook.url:}")
-    private String webhookUrl;
-
-    public void sendMessage(String message) {
-        if (webhookUrl == null || webhookUrl.isBlank()) {
-            log.debug("[Slack] webhook URL 미설정 → 전송 건너뜀");
-            return;
+class SlackNotificationService(
+    private val restTemplate: RestTemplate,
+    @Value("\${slack.webhook.url:}")
+    private val webhookUrl: String
+) {
+    fun sendMessage(message: String) {
+        if (webhookUrl.isBlank()) {
+            log.debug("[Slack] webhook URL 미설정 → 전송 건너뜀")
+            return
         }
 
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
+            val headers = HttpHeaders().apply {
+                contentType = MediaType.APPLICATION_JSON
+            }
 
-            HttpEntity<Map<String, String>> entity =
-                    new HttpEntity<>(Map.of("text", message), headers);
+            val entity = HttpEntity(mapOf("text" to message), headers)
 
             restTemplate.postForEntity(
-                    webhookUrl,
-                    entity,
-                    String.class
-            );
+                webhookUrl,
+                entity,
+                String::class.java
+            )
 
-            log.info("[Slack] 알림 전송 완료");
-
-        } catch (Exception e) {
-            log.error("[Slack] 알림 전송 실패 - message={}",
-                    e.getMessage(),
-                    e);
+            log.info("[Slack] 알림 전송 완료")
+        } catch (e: Exception) {
+            log.error(
+                "[Slack] 알림 전송 실패 - message={}",
+                e.message,
+                e
+            )
         }
+    }
+
+    companion object {
+        private val log = LoggerFactory.getLogger(SlackNotificationService::class.java)
     }
 }

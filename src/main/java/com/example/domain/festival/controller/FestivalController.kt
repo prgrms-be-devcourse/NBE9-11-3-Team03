@@ -23,6 +23,7 @@ class FestivalController(
     private val festivalService: FestivalService,
 ) {
 
+
     @GetMapping
     @Operation(
         summary = "축제 목록 조회",

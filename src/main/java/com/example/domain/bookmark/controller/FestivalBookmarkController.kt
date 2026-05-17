@@ -1,52 +1,46 @@
-package com.example.domain.bookmark.controller;
+package com.example.domain.bookmark.controller
 
-import com.example.domain.bookmark.dto.response.FestivalBookmarkResponse;
-import com.example.domain.bookmark.service.FestivalBookmarkService;
-import com.example.global.response.ApiRes;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import com.example.domain.bookmark.dto.response.FestivalBookmarkResponse
+import com.example.domain.bookmark.service.FestivalBookmarkService
+import com.example.global.response.ApiRes
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
+import org.springframework.http.ResponseEntity
+import org.springframework.security.core.Authentication
+import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api")
 @Tag(name = "FestivalBookmark", description = "축제 찜 API")
-public class FestivalBookmarkController {
-
-    private final FestivalBookmarkService festivalBookmarkService;
+class FestivalBookmarkController(
+    private val festivalBookmarkService: FestivalBookmarkService
+) {
 
     @PostMapping("/festivals/{festivalId}/bookmark")
     @Operation(summary = "축제 찜(북마크) 수행", description = "특정 축제를 찜 처리(북마크) 합니다.")
-    public ResponseEntity<ApiRes<FestivalBookmarkResponse>> bookmarkFestival(
-            @PathVariable Long festivalId,
-            Authentication authentication
-    ) {
-        String loginId = authentication.getName();
-
-        FestivalBookmarkResponse response =
-                festivalBookmarkService.bookmarkFestival(festivalId, loginId);
-
-        return ResponseEntity.ok(
-                new ApiRes<>(200, "축제 찜 되었습니다.", response)
-        );
-    }
+    fun bookmarkFestival(
+        @PathVariable festivalId: Long,
+        authentication: Authentication
+    ): ResponseEntity<ApiRes<FestivalBookmarkResponse>> =
+        ResponseEntity.ok(
+            ApiRes(
+                200,
+                "축제 찜 되었습니다.",
+                festivalBookmarkService.bookmarkFestival(festivalId, authentication.name)
+            )
+        )
 
     @DeleteMapping("/festivals/{festivalId}/bookmark")
     @Operation(summary = "축제 찜(북마크) 취소", description = "특정 축제의 찜 처리(북마크)를 취소합니다.")
-    public ResponseEntity<ApiRes<FestivalBookmarkResponse>> cancelBookmark(
-            @PathVariable Long festivalId,
-            Authentication authentication
-    ) {
-        String loginId = authentication.getName();
-
-        FestivalBookmarkResponse response =
-                festivalBookmarkService.cancelBookmark(festivalId, loginId);
-
-        return ResponseEntity.ok(
-                new ApiRes<>(200, "축제 찜이 취소되었습니다.", response)
-        );
-    }
+    fun cancelBookmark(
+        @PathVariable festivalId: Long,
+        authentication: Authentication
+    ): ResponseEntity<ApiRes<FestivalBookmarkResponse>> =
+        ResponseEntity.ok(
+            ApiRes(
+                200,
+                "축제 찜이 취소되었습니다.",
+                festivalBookmarkService.cancelBookmark(festivalId, authentication.name)
+            )
+        )
 }

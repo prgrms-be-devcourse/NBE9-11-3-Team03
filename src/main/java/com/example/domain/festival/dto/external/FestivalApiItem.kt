@@ -1,30 +1,26 @@
-package com.example.domain.festival.dto.external;
+package com.example.domain.festival.dto.external
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@Getter
-@Setter //Test용도 (FestivalApiConverterTest)
-@NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true) //역직렬화시, 안쓰는 필드 무시
-public class FestivalApiItem {
-    private String contentid;
-    private String title;
-    private String tel;
-    private String addr1;
-    private String addr2;
-    private String homepage;
-    private String overview;
-    private String firstimage;
-    private String firstimage2;
-    private String mapx;
-    private String mapy;
-    @JsonProperty("lDongRegnCd") //Jackson 기본 전략: snake_case ↔ camelCase 변환, Naming 정책이 애매해 DTO 매핑이 안되는 것을 방지
-    private String lDongRegnCd;
-    private String eventstartdate;
-    private String eventenddate;
-    private String modifiedtime; //수정시간, INCREMENTAL 동기화 고려 시 참고 가능
-}
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class FestivalApiItem(
+    var contentid: String? = null,
+    var title: String? = null,
+    var tel: String? = null,
+    var addr1: String? = null,
+    var addr2: String? = null,
+    var homepage: String? = null,
+    var overview: String? = null,
+    var firstimage: String? = null,
+    var firstimage2: String? = null,
+    var mapx: String? = null,
+    var mapy: String? = null,
+
+    @JsonProperty("lDongRegnCd")
+    var lDongRegnCd: String? = null,
+
+    var eventstartdate: String? = null,
+    var eventenddate: String? = null,
+    var modifiedtime: String? = null
+)
