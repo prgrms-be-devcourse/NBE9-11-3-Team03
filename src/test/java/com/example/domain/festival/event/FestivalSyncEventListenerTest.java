@@ -1,6 +1,6 @@
 package com.example.domain.festival.event;
 
-import com.example.domain.festival.dto.response.FestivalSyncResult;
+import com.example.domain.festival.dto.response.FestivalSyncResultResponse;
 import com.example.domain.festival.service.FestivalSyncService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,7 @@ class FestivalSyncEventListenerTest {
     void handle_success_test() {
         List<String> contentIds = List.of("1001", "1002");
 
-        FestivalSyncResult listResult = new FestivalSyncResult(
+        FestivalSyncResultResponse listResult = new FestivalSyncResultResponse(
                 2, 1, 1, 0, contentIds
         );
 
@@ -37,8 +37,8 @@ class FestivalSyncEventListenerTest {
     @Test
     @DisplayName("contentId가 비어있으면 상세 보강을 수행하지 않는다")
     void handle_empty_test() {
-        FestivalSyncResult listResult =
-                new FestivalSyncResult(0, 0, 0, 0, List.of());
+        FestivalSyncResultResponse listResult =
+                new FestivalSyncResultResponse(0, 0, 0, 0, List.of());
 
         FestivalSyncCompletedEvent event =
                 new FestivalSyncCompletedEvent(List.of(), listResult);
@@ -52,8 +52,8 @@ class FestivalSyncEventListenerTest {
     @Test
     @DisplayName("contentId가 null이면 상세 보강을 수행하지 않는다")
     void handle_null_test() {
-        FestivalSyncResult listResult =
-                new FestivalSyncResult(0, 0, 0, 0, List.of());
+        FestivalSyncResultResponse listResult =
+                new FestivalSyncResultResponse(0, 0, 0, 0, List.of());
 
         FestivalSyncCompletedEvent event =
                 new FestivalSyncCompletedEvent(null, listResult);
