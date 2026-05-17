@@ -6,11 +6,9 @@ import com.example.domain.member.entity.MemberStatus
 import com.example.domain.member.entity.RefreshToken
 import com.example.domain.member.repository.MemberRepository
 import com.example.domain.member.repository.RefreshTokenRepository
-import com.example.domain.review.repository.ReviewRepository
 import com.example.global.exception.CustomNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Pageable
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -18,8 +16,6 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class MemberService(
     private val memberRepository: MemberRepository,
-    private val reviewRepository: ReviewRepository,
-    private val passwordEncoder: PasswordEncoder,
     private val refreshTokenRepository: RefreshTokenRepository
 ) {
 
