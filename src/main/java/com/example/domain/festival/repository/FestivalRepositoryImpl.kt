@@ -1,162 +1,137 @@
-package com.example.domain.festival.repository;
+package com.example.domain.festival.repository
 
-import com.example.domain.festival.dto.request.FestivalSearchRequest;
-import com.example.domain.festival.entity.Festival;
-import com.example.domain.festival.entity.FestivalStatus;
-import com.querydsl.core.types.Order;
-import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.CaseBuilder;
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.NumberExpression;
-import com.querydsl.jpa.impl.JPAQuery;
-import com.querydsl.jpa.impl.JPAQueryFactory;
-import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.support.PageableExecutionUtils;
-import org.springframework.util.StringUtils;
+import com.example.domain.festival.dto.request.FestivalSearchRequest
+import com.example.domain.festival.entity.Festival
+import com.example.domain.festival.entity.FestivalStatus
+import com.example.domain.festival.entity.QFestival
+import com.querydsl.core.types.Order
+import com.querydsl.core.types.OrderSpecifier
+import com.querydsl.core.types.dsl.BooleanExpression
+import com.querydsl.core.types.dsl.CaseBuilder
+import com.querydsl.core.types.dsl.Expressions
+import com.querydsl.jpa.impl.JPAQueryFactory
+import lombok.AllArgsConstructor
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.support.PageableExecutionUtils
+import org.springframework.stereotype.Repository
+import org.springframework.util.StringUtils
+import java.time.LocalDateTime
+import java.time.YearMonth
+import java.util.function.LongSupplier
 
-import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.List;
+@Repository
+class FestivalRepositoryImpl(
+    private val queryFactory: JPAQueryFactory,
+) : FestivalRepositoryCustom {
 
-import static com.example.domain.festival.entity.QFestival.festival;
+    override fun searchFestivals(searchDto: FestivalSearchRequest, pageable: Pageable): Page<Festival> {
+        val festival = QFestival.festival
+        val predicates = arrayOf(
+            regionCodeEquals(searchDto.regionCode),
+            statusEquals(searchDto.status),
+            monthEquals(searchDto.month),
+            keywordContains(searchDto.keyword),
+            nearBy(searchDto.mapX, searchDto.mapY, searchDto.radiusKm),
+        )
 
-@AllArgsConstructor
-public class FestivalRepositoryImpl implements FestivalRepositoryCustom{
+        val content = queryFactory
+            .selectFrom(festival)
+            .where(*predicates)
+            .offset(pageable.offset)
+            .limit(pageable.pageSize.toLong())
+            .orderBy(*festivalSort(pageable))
+            .fetch()
 
-    private final JPAQueryFactory queryFactory;
+        val contentQuery = queryFactory
+            .select(festival.count())
+            .from(festival)
+            .where(*predicates)
 
-    @Override
-    public Page<Festival> searchFestivals(FestivalSearchRequest searchDto, Pageable pageable) {
 
-        List<Festival> content = queryFactory
-                .selectFrom(festival)
-                .where(
-                        regionCodeEquals(searchDto.getRegionCode()),
-                        statusEquals(searchDto.getStatus()),
-                        monthEquals(searchDto.getMonth()),
-                        keywordContains(searchDto.getKeyword()),
-                        nearBy(searchDto.getMapX(), searchDto.getMapY() , searchDto.getRadiusKm())
-                )
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .orderBy(festivalSort(pageable))
-                .fetch();
-
-        JPAQuery<Long> contentQuery = queryFactory
-                .select(festival.count())
-                .from(festival)
-                .where(
-                        regionCodeEquals(searchDto.getRegionCode()),
-                        statusEquals(searchDto.getStatus()),
-                        monthEquals(searchDto.getMonth()),
-                        keywordContains(searchDto.getKeyword()),
-                        nearBy(searchDto.getMapX(), searchDto.getMapY(), searchDto.getRadiusKm())
-                );
-
-        return PageableExecutionUtils.getPage(content, pageable, contentQuery::fetchOne);
+        return PageableExecutionUtils.getPage(content, pageable) { contentQuery.fetchOne() ?: 0L }
     }
 
-    @Override
-    public List<Festival> findNearbyFestivals(FestivalSearchRequest searchDto) {
+    override fun findNearbyFestivals(searchDto: FestivalSearchRequest): List<Festival> {
         return queryFactory
-                .selectFrom(festival)
-                .where(
-                        festival.status.in(FestivalStatus.ONGOING, FestivalStatus.UPCOMING),
-                        nearBy(searchDto.getMapX(), searchDto.getMapY(), searchDto.getRadiusKm())
-                )
-                .fetch();
+            .selectFrom(QFestival.festival)
+            .where(
+                QFestival.festival.status.`in`(FestivalStatus.ONGOING, FestivalStatus.UPCOMING),
+                nearBy(searchDto.mapX, searchDto.mapY, searchDto.radiusKm)
+            )
+            .fetch()
     }
 
-    private OrderSpecifier<?>[] festivalSort(Pageable pageable) {
-        List<OrderSpecifier<?>> orderSpecifiers = new ArrayList<>();
+    private fun festivalSort(pageable: Pageable): Array<OrderSpecifier<*>> {
+        val festival = QFestival.festival
+        val orderSpecifiers: MutableList<OrderSpecifier<*>> = ArrayList<OrderSpecifier<*>>()
+        val specs = mutableListOf<OrderSpecifier<*>>()
 
         //1순위 룰 -> sort 조건과 관계없이 상태값 정렬(진행중>예정>종료)
-        NumberExpression<Integer> statusPriority = new CaseBuilder()
-                .when(festival.status.eq(FestivalStatus.ONGOING)).then(1)
-                .when(festival.status.eq(FestivalStatus.UPCOMING)).then(2)
-                .otherwise(3);
-
-        orderSpecifiers.add(statusPriority.asc());
+        specs += CaseBuilder()
+            .`when`(festival.status.eq(FestivalStatus.ONGOING)).then(1)
+            .`when`(festival.status.eq(FestivalStatus.UPCOMING)).then(2)
+            .otherwise(3)
+            .asc()
 
         //2순위
-        if(!pageable.getSort().isEmpty()) {
-            //조회순/북마크순 정렬
-            for (Sort.Order order : pageable.getSort()) {
-                Order direction = order.getDirection().isAscending() ? Order.ASC : Order.DESC;
-                switch (order.getProperty()) {
-                    case "viewCount" -> orderSpecifiers.add(new OrderSpecifier<>(direction, festival.viewCount));
-                    case "startDate" -> orderSpecifiers.add(new OrderSpecifier<>(direction, festival.startDate));
-                    case "bookMarkCount" ->
-                            orderSpecifiers.add(new OrderSpecifier<>(direction, festival.bookMarkCount));
+        if (!pageable.sort.isEmpty) {
+            pageable.sort.forEach { order ->
+                val direction = if (order.direction.isAscending) Order.ASC else Order.DESC
+                when (order.property) {
+                    "viewCount" -> specs += OrderSpecifier(direction, festival.viewCount)
+                    "startDate" -> specs += OrderSpecifier(direction, festival.startDate)
+                    "bookMarkCount" -> specs += OrderSpecifier(direction, festival.bookMarkCount)
                 }
             }
-        }else{
+        } else {
             //기본정렬 -> 아무조건도 없거나, 필터링(키워드/지역/월) 만 있을떄
-
             //Onging, Upcoming 인 경우 startDate 오름차순, 나머지는 null로 처리하여 마지막에 오도록
-            orderSpecifiers.add(
-                    new CaseBuilder()
-                            .when(festival.status.in(FestivalStatus.ONGOING, FestivalStatus.UPCOMING))
-                            .then(festival.startDate)
-                            .otherwise(Expressions.nullExpression(LocalDateTime.class))
-                            .asc().nullsLast()
-            );
-            //Eneded 인 경우 endDate 오름차순, 나머지는 null로 처리하여 마지막에 오도록
-            orderSpecifiers.add(
-                    new CaseBuilder()
-                            .when(festival.status.eq(FestivalStatus.ENDED))
-                            .then(festival.endDate)
-                            .otherwise(Expressions.nullExpression(LocalDateTime.class))
-                            .desc().nullsLast()
-            );
+            specs += CaseBuilder()
+                .`when`(festival.status.`in`(FestivalStatus.ONGOING, FestivalStatus.UPCOMING))
+                .then(festival.startDate)
+                .otherwise(Expressions.nullExpression(LocalDateTime::class.java))
+                .asc().nullsLast()
+
+            specs += CaseBuilder()
+                .`when`(festival.status.eq(FestivalStatus.ENDED))
+                .then(festival.endDate)
+                .otherwise(Expressions.nullExpression(LocalDateTime::class.java))
+                .desc().nullsLast()
         }
-        return orderSpecifiers.toArray(new OrderSpecifier[0]);
+        return specs.toTypedArray()
     }
 
-    public BooleanExpression nearBy(Double myMapx, Double myMapY, Double radiusKm){
-        if(myMapx==null||myMapY==null||radiusKm==null){
-            return null;
-        }
-        double latChange = radiusKm / 111.0; // 위도(Y) 변화량
-        double lonChange = radiusKm / 88.0;  // 경도(X) 변화량
+    private fun nearBy(myMapX: Double?, myMapY: Double?, radiusKm: Double?): BooleanExpression? {
+        if (myMapX == null || myMapY == null || radiusKm == null) return null
+        val festival = QFestival.festival
+        val latChange = radiusKm / 111.0 // 위도(Y) 변화량
+        val lonChange = radiusKm / 88.0 // 경도(X) 변화량
 
-        double minX = myMapx - lonChange;
-        double maxX = myMapx + lonChange;
-        double minY = myMapY - latChange;
-        double maxY = myMapY + latChange;
-
-        return festival.mapX.between(minX, maxX)
-                .and(festival.mapY.between(minY, maxY));
+        return festival.mapX.between(myMapX - lonChange, myMapX + lonChange)
+            .and(festival.mapY.between(myMapY - latChange, myMapY + latChange))
     }
 
-    private BooleanExpression keywordContains(String keyword) {
-        return StringUtils.hasText(keyword)?festival.title.contains(keyword):null;
+    private fun keywordContains(keyword: String?): BooleanExpression? =
+        keyword?.takeIf { it.isNotBlank() }
+            ?.let { QFestival.festival.title.contains(it) }
+
+
+    private fun monthEquals(month: Int?): BooleanExpression? {
+        if (month == null || month !in 1..12) return null
+        val targetMonth = YearMonth.of(LocalDateTime.now().year, month)
+
+        val startOfMonth = targetMonth.atDay(1).atStartOfDay()
+        val endOfMonth = targetMonth.atEndOfMonth().atTime(23, 59, 59, 999_999_999)
+
+        return QFestival.festival.startDate.loe(endOfMonth).and(QFestival.festival.endDate.goe(startOfMonth))
     }
 
-    private BooleanExpression monthEquals(Integer month) {
-        if(month==null||month<1||month>12) return null;
-        int currentYear = LocalDateTime.now().getYear();
-        YearMonth targetMonth = YearMonth.of(currentYear, month);
+    private fun statusEquals(status: FestivalStatus?): BooleanExpression? =
+        status?.let { QFestival.festival.status.eq(it) }
 
-        LocalDateTime startOfMonth = targetMonth.atDay(1).atStartOfDay();
-        LocalDateTime endOfMonth = targetMonth.atEndOfMonth().atTime(23, 59, 59, 999999999);
 
-        return festival.startDate.loe(endOfMonth).and(festival.endDate.goe(startOfMonth));
-    }
-
-    private BooleanExpression statusEquals(FestivalStatus status) {
-        return status !=null?festival.status.eq(status):null;
-
-    }
-
-    private BooleanExpression regionCodeEquals(String regionCode) {
-        if(!StringUtils.hasText(regionCode))return null;
-
-        return StringUtils.hasText(regionCode)?festival.lDongRegnCd.eq(regionCode):null;
-    }
+    private fun regionCodeEquals(regionCode: String?): BooleanExpression? =
+        regionCode?.takeIf { it.isNotBlank() }
+            ?.let { QFestival.festival.lDongRegnCd.eq(it) }
 }
