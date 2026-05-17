@@ -15,13 +15,16 @@ class FestivalDetailSyncPendingService(
 ) {
     // 실패 또는 미시도 대상 contentId를 pending에 저장한다.
     fun saveOrUpdate(contentId: String, reason: DetailSyncPendingReason) {
-        val pending = pendingRepository.findByContentId(contentId).orElse(null)
+        val pending = pendingRepository.findByContentId(contentId)
 
         if (pending != null) {
             pending.updateFailure(reason)
-        } else {
-            pendingRepository.save(FestivalDetailSyncPending.create(contentId, reason))
+            return
         }
+
+        pendingRepository.save(
+            FestivalDetailSyncPending.create(contentId, reason)
+        )
     }
 
     // 상세 보강 성공 시 pending에서 제거한다.
