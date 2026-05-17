@@ -33,7 +33,7 @@ class FestivalDetailSyncPendingService(
     @Transactional(readOnly = true)
     fun findAllContentIds(): List<String> =
         pendingRepository.findAllByOrderByLastFailedAtAsc()
-            .map(FestivalDetailSyncPending::getContentId)
+            .map { it.contentId }
 
     // 재처리 대상 건수 카운터(로그용)
     @Transactional(readOnly = true)
