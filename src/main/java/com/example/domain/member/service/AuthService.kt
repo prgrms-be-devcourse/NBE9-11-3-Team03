@@ -50,7 +50,7 @@ class AuthService(
         )
 
         val savedMember = memberRepository.save(member)
-        log.info("[Member] 회원가입 완료 - loginId=${savedMember.loginId}")
+        log.info("[Member] 회원가입 완료 - loginId={}", savedMember.loginId)
 
         return SignupResponse.from(savedMember)
     }
@@ -64,7 +64,7 @@ class AuthService(
         val accessToken = createAccessToken(member)
         val refreshToken = createAndSaveRefreshToken(member)
 
-        log.info("[Member] 로그인 성공 - loginId=${member.loginId}")
+        log.info("[Member] 로그인 성공 - loginId={}", member.loginId)
         return LoginResponse.of(accessToken, refreshToken, member)
     }
 
@@ -88,7 +88,7 @@ class AuthService(
         val newRefreshToken = jwtUtil.createRefreshToken(member)
         refreshToken.update(newRefreshToken, jwtUtil.getExpirationDateTime(newRefreshToken))
 
-        log.info("[Member] 토큰 재발급 완료 - loginId=${member.loginId}")
+        log.info("[Member] 토큰 재발급 완료 - loginId={}", member.loginId)
         return TokenReissueResponse.of(newAccessToken, newRefreshToken)
     }
 
@@ -99,7 +99,7 @@ class AuthService(
             .ifPresent(RefreshToken::logout)
 
         saveAccessTokenBlacklist(accessToken)
-        log.info("[Member] 로그아웃 처리 - loginId=${member.loginId}")
+        log.info("[Member] 로그아웃 처리 - loginId={}", member.loginId)
     }
 
     @Transactional
@@ -117,7 +117,7 @@ class AuthService(
             .ifPresent(RefreshToken::logout)
 
         saveAccessTokenBlacklist(accessToken)
-        log.info("[Member] 회원 탈퇴 처리 - loginId=$loginId")
+        log.info("[Member] 회원 탈퇴 처리 - loginId={}", loginId)
 
         return WithdrawResponse(member.id, member.status)
     }
@@ -173,7 +173,7 @@ class AuthService(
 
     private fun validateLoginPassword(loginId: String?, rawPassword: String?, encodedPassword: String) {
         if (!passwordEncoder.matches(rawPassword, encodedPassword)) {
-            log.warn("[Member] 로그인 실패 - loginId=$loginId")
+            log.warn("[Member] 로그인 실패 - loginId={}", loginId)
             throw UnauthorizedException("비밀번호가 일치하지 않습니다.")
         }
     }
@@ -215,7 +215,7 @@ class AuthService(
 
     private fun validateRefreshTokenNotExpired(refreshToken: RefreshToken) {
         if (refreshToken.isExpired) {
-            log.warn("[Member] 만료된 리프레시 토큰 - memberId=${refreshToken.member.id}")
+            log.warn("[Member] 만료된 리프레시 토큰 - memberId={}", refreshToken.member.id)
             refreshTokenRepository.delete(refreshToken)
             throw UnauthorizedException("만료된 refresh token입니다.")
         }

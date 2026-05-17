@@ -43,7 +43,7 @@ class MemberService(
             .orElseThrow { CustomNotFoundException("404", "존재하지 않는 회원입니다.") }
 
         if (member.status == MemberStatus.WITHDRAWN) {
-            log.warn("[ADMIN] 회원 강제 탈퇴 실패(이미 탈퇴한 회원) - memberId=$memberId")
+            log.warn("[ADMIN] 회원 강제 탈퇴 실패(이미 탈퇴한 회원) - memberId={}", memberId)
             throw IllegalArgumentException("이미 탈퇴 처리된 회원입니다.")
         }
 
