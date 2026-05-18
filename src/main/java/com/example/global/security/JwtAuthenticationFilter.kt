@@ -119,7 +119,7 @@ class JwtAuthenticationFilter(
         devTokenEnabled && StringUtils.hasText(devTokenValue) && devTokenValue == token
 
     // Spring Security가 "이 요청은 인증된 사용자 요청"이라고 알 수 있도록 인증 정보를 저장한다.
-    private fun setAuthentication(loginId: String, role: String, request: HttpServletRequest) {
+    private fun setAuthentication(loginId: String, role: String?, request: HttpServletRequest) {
         val authentication = UsernamePasswordAuthenticationToken(
             loginId,
             null,

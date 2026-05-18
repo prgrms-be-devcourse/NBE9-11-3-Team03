@@ -19,10 +19,10 @@ data class MyBookMarkItemResponse(
             return MyBookMarkItemResponse(
                 festivalBookmark.getId(),
                 festivalBookmark.festival.getId(),
-                festivalBookmark.festival.getTitle(),
-                festivalBookmark.festival.getAddress(),
-                festivalBookmark.festival.getStartDate(),
-                festivalBookmark.festival.getEndDate(),
+                festivalBookmark.festival.title,
+                festivalBookmark.festival.address,
+                festivalBookmark.festival.startDate,
+                festivalBookmark.festival.endDate,
                 festivalBookmark.getCreatedAt()
             )
         }

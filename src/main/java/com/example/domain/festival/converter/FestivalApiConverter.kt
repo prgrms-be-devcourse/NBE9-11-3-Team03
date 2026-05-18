@@ -19,22 +19,22 @@ class FestivalApiConverter {
         val startDate = parseStartDate(requiredText(item.eventstartdate))
         val endDate = parseEndDate(requiredText(item.eventenddate))
 
-        return Festival.builder()
-            .contentId(requiredText(item.contentid))
-            .title(requiredText(item.title))
-            .overview(defaultText(item.overview))
-            .contactNumber(normalizeContactNumber(item.tel))
-            .firstImageUrl(nullableText(item.firstimage))
-            .thumbnailUrl(resolveThumbnail(item.firstimage2, item.firstimage))
-            .address(buildAddress(requiredText(item.addr1), item.addr2))
-            .homepageUrl(extractHomepageUrl(item.homepage))
-            .startDate(startDate)
-            .endDate(endDate)
-            .mapX(parseDouble(requiredText(item.mapx)))
-            .mapY(parseDouble(requiredText(item.mapy)))
-            .lDongRegnCd(extractRegionCode(item.lDongRegnCd))
-            .status(calculateStatus(startDate, endDate))
-            .build()
+        return Festival(
+            contentId = requiredText(item.contentid),
+            title = requiredText(item.title),
+            overview = defaultText(item.overview),
+            address = buildAddress(requiredText(item.addr1), item.addr2),
+            startDate = startDate,
+            endDate = endDate,
+            mapX = parseDouble(requiredText(item.mapx)),
+            mapY = parseDouble(requiredText(item.mapy)),
+            contactNumber = normalizeContactNumber(item.tel),
+            firstImageUrl = nullableText(item.firstimage),
+            thumbnailUrl = resolveThumbnail(item.firstimage2, item.firstimage),
+            homepageUrl = extractHomepageUrl(item.homepage),
+            lDongRegnCd = extractRegionCode(item.lDongRegnCd),
+            status = calculateStatus(startDate, endDate)
+        )
     }
 
     // 기존 Festival 엔티티에 외부 API 값을 반영 (contentId 기준으로 이미 존재하는 축제를 Update할 때)
