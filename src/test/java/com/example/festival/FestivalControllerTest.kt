@@ -34,15 +34,15 @@ class FestivalControllerTest {
     private lateinit var mockMvc: MockMvc
 
     @Autowired
-    private lateinit var  festivalRepository: FestivalRepository
+    private lateinit var festivalRepository: FestivalRepository
 
     @Autowired
-    private lateinit var  memberRepository: MemberRepository
+    private lateinit var memberRepository: MemberRepository
 
     @Autowired
-    private lateinit var  festivalBookmarkRepository: FestivalBookmarkRepository
+    private lateinit var festivalBookmarkRepository: FestivalBookmarkRepository
 
-    private lateinit var  savedFestival: Festival
+    private lateinit var savedFestival: Festival
 
     @BeforeEach
     fun setUp() {
@@ -115,8 +115,8 @@ class FestivalControllerTest {
             .andDo(print())
             .andExpect(jsonPath("$.status").value("200"))
             .andExpect(
-                jsonPath("$.data.id").value(targetId)
-            ) // 핵심 검증: 찜한 데이터가 있으므로 true 로 반환되어야 함
+                jsonPath("$.data.id").value(targetId))
+            // 핵심 검증: 찜한 데이터가 있으므로 true 로 반환되어야 함
             .andExpect(jsonPath("$.data.isBookmarked").value(true))
     }
 }

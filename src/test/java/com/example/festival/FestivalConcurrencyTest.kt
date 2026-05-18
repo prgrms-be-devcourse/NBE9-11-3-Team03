@@ -51,7 +51,7 @@ class FestivalConcurrencyTest {
     }
 
     @Test
-    @DisplayName("조회수 동시성 문제 - 100명이 동시에 조회하면 조회수가 100이 되지 않는다 (Lost Update 발생)")
+    @DisplayName("조회수 동시성 테스트 - 100명이 동시에 조회해도 조회수가 정확히 100이어야 한다")
     fun viewCount_concurrency_issue_test() {
         // given
         val threadCount = 100

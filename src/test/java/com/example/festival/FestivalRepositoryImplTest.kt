@@ -125,7 +125,7 @@ class FestivalRepositoryImplTest {
 
         val result = festivalRepository.searchFestivals(condition, pageRequest)
 
-        assertThat<Festival?>(result.getContent()).hasSize(5)
+        assertThat<Festival?>(result.content).hasSize(5)
 
         // 1순위 룰: ONGOING -> UPCOMING -> ENDED 확인
         assertThat(result.content[0].status).isEqualTo(FestivalStatus.ONGOING)
@@ -150,7 +150,7 @@ class FestivalRepositoryImplTest {
         val result = festivalRepository.searchFestivals(condition, pageRequest)
 
         // then
-        assertThat(result.getContent()).hasSize(1)
+        assertThat(result.content).hasSize(1)
         assertThat(result.content[0].title).isEqualTo("진행중인 서울 벚꽃축제")
     }
 

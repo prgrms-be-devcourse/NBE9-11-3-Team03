@@ -2,8 +2,6 @@ package com.example.domain.festival.repository
 
 import com.example.domain.festival.converter.FestivalApiConverter
 import com.example.domain.festival.dto.external.FestivalApiItem
-import com.example.domain.festival.entity.Festival
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
