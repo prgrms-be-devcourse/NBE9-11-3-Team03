@@ -79,11 +79,10 @@ class JwtUtil(
         try {
             parseClaims(token)
             true
-        } catch (e: Exception) {
-            when (e) {
-                is JwtException, is IllegalArgumentException -> false
-                else -> throw e
-            }
+        } catch (e: JwtException) {
+            false
+        } catch (e: IllegalArgumentException) {
+            false
         }
 
 

@@ -51,15 +51,19 @@ class Festival(
     @Column(nullable = false)
     var status: FestivalStatus = FestivalStatus.UPCOMING,
 
-    @Column(nullable = false)
-    var viewCount: Int = 0,
-
-    @Column(nullable = false)
-    var bookMarkCount: Int = 0,
-
-    @Column(nullable = false)
-    var averageRate: Double = 0.0,
 ) : BaseEntity() {
+
+    @Column(nullable = false)
+    var viewCount: Int = 0
+        protected set
+
+    @Column(nullable = false)
+    var bookMarkCount: Int = 0
+        protected set
+
+    @Column(nullable = false)
+    var averageRate: Double = 0.0
+        protected set
 
     fun updateAverageRating(averageRating: Double) {
         this.averageRate = averageRating
