@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.security.crypto.password.PasswordEncoder
 import java.time.LocalDateTime
+import org.slf4j.LoggerFactory
 
 //초기 데이터용 추후 삭제
 @Configuration
@@ -56,7 +57,7 @@ class InitDataConfig {
                 )
 
                 memberRepository.saveAll(dummyMembers)
-                println("✅ 초기 더미 회원 5명 DB 저장 완료!")
+                log.info("[Init] 초기 더미 회원 5명 DB 저장 완료")
             }
 
             // APi 확인용 Festival 데이터
@@ -75,4 +76,8 @@ class InitDataConfig {
             }
         }
     }
+    companion object {
+        private val log = LoggerFactory.getLogger(InitDataConfig::class.java)
+    }
+
 }
