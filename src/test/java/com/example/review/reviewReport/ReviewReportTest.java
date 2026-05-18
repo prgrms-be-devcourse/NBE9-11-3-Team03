@@ -58,7 +58,7 @@ public class ReviewReportTest {
         //    본인 리뷰 신고 방지 로직이 추가되었기 때문에,
         //    신고자 목록과 리뷰 작성자를 분리해야 동시성 테스트가 정확해집니다.
         writer = memberRepository.save(
-                new Member(
+                 Member.create(
                         "리뷰작성자",
                         "1234",
                         "writer",
@@ -71,7 +71,7 @@ public class ReviewReportTest {
         // 2. 100명의 서로 다른 신고자를 생성합니다.
         //    중복 신고 방지 로직을 우회하기 위해 모든 신고자는 서로 다른 계정이어야 합니다.
         for (int i = 0; i < THREAD_COUNT; i++) {
-            Member member = new Member(
+            Member member= Member.create(
                     "신고자" + i,
                     "1234",
                     "reporter" + i,

@@ -55,11 +55,11 @@ class ReviewReportServiceTest {
             val reviewId = 1L
             val loginId = "reporter1"
 
-            val reporter = Member("loginId", "pw", "신고자", "reporter@test.com", "닉네임", 0).apply {
+            val reporter = Member.create("loginId", "pw", "신고자", "reporter@test.com", "닉네임").apply {
                 setId(this, 10L)
             }
 
-            val writer = Member("writerId", "pw", "작성자", "writer@test.com", "작성자닉네임", 0).apply {
+            val writer = Member.create("writerId", "pw", "작성자", "writer@test.com", "작성자닉네임").apply {
                 setId(this, 20L)
             }
 
@@ -92,11 +92,11 @@ class ReviewReportServiceTest {
             val reviewId = 1L
             val loginId = "reporter1"
 
-            val reporter = Member("loginId", "pw", "신고자", "reporter@test.com", "닉네임", 0).apply {
+            val reporter = Member.create("loginId", "pw", "신고자", "reporter@test.com", "닉네임").apply {
                 setId(this, 10L)
             }
 
-            val writer = Member("writerId", "pw", "작성자", "writer@test.com", "작성자닉네임", 0).apply {
+            val writer = Member.create("writerId", "pw", "작성자", "writer@test.com", "작성자닉네임").apply {
                 setId(this, 20L) // reporter와 다른 사람이어야 함
             }
 
@@ -124,7 +124,7 @@ class ReviewReportServiceTest {
             val reviewId = 999L
             val loginId = "reporter1"
 
-            val reporter = Member("loginId", "pw", "신고자", "reporter@test.com", "닉네임", 0).apply {
+            val reporter = Member.create("loginId", "pw", "신고자", "reporter@test.com", "닉네임").apply {
                 setId(this, 10L)
             }
 
@@ -144,7 +144,7 @@ class ReviewReportServiceTest {
             val reviewId = 1L
             val loginId = "reporter1"
 
-            val reporter = Member("loginId", "pw", "신고자", "reporter@test.com", "닉네임", 0).apply {
+            val reporter = Member.create("loginId", "pw", "신고자", "reporter@test.com", "닉네임").apply {
                 setId(this, 10L)
             }
 
@@ -187,11 +187,11 @@ class ReviewReportServiceTest {
             val loginId = "writer1"
 
             // reporter와 writer의 ID가 같도록 설정 (본인 리뷰 신고 테스트)
-            val reporter = Member("loginId", "pw", "작성자", "writer@test.com", "닉네임", 0).apply {
+            val reporter = Member.create("loginId", "pw", "작성자", "writer@test.com", "닉네임").apply {
                 setId(this, 10L)
             }
 
-            val writer = Member("loginId2", "pw", "작성자", "writer2@test.com", "닉네임2", 0).apply {
+            val writer = Member.create("loginId2", "pw", "작성자", "writer2@test.com", "닉네임2").apply {
                 setId(this, 10L)
             }
 

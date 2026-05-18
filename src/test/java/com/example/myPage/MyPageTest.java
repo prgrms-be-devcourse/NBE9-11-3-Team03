@@ -62,7 +62,7 @@ public class MyPageTest {
     @WithMockUser(username = "myPageUser")
     void t1() throws Exception {
         // 1. Given: 테스트용 회원 생성
-        Member member = new Member("myPageUser", "1234", "홍길동", "mypage@test.com", "길동이t1", 0);
+        Member member = Member.create("myPageUser", "1234", "홍길동", "mypage@test.com", "길동이t1");
         memberRepository.save(member);
 
         // 2. Given: 해당 회원이 작성한 리뷰 2개 생성
@@ -107,7 +107,7 @@ public class MyPageTest {
     @WithMockUser(username = "myPageUser")
     void getMyReviewsTest() throws Exception {
         // 1. Given: 테스트용 회원 및 축제 생성
-        Member member = new Member("myPageUser", "1234", "홍길동", "mypage@test.com", "길동이t1", 0);
+        Member member = Member.create("myPageUser", "1234", "홍길동", "mypage@test.com", "길동이t1");
         memberRepository.save(member);
 
         Festival festival = new Festival(
@@ -155,13 +155,12 @@ public class MyPageTest {
         String rawPassword = "password123";
 
         // PasswordEncoder를 주입받아 암호화해서 저장해야 서비스의 matches를 통과합니다.
-        Member member = new Member(
+        Member member = Member.create(
                 loginId,
                 passwordEncoder.encode(rawPassword), // 암호화 필수
                 "탈퇴전닉네임",
                 "withdraw@test.com",
-                "길동",
-                0
+                "길동"
         );
         memberRepository.save(member);
 
@@ -192,13 +191,12 @@ public class MyPageTest {
     @WithMockUser(username = "failUser")
     void withdrawFailTest() throws Exception {
         // 1. Given: 회원 저장
-        Member member = new Member(
+        Member member =  Member.create(
                 "failUser",
                 passwordEncoder.encode("correctPassword"),
                 "실패테스트",
                 "fail@test.com",
-                "길동",
-                0
+                "길동"
         );
         memberRepository.save(member);
 

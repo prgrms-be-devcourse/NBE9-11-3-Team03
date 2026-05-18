@@ -96,16 +96,15 @@ public class FestivalControllerTest {
     @WithMockUser(username = "testUser123") // 💡 가짜 인증 유저 생성 (authentication.getName()이 "testUser123"이 됨)
     void getFestivalDetail_WithBookmark_Success() throws Exception {
         // given: 유저 생성 및 해당 축제에 대한 찜(Bookmark) 데이터 저장
-        Member member = Member.builder()
-                .loginId("testUser123")
-                .password("1234")
-                .nickname("테스터")
-                .memberName("무기남")
-                .email("test@test.com")
-                .reportCount(0)
-                .role(Role.USER)
-                .status(MemberStatus.ACTIVE)
-                .build();
+        Member member = Member.create(
+                "무기남",
+                "1234",
+                "testUser123",
+                "test@test.com",
+                "테스터",
+                Role.USER,
+                0
+        );
         memberRepository.save(member);
 
         FestivalBookmark bookmark = new FestivalBookmark(member, savedFestival);

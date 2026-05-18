@@ -55,7 +55,7 @@ public class ReviewLikeTest {
     void setUp() {
         // 1. 100명의 서로 다른 유저 생성 (한 유저는 한 리뷰에 1번만 좋아요 가능하므로)
         for (int i = 0; i < THREAD_COUNT; i++) {
-            Member member = new Member(
+            Member member = Member.create(
                     "유저" + i,
                     "1234",
                     "user" + i,

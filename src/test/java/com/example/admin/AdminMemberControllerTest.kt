@@ -4,6 +4,7 @@ import com.example.domain.festival.entity.Festival
 import com.example.domain.festival.repository.FestivalRepository
 import com.example.domain.member.entity.Member
 import com.example.domain.member.entity.MemberStatus
+import com.example.domain.member.entity.Role
 import com.example.domain.member.repository.MemberRepository
 import com.example.domain.review.entity.Review
 import com.example.domain.review.repository.ReviewRepository
@@ -59,9 +60,9 @@ class AdminMemberControllerTest {
     @Test
     @DisplayName("신고누적순")
     fun t2() {
-        val lowReport = Member("user1", "1234", "이름1", "user1@test.com", "저신고자", 1)
-        val midReport = Member("user2", "1234", "이름2", "user2@test.com", "중신고자", 5)
-        val highReport = Member("user3", "1234", "이름3", "user3@test.com", "고신고자", 10)
+        val lowReport = Member.create("user1", "1234", "이름1", "user1@test.com", "저신고자", Role.USER,1)
+        val midReport = Member.create("user2", "1234", "이름2", "user2@test.com", "중신고자", Role.USER,5)
+        val highReport = Member.create("user3", "1234", "이름3", "user3@test.com", "고신고자", Role.USER,10)
 
         memberRepository.saveAll(listOf(lowReport, midReport, highReport))
 
@@ -82,7 +83,7 @@ class AdminMemberControllerTest {
     @Test
     @DisplayName("관리자가 회원을 강제 탈퇴시키면 상태가 WITHDRAWN으로 변경되고 닉네임이 마스킹된다.")
     fun t4() {
-        val member = Member("user4", "1234", "이름4", "user4@test.com", "활동중인회원", 0)
+        val member = Member.create("user4", "1234", "이름4", "user4@test.com", "활동중인회원", Role.USER,0)
         memberRepository.save(member)
 
         val memberId = member.id
@@ -110,10 +111,10 @@ class AdminMemberControllerTest {
     @DisplayName("탈퇴한 회원이 작성한 리뷰를 조회하면 닉네임이 '탈퇴된 회원입니다.'로 표시된다.")
     @WithMockUser(username = "visitor", roles = ["USER"]) // 1. API를 호출할 유저 지정
     fun t5() {
-        val visitor = Member("visitor", "1234", "방문자", "visitor@test.com", "방문자닉넴", 0)
+        val visitor = Member.create("visitor", "1234", "방문자", "visitor@test.com", "방문자닉넴", Role.USER,0)
         memberRepository.save(visitor)
 
-        val member = Member("user5", "1234", "이름5", "user5@test.com", "탈퇴전이름", 0)
+        val member = Member.create("user5", "1234", "이름5", "user5@test.com", "탈퇴전이름", Role.USER,0)
         memberRepository.save(member)
         member.withdraw() // 상태: WITHDRAWN 변경
         memberRepository.save(member)

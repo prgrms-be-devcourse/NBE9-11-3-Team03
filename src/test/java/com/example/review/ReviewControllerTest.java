@@ -57,7 +57,7 @@ class ReviewControllerTest {
     @BeforeEach
     void setUp() {
         savedMember = memberRepository.save(
-                new Member(
+                Member.create(
                         "유저2",
                         "1234",
                         "user2",
@@ -68,7 +68,7 @@ class ReviewControllerTest {
         );
 
         otherMember = memberRepository.save(
-                new Member(
+                 Member.create(
                         "유저3",
                         "1234",
                         "user3",

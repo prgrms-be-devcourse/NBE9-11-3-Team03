@@ -50,7 +50,7 @@ public class ReviewLikeCancelTest {
     void setUp() {
         // 1. 100명의 유저 생성
         for (int i = 0; i < THREAD_COUNT; i++) {
-            Member member = new Member("유저" + i, "1234", "user" + i, "user" + i + "@test.com", "닉네임" + i, Role.USER);
+            Member member =Member.create("유저" + i, "1234", "user" + i, "user" + i + "@test.com", "닉네임" + i, Role.USER);
             members.add(memberRepository.save(member));
         }
 

@@ -3,6 +3,7 @@ package com.example.admin
 import com.example.domain.festival.entity.Festival
 import com.example.domain.festival.repository.FestivalRepository
 import com.example.domain.member.entity.Member
+import com.example.domain.member.entity.Role
 import com.example.domain.member.repository.MemberRepository
 import com.example.domain.review.entity.Review
 import com.example.domain.review.repository.ReviewRepository
@@ -44,7 +45,7 @@ class AdminReviewConcurrencyTest {
     @DisplayName("관리자 2명이 동시에 한 유저의 '서로 다른 2개의 리뷰'를 BLIND 처리 시, 작성자의 신고횟수 갱신 손실발생 확인")
     fun adminBlindConcurrencyTest() {
         // given
-        val author = Member("baduser", "1234", "악플러", "bad@test.com", "악성유저", 0)
+        val author = Member.create("baduser", "1234", "악플러", "bad@test.com", "악성유저", Role.USER,0)
         memberRepository.save(author)
 
         val festival = Festival(
@@ -102,7 +103,7 @@ class AdminReviewConcurrencyTest {
     @DisplayName("한 리뷰에 대해 한 명은 BLIND, 한 명은 DISMISS를 동시에 요청할 때 방어 로직 검증")
     fun blindAndDismissConcurrencyTest() {
         // given
-        val author = Member("baduser2", "1234", "악플러2", "bad2@test.com", "악성유저2", 0)
+        val author = Member.create("baduser2", "1234", "악플러2", "bad2@test.com", "악성유저2", Role.USER,0)
         memberRepository.save(author)
 
         val festival = Festival(

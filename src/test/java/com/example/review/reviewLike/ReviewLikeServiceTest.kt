@@ -56,7 +56,7 @@ class ReviewLikeServiceTest {
             val loginId = "user1"
 
             // apply를 활용해 생성과 동시에 id 세팅
-            val member = Member("loginId", "pw", "홍길동", "user@test.com", "닉네임", 0).apply {
+            val member = Member.create("loginId", "pw", "홍길동", "user@test.com", "닉네임").apply {
                 setId(this, 1L)
             }
 
@@ -90,7 +90,7 @@ class ReviewLikeServiceTest {
             val reviewId = 10L
             val loginId = "user1"
 
-            val member = Member("loginId", "pw", "홍길동", "user@test.com", "닉네임", 0).apply {
+            val member = Member.create("loginId", "pw", "홍길동", "user@test.com", "닉네임").apply {
                 setId(this, 1L)
             }
 
@@ -117,7 +117,7 @@ class ReviewLikeServiceTest {
             val reviewId = 999L
             val loginId = "user1"
 
-            val member = Member("loginId", "pw", "홍길동", "user@test.com", "닉네임", 0).apply {
+            val member = Member.create("loginId", "pw", "홍길동", "user@test.com", "닉네임").apply {
                 setId(this, 1L)
             }
 
@@ -158,7 +158,7 @@ class ReviewLikeServiceTest {
             val reviewId = 10L
             val loginId = "user1"
 
-            val member = Member("loginId", "pw", "홍길동", "user@test.com", "닉네임", 0).apply {
+            val member = Member.create("loginId", "pw", "홍길동", "user@test.com", "닉네임").apply {
                 setId(this, 1L)
             }
 
@@ -193,7 +193,7 @@ class ReviewLikeServiceTest {
             val reviewId = 10L
             val loginId = "user1"
 
-            val member = Member("loginId", "pw", "홍길동", "user@test.com", "닉네임", 0).apply {
+            val member = Member.create("loginId", "pw", "홍길동", "user@test.com", "닉네임",).apply {
                 setId(this, 1L)
             }
 

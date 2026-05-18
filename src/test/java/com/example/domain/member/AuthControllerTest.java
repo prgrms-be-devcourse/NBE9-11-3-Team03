@@ -221,7 +221,7 @@ public class AuthControllerTest {
     }
 
     private Member saveMember(String loginId, String email, String nickname, String password) {
-        return memberRepository.save(new Member(
+        return memberRepository.save(Member.create(
                 "테스트회원",
                 passwordEncoder.encode(password),
                 loginId,

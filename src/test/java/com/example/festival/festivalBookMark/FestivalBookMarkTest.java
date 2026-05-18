@@ -47,7 +47,7 @@ public class FestivalBookMarkTest {
     void setUp() {
         // 1. 100명의 서로 다른 유저 생성 (동일 유저의 중복 찜 예외를 방지)
         for (int i = 0; i < THREAD_COUNT; i++) {
-            Member member = new Member(
+            Member member = Member.create(
                     "찜유저" + i,
                     "1234",
                     "bookmarkUser" + i,

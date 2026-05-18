@@ -4,6 +4,7 @@ import com.example.domain.admin.dto.request.ReviewProcessRequest
 import com.example.domain.festival.entity.Festival
 import com.example.domain.festival.repository.FestivalRepository
 import com.example.domain.member.entity.Member
+import com.example.domain.member.entity.Role
 import com.example.domain.member.repository.MemberRepository
 import com.example.domain.review.entity.Review
 import com.example.domain.review.entity.ReviewStatus
@@ -53,7 +54,7 @@ class AdminReviewControllerTest {
     @DisplayName("신고 누적 5회 이상인 리뷰 조회")
     fun t1() {
         // Given
-        val author = Member("user1", "1234", "이름1", "user1@test.com", "작성자", 0)
+        val author = Member.create("user1", "1234", "이름1", "user1@test.com", "작성자", Role.USER,0)
         memberRepository.save(author)
 
         // 이전 단계에서 정의한 코틀린 스타일 생성자 호출 적용 (JvmOverloads 활용)
@@ -95,7 +96,7 @@ class AdminReviewControllerTest {
     @DisplayName("리뷰 블라인드 처리 - 리뷰 상태 변경 및 작성자 신고 횟수 증가 확인")
     fun t2() {
         // Given
-        val author = Member("user2", "1234", "이름2", "user2@test.com", "작성자2", 0)
+        val author = Member.create("user2", "1234", "이름2", "user2@test.com", "작성자2")
         memberRepository.save(author)
 
         val festival = Festival(
@@ -133,7 +134,7 @@ class AdminReviewControllerTest {
     @DisplayName("신고 초기화(무혐의) - 리뷰 신고수 리셋 확인")
     fun t3() {
         // Given
-        val author = Member("user3", "1234", "이름3", "user3@test.com", "작성자3", 0)
+        val author = Member.create("user3", "1234", "이름3", "user3@test.com", "작성자3")
         memberRepository.save(author)
 
         val festival = Festival(
@@ -168,7 +169,7 @@ class AdminReviewControllerTest {
     @WithMockUser(username = "user4", roles = ["USER"])
     fun t4() {
         // Given
-        val author = Member("user4", "1234", "이름4", "user4@test.com", "작성자4", 0)
+        val author = Member.create("user4", "1234", "이름4", "user4@test.com", "작성자4")
         memberRepository.save(author)
 
         val festival = Festival(

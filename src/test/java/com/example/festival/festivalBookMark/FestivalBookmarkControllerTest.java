@@ -52,7 +52,7 @@ public class FestivalBookmarkControllerTest {
     @BeforeEach
     void setUp() {
         // 1. 테스트용 유저 생성
-        Member member = new Member(
+        Member member = Member.create(
                 "테스트유저",
                 "1234",
                 "testUser",
