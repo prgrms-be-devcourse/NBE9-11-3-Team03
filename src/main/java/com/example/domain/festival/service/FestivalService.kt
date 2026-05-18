@@ -53,10 +53,8 @@ class FestivalService(
     @Transactional
     fun getFestivalDetail(id: Long, loginId: String?): FestivalDetailResponse {
         val festival = getFestival(id)
-        val isBookmarked = loginId
-            ?.let { memberRepository.findByLoginId(it).getOrNull()?.id }
-            ?.let { festivalBookmarkRepository.existsByMemberIdAndFestivalId(it, id) }
-            ?: false
+        val member = loginId?.let { memberRepository.findByLoginId(it) }
+        val isBookmarked = member?.let { festivalBookmarkRepository.existsByMemberIdAndFestivalId(it.id, id) } ?: false
         return FestivalDetailResponse.from(festival, isBookmarked)
     }
 
@@ -67,7 +65,7 @@ class FestivalService(
     private fun resolveBookmarkedIds(loginId: String?, festivals: List<Festival>): Set<Long> {
         if (loginId == null || festivals.isEmpty()) return emptySet()
 
-        val memberId = memberRepository.findByLoginId(loginId).getOrNull()?.id
+        val memberId = memberRepository.findByLoginId(loginId)?.id
             ?: return emptySet()
 
         val festivalIds = festivals.map { it.id }

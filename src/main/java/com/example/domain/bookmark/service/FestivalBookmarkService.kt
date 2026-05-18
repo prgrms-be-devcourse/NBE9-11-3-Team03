@@ -23,7 +23,7 @@ class FestivalBookmarkService(
     @Transactional
     fun bookmarkFestival(festivalId: Long, loginId: String): FestivalBookmarkResponse {
         val member = memberRepository.findByLoginId(loginId)
-            .orElseThrow { UnauthorizedException("로그인이 필요한 서비스입니다.") }
+            ?: throw UnauthorizedException("로그인이 필요한 서비스입니다.")
 
         val festival = festivalRepository.findById(festivalId)
             .orElseThrow { CustomNotFoundException("해당 축제를 찾을 수 없습니다.") }
@@ -47,7 +47,7 @@ class FestivalBookmarkService(
     @Transactional
     fun cancelBookmark(festivalId: Long, loginId: String): FestivalBookmarkResponse {
         val member = memberRepository.findByLoginId(loginId)
-            .orElseThrow { UnauthorizedException("로그인이 필요한 서비스입니다.") }
+            ?: throw UnauthorizedException("로그인이 필요한 서비스입니다.")
 
         val festival = festivalRepository.findById(festivalId)
             .orElseThrow { CustomNotFoundException("해당 축제를 찾을 수 없습니다.") }
