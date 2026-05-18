@@ -7,8 +7,6 @@ import com.example.domain.festival.repository.FestivalDetailSyncPendingRepositor
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -22,7 +20,7 @@ class FestivalDetailSyncPendingServiceTest {
     @Test
     @DisplayName("pending이 없으면 새로 생성한다")
     void saveOrUpdate_create_test() {
-        when(repository.findByContentId("1001")).thenReturn(Optional.empty());
+        when(repository.findByContentId("1001")).thenReturn(null);
 
         service.saveOrUpdate("1001", DetailSyncPendingReason.EXCEPTION);
 
@@ -35,7 +33,7 @@ class FestivalDetailSyncPendingServiceTest {
         FestivalDetailSyncPending existing =
                 FestivalDetailSyncPending.create("1001", DetailSyncPendingReason.EXCEPTION);
 
-        when(repository.findByContentId("1001")).thenReturn(Optional.of(existing));
+        when(repository.findByContentId("1001")).thenReturn(existing);
 
         service.saveOrUpdate("1001", DetailSyncPendingReason.SERVER_ERROR);
 
