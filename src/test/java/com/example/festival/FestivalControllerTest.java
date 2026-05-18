@@ -52,20 +52,18 @@ public class FestivalControllerTest {
     @BeforeEach
     void setUp() {
         // 테스트용 더미 데이터 세팅
-        Festival festival = Festival.builder()
-                .contentId("FEST-001")
-                .overview("축제 상세조회 테스트용 축제입니다.")
-                .mapX(126.9780)
-                .mapY(37.5665)
-                .title("상세조회 타겟 축제")
-                .address("서울 테스트구")
-                .status(FestivalStatus.ONGOING)
-                .startDate(LocalDateTime.now().minusDays(1))
-                .endDate(LocalDateTime.now().plusDays(10))
-                .viewCount(0)
-                .bookMarkCount(0)
-                .averageRate(0.0)
-                .build();
+        Festival festival = new Festival(
+                "FEST-001",
+                "상세조회 타겟 축제",
+                "축제 상세조회 테스트용 축제입니다.",
+                "서울 테스트구",
+                LocalDateTime.now().minusDays(1),
+                LocalDateTime.now().plusDays(10),
+                126.9780,
+                37.5665,
+                null, null, null, null, null,
+                FestivalStatus.ONGOING
+        );
 
         savedFestival = festivalRepository.save(festival);
     }
@@ -98,16 +96,15 @@ public class FestivalControllerTest {
     @WithMockUser(username = "testUser123") // 💡 가짜 인증 유저 생성 (authentication.getName()이 "testUser123"이 됨)
     void getFestivalDetail_WithBookmark_Success() throws Exception {
         // given: 유저 생성 및 해당 축제에 대한 찜(Bookmark) 데이터 저장
-        Member member = Member.builder()
-                .loginId("testUser123")
-                .password("1234")
-                .nickname("테스터")
-                .memberName("무기남")
-                .email("test@test.com")
-                .reportCount(0)
-                .role(Role.USER)
-                .status(MemberStatus.ACTIVE)
-                .build();
+        Member member = Member.create(
+                "무기남",
+                "1234",
+                "testUser123",
+                "test@test.com",
+                "테스터",
+                Role.USER,
+                0
+        );
         memberRepository.save(member);
 
         FestivalBookmark bookmark = new FestivalBookmark(member, savedFestival);

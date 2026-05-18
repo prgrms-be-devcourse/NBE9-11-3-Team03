@@ -45,13 +45,22 @@ public class FestivalBookMarkCancelTest {
     void setUp() {
         // 1. 100명의 유저 생성
         for (int i = 0; i < THREAD_COUNT; i++) {
-            Member member = new Member("찜유저" + i, "1234", "bmUser" + i, "bm" + i + "@test.com", "닉네임" + i, Role.USER);
+            Member member = Member.create("찜유저" + i, "1234", "bmUser" + i, "bm" + i + "@test.com", "닉네임" + i, Role.USER);
             members.add(memberRepository.save(member));
         }
 
-        Festival initialFestival = Festival.builder()
-                .contentId("FEST-BM-CANCEL").overview("테스트").mapX(126.9).mapY(37.5).title("축제").address("주소")
-                .status(FestivalStatus.ONGOING).startDate(LocalDateTime.now()).endDate(LocalDateTime.now().plusDays(10)).build();
+        Festival initialFestival = new Festival(
+                "FEST-BM-CANCEL",
+                "축제",
+                "테스트",
+                "주소",
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(10),
+                126.9,
+                37.5,
+                null, null, null, null, null,
+                FestivalStatus.ONGOING
+        );
 
         savedFestival = festivalRepository.save(initialFestival);
 
