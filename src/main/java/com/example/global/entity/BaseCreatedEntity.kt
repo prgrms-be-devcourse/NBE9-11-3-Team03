@@ -1,29 +1,20 @@
-package com.example.global.entity;
+package com.example.global.entity
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
+import jakarta.persistence.*
+import org.springframework.data.annotation.CreatedDate
+import org.springframework.data.jpa.domain.support.AuditingEntityListener
+import java.time.LocalDateTime
 
 @MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
-public abstract class BaseCreatedEntity {
-
+@EntityListeners(AuditingEntityListener::class)
+abstract class BaseCreatedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    var id: Long = 0
+        protected set
 
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
-    private LocalDateTime createdAt;
-
-    public Long getId() {
-        return id;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    lateinit var createdAt: LocalDateTime
+        protected set
 }
