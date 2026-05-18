@@ -92,24 +92,7 @@ kapt {
     keepJavacAnnotationProcessors = true
 }
 
-val mainRuntimeClassesJar by tasks.registering(Jar::class) {
-    archiveFileName.set("festival-main-runtime-classes.jar")
-    destinationDirectory.set(file("${System.getProperty("java.io.tmpdir")}/festival-gradle-test-runtime"))
-    from(sourceSets["main"].output)
-}
-
-val testRuntimeClassesJar by tasks.registering(Jar::class) {
-    archiveFileName.set("festival-test-runtime-classes.jar")
-    destinationDirectory.set(file("${System.getProperty("java.io.tmpdir")}/festival-gradle-test-runtime"))
-    from(sourceSets["test"].output)
-}
 
 tasks.withType<Test> {
     useJUnitPlatform()
-    dependsOn(mainRuntimeClassesJar, testRuntimeClassesJar)
-
-    testClassesDirs = sourceSets["test"].output.classesDirs
-    classpath = files(testRuntimeClassesJar, mainRuntimeClassesJar) + sourceSets["test"].runtimeClasspath.filter {
-        !it.absolutePath.startsWith(projectDir.absolutePath)
-    }
 }
