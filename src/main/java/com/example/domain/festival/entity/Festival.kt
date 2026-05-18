@@ -154,6 +154,44 @@ class Festival(
     // 축제 찜 수 1 감소
     fun decreaseBookmarkCount() {
         if (this.bookMarkCount > 0) this.bookMarkCount--
-
     }
+
+    companion object {
+        /**
+         * 테스트 전용 팩토리. 운영 코드에서는 사용 금지.
+         * viewCount/bookMarkCount/averageRate를 직접 세팅하기 위함.
+         */
+        @JvmStatic
+        fun forTest(
+            contentId: String,
+            title: String,
+            overview: String,
+            address: String,
+            startDate: LocalDateTime,
+            endDate: LocalDateTime,
+            mapX: Double,
+            mapY: Double,
+            lDongRegnCd: String? = null,
+            status: FestivalStatus = FestivalStatus.UPCOMING,
+            viewCount: Int = 0,
+            bookMarkCount: Int = 0,
+            averageRate: Double = 0.0,
+        ): Festival = Festival(
+            contentId = contentId,
+            title = title,
+            overview = overview,
+            address = address,
+            startDate = startDate,
+            endDate = endDate,
+            mapX = mapX,
+            mapY = mapY,
+            lDongRegnCd = lDongRegnCd,
+            status = status,
+        ).apply {
+            this.viewCount = viewCount
+            this.bookMarkCount = bookMarkCount
+            this.averageRate = averageRate
+        }
+    }
+
 }
