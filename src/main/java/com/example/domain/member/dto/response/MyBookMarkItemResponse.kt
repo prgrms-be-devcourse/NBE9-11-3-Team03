@@ -17,13 +17,13 @@ data class MyBookMarkItemResponse(
         @JvmStatic
         fun from(festivalBookmark: FestivalBookmark): MyBookMarkItemResponse {
             return MyBookMarkItemResponse(
-                festivalBookmark.getId(),
-                festivalBookmark.festival.getId(),
+                festivalBookmark.id,
+                festivalBookmark.festival.id,
                 festivalBookmark.festival.title,
                 festivalBookmark.festival.address,
                 festivalBookmark.festival.startDate,
                 festivalBookmark.festival.endDate,
-                festivalBookmark.getCreatedAt()
+                festivalBookmark.createdAt
             )
         }
     }
