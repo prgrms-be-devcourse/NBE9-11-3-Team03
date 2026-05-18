@@ -18,12 +18,12 @@ data class MemberDetailResponse(
         fun from(member: Member): MemberDetailResponse {
             return MemberDetailResponse(
                 member.getId(),
-                member.getLoginId(),
-                member.getEmail(),
-                member.getNickname(),
-                member.getReportCount(),
-                member.getStatus().name,
-                member.getRole().name,
+                member.loginId,
+                member.email,
+                member.nickname,
+                member.reportCount,
+                member.status.name,
+                member.role.name,
                 member.getCreatedAt()
             )
         }

@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 
 import com.jayway.jsonpath.JsonPath;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -177,7 +178,8 @@ public class AuthControllerTest {
         saveMember("authUser7", "auth7@test.com", "인증유저7", "1234");
 
         Cookie refreshTokenCookie = loginAndGetRefreshTokenCookie("authUser7", "1234");
-        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenCookie.getValue()).orElseThrow();
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenCookie.getValue());
+        assertThat(refreshToken).isNotNull();
 
         // DB 기준 만료 시간을 과거로 바꿔서 만료된 refresh token 상황을 만듭니다.
         ReflectionTestUtils.setField(refreshToken, "expiresAt", LocalDateTime.now().minusSeconds(1));
