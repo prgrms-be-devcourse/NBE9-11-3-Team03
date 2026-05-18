@@ -47,7 +47,7 @@ public class FestivalBookMarkTest {
     void setUp() {
         // 1. 100명의 서로 다른 유저 생성 (동일 유저의 중복 찜 예외를 방지)
         for (int i = 0; i < THREAD_COUNT; i++) {
-            Member member = new Member(
+            Member member = Member.create(
                     "찜유저" + i,
                     "1234",
                     "bookmarkUser" + i,
@@ -60,20 +60,18 @@ public class FestivalBookMarkTest {
 
         // 2. 찜 대상이 될 축제 하나 생성
         savedFestival = festivalRepository.save(
-                Festival.builder()
-                        .contentId("FEST-BM-CONCURRENCY")
-                        .overview("찜 동시성 테스트용 축제")
-                        .mapX(126.9780)
-                        .mapY(37.5665)
-                        .title("찜 동시성 축제")
-                        .address("서울 테스트구")
-                        .status(FestivalStatus.ONGOING)
-                        .startDate(LocalDateTime.now().minusDays(1))
-                        .endDate(LocalDateTime.now().plusDays(10))
-                        .viewCount(0)
-                        .bookMarkCount(0)
-                        .averageRate(0.0)
-                        .build()
+                new Festival(
+                        "FEST-BM-CONCURRENCY",
+                        "찜 동시성 축제",
+                        "찜 동시성 테스트용 축제",
+                        "서울 테스트구",
+                        LocalDateTime.now().minusDays(1),
+                        LocalDateTime.now().plusDays(10),
+                        126.9780,
+                        37.5665,
+                        null, null, null, null, null,
+                        FestivalStatus.ONGOING
+                )
         );
     }
 

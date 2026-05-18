@@ -1,224 +1,230 @@
-package com.example.review.reviewLike;
+package com.example.review.reviewLike
 
-import com.example.domain.member.entity.Member;
-import com.example.domain.member.repository.MemberRepository;
-import com.example.domain.review.entity.Review;
-import com.example.domain.review.repository.ReviewRepository;
-import com.example.domain.review.service.ReviewLikeService;
-import com.example.domain.reviewlike.dto.response.ReviewLikeResponse;
-import com.example.domain.reviewlike.entity.ReviewLike;
-import com.example.domain.reviewlike.repository.ReviewLikeRepository;
-import com.example.global.exception.BadRequestException;
-import com.example.global.exception.ConflictException;
-import com.example.global.exception.CustomNotFoundException;
-import com.example.global.exception.UnauthorizedException;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import com.example.domain.member.entity.Member
+import com.example.domain.member.repository.MemberRepository
+import com.example.domain.review.entity.Review
+import com.example.domain.review.entity.ReviewStatus
+import com.example.domain.review.repository.ReviewRepository
+import com.example.domain.review.service.ReviewLikeService
+import com.example.domain.reviewlike.entity.ReviewLike
+import com.example.domain.reviewlike.repository.ReviewLikeRepository
+import com.example.global.exception.BadRequestException
+import com.example.global.exception.ConflictException
+import com.example.global.exception.CustomNotFoundException
+import com.example.global.exception.UnauthorizedException
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.BDDMockito.any
+import org.mockito.BDDMockito.given
+import org.mockito.BDDMockito.never
+import org.mockito.BDDMockito.verify
+import org.mockito.InjectMocks
+import org.mockito.Mock
+import org.mockito.Mockito.mock
+import org.mockito.junit.jupiter.MockitoExtension
+import java.util.Optional
 
-import java.lang.reflect.Field;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(MockitoExtension::class)
 class ReviewLikeServiceTest {
 
     @Mock
-    private ReviewLikeRepository reviewLikeRepository;
+    private lateinit var reviewLikeRepository: ReviewLikeRepository
 
     @Mock
-    private ReviewRepository reviewRepository;
+    private lateinit var reviewRepository: ReviewRepository
 
     @Mock
-    private MemberRepository memberRepository;
+    private lateinit var memberRepository: MemberRepository
 
     @InjectMocks
-    private ReviewLikeService reviewLikeService;
+    private lateinit var reviewLikeService: ReviewLikeService
 
     @Nested
     @DisplayName("리뷰 좋아요")
-    class LikeReviewTest {
+    inner class LikeReviewTest { // 코틀린에서는 Nested 클래스에 inner를 붙여야 외부 프로퍼티에 접근 가능합니다.
 
         @Test
         @DisplayName("좋아요 성공")
-        void likeReview_success() {
+        fun likeReview_success() {
             // given
-            Long reviewId = 10L;
-            String loginId = "user1";
+            val reviewId = 10L
+            val loginId = "user1"
 
-            Member member = new Member("loginId", "pw", "홍길동", "user@test.com", "닉네임", 0);
-            setId(member, 1L);
+            // apply를 활용해 생성과 동시에 id 세팅
+            val member = Member.create("loginId", "pw", "홍길동", "user@test.com", "닉네임").apply {
+                setId(this, 1L)
+            }
 
-            Review review = mock(Review.class);
-            when(review.getId()).thenReturn(reviewId);
-            when(review.getStatus()).thenReturn(com.example.domain.review.entity.ReviewStatus.ACTIVE);
-            when(review.getLikeCount()).thenReturn(0);
+            val review = mock(Review::class.java)
+            given(review.id).willReturn(reviewId)
+            given(review.status).willReturn(ReviewStatus.ACTIVE)
+            given(review.likeCount).willReturn(0)
 
-            when(memberRepository.findByLoginId(loginId)).thenReturn(Optional.of(member));
-            when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
-            when(reviewLikeRepository.existsByMemberIdAndReviewId(1L, reviewId)).thenReturn(false);
+            // 코틀린 서비스 단에서 nullable로 받으므로 Optional 대신 직접 리턴
+            given(memberRepository.findByLoginId(loginId)).willReturn(member)
+            given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review))
+            given(reviewLikeRepository.existsByMemberIdAndReviewId(1L, reviewId)).willReturn(false)
 
             // when
-            ReviewLikeResponse result = reviewLikeService.likeReview(reviewId, loginId);
+            val result = reviewLikeService.likeReview(reviewId, loginId)
 
             // then
-            assertThat(result.getReviewId()).isEqualTo(reviewId);
-            assertThat(result.getMemberId()).isEqualTo(1L);
-            assertThat(result.isLiked()).isTrue();
-            assertThat(result.getLikeCount()).isEqualTo(1);
+            assertThat(result.reviewId).isEqualTo(reviewId)
+            assertThat(result.memberId).isEqualTo(1L)
+            assertThat(result.isLiked).isTrue()
+            assertThat(result.likeCount).isEqualTo(1)
 
-            verify(reviewLikeRepository).save(any(ReviewLike.class));
-            verify(reviewRepository).increaseLikeCount(reviewId);
+            verify(reviewLikeRepository).save(any(ReviewLike::class.java))
+            verify(reviewRepository).increaseLikeCount(reviewId)
         }
 
         @Test
         @DisplayName("같은 유저 중복 좋아요")
-        void likeReview_duplicate() {
+        fun likeReview_duplicate() {
             // given
-            Long reviewId = 10L;
-            String loginId = "user1";
+            val reviewId = 10L
+            val loginId = "user1"
 
-            Member member = new Member("loginId", "pw", "홍길동", "user@test.com", "닉네임", 0);
-            setId(member, 1L);
+            val member = Member.create("loginId", "pw", "홍길동", "user@test.com", "닉네임").apply {
+                setId(this, 1L)
+            }
 
-            Review review = mock(Review.class);
-            when(review.getStatus()).thenReturn(com.example.domain.review.entity.ReviewStatus.ACTIVE);
+            val review = mock(Review::class.java)
+            given(review.status).willReturn(ReviewStatus.ACTIVE)
 
-            when(memberRepository.findByLoginId(loginId)).thenReturn(Optional.of(member));
-            when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
-            when(reviewLikeRepository.existsByMemberIdAndReviewId(1L, reviewId)).thenReturn(true);
+            given(memberRepository.findByLoginId(loginId)).willReturn(member)
+            given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review))
+            given(reviewLikeRepository.existsByMemberIdAndReviewId(1L, reviewId)).willReturn(true)
 
             // when & then
-            assertThatThrownBy(() -> reviewLikeService.likeReview(reviewId, loginId))
-                    .isInstanceOf(ConflictException.class)
-                    .hasMessage("이미 좋아요를 누른 리뷰입니다.");
+            assertThatThrownBy { reviewLikeService.likeReview(reviewId, loginId) }
+                .isInstanceOf(ConflictException::class.java)
+                .hasMessage("이미 좋아요를 누른 리뷰입니다.")
 
-            verify(reviewLikeRepository, never()).save(any());
-            verify(reviewRepository, never()).increaseLikeCount(anyLong());
+            verify(reviewLikeRepository, never()).save(any())
+            verify(reviewRepository, never()).increaseLikeCount(anyLong())
         }
 
         @Test
         @DisplayName("존재하지 않는 리뷰 좋아요 시도")
-        void likeReview_reviewNotFound() {
+        fun likeReview_reviewNotFound() {
             // given
-            Long reviewId = 999L;
-            String loginId = "user1";
+            val reviewId = 999L
+            val loginId = "user1"
 
-            Member member = new Member("loginId", "pw", "홍길동", "user@test.com", "닉네임", 0);
-            setId(member, 1L);
+            val member = Member.create("loginId", "pw", "홍길동", "user@test.com", "닉네임").apply {
+                setId(this, 1L)
+            }
 
-            when(memberRepository.findByLoginId(loginId)).thenReturn(Optional.of(member));
-            when(reviewRepository.findById(reviewId)).thenReturn(Optional.empty());
+            given(memberRepository.findByLoginId(loginId)).willReturn(member)
+            given(reviewRepository.findById(reviewId)).willReturn(Optional.empty())
 
             // when & then
-            assertThatThrownBy(() -> reviewLikeService.likeReview(reviewId, loginId))
-                    .isInstanceOf(CustomNotFoundException.class)
-                    .hasMessage("존재하지 않는 리뷰입니다.");
+            assertThatThrownBy { reviewLikeService.likeReview(reviewId, loginId) }
+                .isInstanceOf(CustomNotFoundException::class.java)
+                .hasMessage("존재하지 않는 리뷰입니다.")
         }
 
         @Test
         @DisplayName("로그인 회원 정보 없음")
-        void likeReview_memberNotFound() {
+        fun likeReview_memberNotFound() {
             // given
-            Long reviewId = 10L;
-            String loginId = "unknown";
+            val reviewId = 10L
+            val loginId = "unknown"
 
-            when(memberRepository.findByLoginId(loginId)).thenReturn(Optional.empty());
+            // nullable 반환이므로 null 세팅
+            given(memberRepository.findByLoginId(loginId)).willReturn(null)
 
             // when & then
-            assertThatThrownBy(() -> reviewLikeService.likeReview(reviewId, loginId))
-                    .isInstanceOf(UnauthorizedException.class)
-                    .hasMessage("로그인한 회원 정보를 찾을 수 없습니다.");
+            assertThatThrownBy { reviewLikeService.likeReview(reviewId, loginId) }
+                .isInstanceOf(UnauthorizedException::class.java)
+                .hasMessage("로그인한 회원 정보를 찾을 수 없습니다.")
         }
     }
 
     @Nested
     @DisplayName("리뷰 좋아요 취소")
-    class CancelLikeReviewTest {
+    inner class CancelLikeReviewTest {
 
         @Test
         @DisplayName("좋아요 취소 성공")
-        void cancelLikeReview_success() {
+        fun cancelLikeReview_success() {
             // given
-            Long reviewId = 10L;
-            String loginId = "user1";
+            val reviewId = 10L
+            val loginId = "user1"
 
-            Member member = new Member("loginId", "pw", "홍길동", "user@test.com", "닉네임", 0);
-            setId(member, 1L);
+            val member = Member.create("loginId", "pw", "홍길동", "user@test.com", "닉네임").apply {
+                setId(this, 1L)
+            }
 
-            Review review = mock(Review.class);
-            when(review.getId()).thenReturn(reviewId);
-            when(review.getLikeCount()).thenReturn(1);
+            val review = mock(Review::class.java)
+            given(review.id).willReturn(reviewId)
+            given(review.likeCount).willReturn(1)
 
-            ReviewLike reviewLike = mock(ReviewLike.class);
+            val reviewLike = mock(ReviewLike::class.java)
 
-            when(memberRepository.findByLoginId(loginId)).thenReturn(Optional.of(member));
-            when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
-            when(reviewLikeRepository.findByMemberIdAndReviewId(1L, reviewId)).thenReturn(Optional.of(reviewLike));
+            given(memberRepository.findByLoginId(loginId)).willReturn(member)
+            given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review))
+            given(reviewLikeRepository.findByMemberIdAndReviewId(1L, reviewId)).willReturn(reviewLike)
 
             // when
-            ReviewLikeResponse result = reviewLikeService.cancelLikeReview(reviewId, loginId);
+            val result = reviewLikeService.cancelLikeReview(reviewId, loginId)
 
             // then
-            assertThat(result.getReviewId()).isEqualTo(reviewId);
-            assertThat(result.getMemberId()).isEqualTo(1L);
-            assertThat(result.isLiked()).isFalse();
-            assertThat(result.getLikeCount()).isEqualTo(0);
+            assertThat(result.reviewId).isEqualTo(reviewId)
+            assertThat(result.memberId).isEqualTo(1L)
+            assertThat(result.isLiked).isFalse()
+            assertThat(result.likeCount).isEqualTo(0)
 
-            verify(reviewLikeRepository).delete(reviewLike);
-            verify(reviewLikeRepository).flush();
-            verify(reviewRepository).decreaseLikeCount(reviewId);
+            verify(reviewLikeRepository).delete(reviewLike)
+            verify(reviewLikeRepository).flush()
+            verify(reviewRepository).decreaseLikeCount(reviewId)
         }
 
         @Test
         @DisplayName("좋아요 누르지 않은 상태에서 취소")
-        void cancelLikeReview_withoutLike() {
+        fun cancelLikeReview_withoutLike() {
             // given
-            Long reviewId = 10L;
-            String loginId = "user1";
+            val reviewId = 10L
+            val loginId = "user1"
 
-            Member member = new Member("loginId", "pw", "홍길동", "user@test.com", "닉네임", 0);
-            setId(member, 1L);
+            val member = Member.create("loginId", "pw", "홍길동", "user@test.com", "닉네임",).apply {
+                setId(this, 1L)
+            }
 
-            Review review = mock(Review.class);
+            val review = mock(Review::class.java)
 
-            when(memberRepository.findByLoginId(loginId)).thenReturn(Optional.of(member));
-            when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(review));
-            when(reviewLikeRepository.findByMemberIdAndReviewId(1L, reviewId)).thenReturn(Optional.empty());
+            given(memberRepository.findByLoginId(loginId)).willReturn(member)
+            given(reviewRepository.findById(reviewId)).willReturn(Optional.of(review))
+            given(reviewLikeRepository.findByMemberIdAndReviewId(1L, reviewId)).willReturn(null)
 
             // when & then
-            assertThatThrownBy(() -> reviewLikeService.cancelLikeReview(reviewId, loginId))
-                    .isInstanceOf(BadRequestException.class)
-                    .hasMessage("좋아요를 누르지 않은 리뷰입니다.");
+            assertThatThrownBy { reviewLikeService.cancelLikeReview(reviewId, loginId) }
+                .isInstanceOf(BadRequestException::class.java)
+                .hasMessage("좋아요를 누르지 않은 리뷰입니다.")
 
-            verify(reviewLikeRepository, never()).delete(any());
-            verify(reviewRepository, never()).decreaseLikeCount(anyLong());
+            verify(reviewLikeRepository, never()).delete(any())
+            verify(reviewRepository, never()).decreaseLikeCount(anyLong())
         }
     }
 
-    private void setId(Object target, Long id) {
-        try {
-            Class<?> clazz = target.getClass();
-            while (clazz != null) {
-                try {
-                    Field field = clazz.getDeclaredField("id");
-                    field.setAccessible(true);
-                    field.set(target, id);
-                    return;
-                } catch (NoSuchFieldException e) {
-                    clazz = clazz.getSuperclass();
-                }
+    private fun setId(target: Any, id: Long) {
+        var clazz: Class<*>? = target.javaClass
+        while (clazz != null) {
+            try {
+                val field = clazz.getDeclaredField("id")
+                field.isAccessible = true
+                field.set(target, id)
+                return
+            } catch (e: NoSuchFieldException) {
+                clazz = clazz.superclass
             }
-            throw new IllegalArgumentException("id 필드를 찾을 수 없습니다.");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
+        throw IllegalArgumentException("id 필드를 찾을 수 없습니다.")
     }
 }

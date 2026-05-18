@@ -61,22 +61,22 @@ class FestivalSyncServiceTest {
             FestivalApiItem item = createApiItem("1001", "가야문화축제");
             FestivalApiResponse response = createResponse(List.of(item));
 
-            Festival newFestival = Festival.builder()
-                    .contentId("1001")
-                    .title("가야문화축제")
-                    .overview("상세 설명 없음")
-                    .contactNumber("055-330-6840")
-                    .firstImageUrl("image1.jpg")
-                    .thumbnailUrl("image2.jpg")
-                    .address("경상남도 김해시 대성동")
-                    .homepageUrl("https://test.com")
-                    .startDate(LocalDateTime.of(2026, 4, 30, 0, 0))
-                    .endDate(LocalDateTime.of(2026, 5, 3, 23, 59, 59))
-                    .mapX(128.87)
-                    .mapY(35.23)
-                    .lDongRegnCd("48")
-                    .status(FestivalStatus.UPCOMING)
-                    .build();
+            Festival newFestival = new Festival(
+                    "1001",
+                    "가야문화축제",
+                    "상세 설명 없음",
+                    "경상남도 김해시 대성동",
+                    LocalDateTime.of(2026, 4, 30, 0, 0),
+                    LocalDateTime.of(2026, 5, 3, 23, 59, 59),
+                    128.87,
+                    35.23,
+                    "055-330-6840",
+                    "image1.jpg",
+                    "image2.jpg",
+                    "https://test.com",
+                    "48",
+                    FestivalStatus.UPCOMING
+            );
 
             when(festivalApiClient.fetchFestivalList(1, 10, "20260101")).thenReturn(response);
             when(festivalRepository.findAllByContentIdIn(List.of("1001"))).thenReturn(List.of());
@@ -100,22 +100,22 @@ class FestivalSyncServiceTest {
             FestivalApiItem item = createApiItem("1001", "수정된 축제명");
             FestivalApiResponse response = createResponse(List.of(item));
 
-            Festival existingFestival = Festival.builder()
-                    .contentId("1001")
-                    .title("기존 축제명")
-                    .overview("기존 설명")
-                    .contactNumber("055-1111-1111")
-                    .firstImageUrl("old1.jpg")
-                    .thumbnailUrl("old2.jpg")
-                    .address("기존 주소")
-                    .homepageUrl("https://old.com")
-                    .startDate(LocalDateTime.of(2026, 4, 1, 0, 0))
-                    .endDate(LocalDateTime.of(2026, 4, 2, 23, 59, 59))
-                    .mapX(127.0)
-                    .mapY(37.0)
-                    .lDongRegnCd("11")
-                    .status(FestivalStatus.UPCOMING)
-                    .build();
+            Festival existingFestival = new Festival(
+                    "1001",
+                    "기존 축제명",
+                    "기존 설명",
+                    "기존 주소",
+                    LocalDateTime.of(2026, 4, 1, 0, 0),
+                    LocalDateTime.of(2026, 4, 2, 23, 59, 59),
+                    127.0,
+                    37.0,
+                    "055-1111-1111",
+                    "old1.jpg",
+                    "old2.jpg",
+                    "https://old.com",
+                    "11",
+                    FestivalStatus.UPCOMING
+            );
 
             when(festivalApiClient.fetchFestivalList(1, 10, "20260101")).thenReturn(response);
             when(festivalRepository.findAllByContentIdIn(List.of("1001"))).thenReturn(List.of(existingFestival));
@@ -139,22 +139,22 @@ class FestivalSyncServiceTest {
             FestivalApiItem item = createApiItem("1001", "기존 축제명");
             FestivalApiResponse response = createResponse(List.of(item));
 
-            Festival existingFestival = Festival.builder()
-                    .contentId("1001")
-                    .title("기존 축제명")
-                    .overview("기존 설명")
-                    .contactNumber("055-1111-1111")
-                    .firstImageUrl("old1.jpg")
-                    .thumbnailUrl("old2.jpg")
-                    .address("기존 주소")
-                    .homepageUrl("https://old.com")
-                    .startDate(LocalDateTime.of(2026, 4, 1, 0, 0))
-                    .endDate(LocalDateTime.of(2026, 4, 2, 23, 59, 59))
-                    .mapX(127.0)
-                    .mapY(37.0)
-                    .lDongRegnCd("11")
-                    .status(FestivalStatus.UPCOMING)
-                    .build();
+            Festival existingFestival = new Festival(
+                    "1001",
+                    "기존 축제명",
+                    "기존 설명",
+                    "기존 주소",
+                    LocalDateTime.of(2026, 4, 1, 0, 0),
+                    LocalDateTime.of(2026, 4, 2, 23, 59, 59),
+                    127.0,
+                    37.0,
+                    "055-1111-1111",
+                    "old1.jpg",
+                    "old2.jpg",
+                    "https://old.com",
+                    "11",
+                    FestivalStatus.UPCOMING
+            );
 
             when(festivalApiClient.fetchFestivalList(1, 10, "20260101")).thenReturn(response);
             when(festivalRepository.findAllByContentIdIn(List.of("1001"))).thenReturn(List.of(existingFestival));
@@ -185,22 +185,22 @@ class FestivalSyncServiceTest {
 
             FestivalApiResponse response = createResponse(List.of(item1, item2));
 
-            Festival newFestival = Festival.builder()
-                    .contentId("1001")
-                    .title("가야문화축제")
-                    .overview("상세 설명 없음")
-                    .contactNumber("055-330-6840")
-                    .firstImageUrl("image1.jpg")
-                    .thumbnailUrl("image2.jpg")
-                    .address("경상남도 김해시 대성동")
-                    .homepageUrl("https://test.com")
-                    .startDate(LocalDateTime.of(2026, 4, 30, 0, 0))
-                    .endDate(LocalDateTime.of(2026, 5, 3, 23, 59, 59))
-                    .mapX(128.87)
-                    .mapY(35.23)
-                    .lDongRegnCd("48")
-                    .status(FestivalStatus.UPCOMING)
-                    .build();
+            Festival newFestival = new Festival(
+                    "1001",
+                    "가야문화축제",
+                    "상세 설명 없음",
+                    "경상남도 김해시 대성동",
+                    LocalDateTime.of(2026, 4, 30, 0, 0),
+                    LocalDateTime.of(2026, 5, 3, 23, 59, 59),
+                    128.87,
+                    35.23,
+                    "055-330-6840",
+                    "image1.jpg",
+                    "image2.jpg",
+                    "https://test.com",
+                    "48",
+                    FestivalStatus.UPCOMING
+            );
 
             when(festivalApiClient.fetchFestivalList(1, 10, "20260101")).thenReturn(response);
             when(festivalRepository.findAllByContentIdIn(List.of("1001", "1002"))).thenReturn(List.of());
@@ -352,29 +352,33 @@ class FestivalSyncServiceTest {
         @Test
         @DisplayName("상세 보강 중 429가 발생하면 현재 건과 뒤 미시도 건을 pending에 저장하고 즉시 중단한다")
         void enrichFestivalDetailsByContentIds_429_break_test() {
-            Festival festival1 = Festival.builder()
-                    .contentId("1001")
-                    .title("축제1")
-                    .overview("기존 상세 설명")
-                    .address("서울")
-                    .startDate(LocalDateTime.now())
-                    .endDate(LocalDateTime.now().plusDays(1))
-                    .mapX(127.0)
-                    .mapY(37.0)
-                    .status(FestivalStatus.UPCOMING)
-                    .build();
+            // 축제 1 생성 (필수 인자 8개 + 중간 null 채우기 + 14번째 status 지정)
+            Festival festival1 = new Festival(
+                    "1001",                                          // 1. contentId
+                    "축제1",                                         // 2. title
+                    "기존 상세 설명",                                 // 3. overview
+                    "서울",                                          // 4. address
+                    LocalDateTime.now(),                             // 5. startDate
+                    LocalDateTime.now().plusDays(1),                 // 6. endDate
+                    127.0,                                           // 7. mapX (경도)
+                    37.0,                                            // 8. mapY (위도)
+                    null, null, null, null, null,                    // 9~13. 선택적 필드 기본값(null) 채우기
+                    FestivalStatus.UPCOMING                          // 14. status
+            );
 
-            Festival festival2 = Festival.builder()
-                    .contentId("1002")
-                    .title("축제2")
-                    .overview("기존 상세 설명")
-                    .address("부산")
-                    .startDate(LocalDateTime.now())
-                    .endDate(LocalDateTime.now().plusDays(1))
-                    .mapX(128.0)
-                    .mapY(35.0)
-                    .status(FestivalStatus.UPCOMING)
-                    .build();
+// 축제 2 생성
+            Festival festival2 = new Festival(
+                    "1002",                                          // 1. contentId
+                    "축제2",                                         // 2. title
+                    "기존 상세 설명",                                 // 3. overview
+                    "부산",                                          // 4. address
+                    LocalDateTime.now(),                             // 5. startDate
+                    LocalDateTime.now().plusDays(1),                 // 6. endDate
+                    128.0,                                           // 7. mapX (경도)
+                    35.0,                                            // 8. mapY (위도)
+                    null, null, null, null, null,                    // 9~13. 선택적 필드 기본값(null) 채우기
+                    FestivalStatus.UPCOMING                          // 14. status
+            );
 
             when(festivalRepository.findByContentId("1001")).thenReturn(Optional.of(festival1));
             when(festivalRepository.findByContentId("1002")).thenReturn(Optional.of(festival2));
@@ -405,29 +409,33 @@ class FestivalSyncServiceTest {
         @Test
         @DisplayName("상세 보강 중 5xx가 발생하면 해당 건을 pending에 저장하고 다음 건으로 진행한다")
         void enrichFestivalDetailsByContentIds_5xx_continue_test() throws Exception {
-            Festival festival1 = Festival.builder()
-                    .contentId("1001")
-                    .title("축제1")
-                    .overview("기존 상세 설명")
-                    .address("서울")
-                    .startDate(LocalDateTime.now())
-                    .endDate(LocalDateTime.now().plusDays(1))
-                    .mapX(127.0)
-                    .mapY(37.0)
-                    .status(FestivalStatus.UPCOMING)
-                    .build();
+            // 축제 1 생성 (필수 인자 8개 + 중간 null 채우기 + 14번째 status 지정)
+            Festival festival1 = new Festival(
+                    "1001",                                          // 1. contentId
+                    "축제1",                                         // 2. title
+                    "기존 상세 설명",                                 // 3. overview
+                    "서울",                                          // 4. address
+                    LocalDateTime.now(),                             // 5. startDate
+                    LocalDateTime.now().plusDays(1),                 // 6. endDate
+                    127.0,                                           // 7. mapX (경도)
+                    37.0,                                            // 8. mapY (위도)
+                    null, null, null, null, null,                    // 9~13. 선택적 필드 기본값(null) 채우기
+                    FestivalStatus.UPCOMING                          // 14. status
+            );
 
-            Festival festival2 = Festival.builder()
-                    .contentId("1002")
-                    .title("축제2")
-                    .overview("기존 상세 설명")
-                    .address("부산")
-                    .startDate(LocalDateTime.now())
-                    .endDate(LocalDateTime.now().plusDays(1))
-                    .mapX(128.0)
-                    .mapY(35.0)
-                    .status(FestivalStatus.UPCOMING)
-                    .build();
+// 축제 2 생성
+            Festival festival2 = new Festival(
+                    "1002",                                          // 1. contentId
+                    "축제2",                                         // 2. title
+                    "기존 상세 설명",                                 // 3. overview
+                    "부산",                                          // 4. address
+                    LocalDateTime.now(),                             // 5. startDate
+                    LocalDateTime.now().plusDays(1),                 // 6. endDate
+                    128.0,                                           // 7. mapX (경도)
+                    35.0,                                            // 8. mapY (위도)
+                    null, null, null, null, null,                    // 9~13. 선택적 필드 기본값(null) 채우기
+                    FestivalStatus.UPCOMING                          // 14. status
+            );
 
             FestivalApiItem detailItem = createApiItem("1002", "축제2");
             setField(detailItem, "overview", "새 상세 설명");
@@ -461,17 +469,18 @@ class FestivalSyncServiceTest {
         @Test
         @DisplayName("상세 응답 구조가 비정상이면 pending에 저장한다")
         void enrichFestivalDetailsByContentIds_invalid_response_save_pending_test() {
-            Festival festival = Festival.builder()
-                    .contentId("1001")
-                    .title("축제1")
-                    .overview("기존 상세 설명")
-                    .address("서울")
-                    .startDate(LocalDateTime.now())
-                    .endDate(LocalDateTime.now().plusDays(1))
-                    .mapX(127.0)
-                    .mapY(37.0)
-                    .status(FestivalStatus.UPCOMING)
-                    .build();
+            Festival festival = new Festival(
+                    "1001",                                          // 1. contentId
+                    "축제1",                                         // 2. title
+                    "기존 상세 설명",                                 // 3. overview
+                    "서울",                                          // 4. address
+                    LocalDateTime.now(),                             // 5. startDate
+                    LocalDateTime.now().plusDays(1),                 // 6. endDate
+                    127.0,                                           // 7. mapX (경도)
+                    37.0,                                            // 8. mapY (위도)
+                    null, null, null, null, null,                    // 9~13. 선택적 필드 기본값(null) 채우기
+                    FestivalStatus.UPCOMING                          // 14. status
+            );
 
             when(festivalRepository.findByContentId("1001")).thenReturn(Optional.of(festival));
             when(festivalApiClient.fetchFestivalDetail("1001")).thenReturn(null);
