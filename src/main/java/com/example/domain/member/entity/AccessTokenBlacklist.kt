@@ -1,35 +1,32 @@
-package com.example.domain.member.entity;
+package com.example.domain.member.entity
 
-import com.example.global.entity.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
+import com.example.global.entity.BaseEntity
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Table
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "access_token_blacklist")
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AccessTokenBlacklist extends BaseEntity {
-
+open class AccessTokenBlacklist protected constructor() : BaseEntity() {
     // 로그아웃된 access token을 저장함.
     @Column(nullable = false, unique = true, length = 500)
-    private String token;
+    lateinit var token: String
+        protected set
 
     // 이 시간이 지나면 blacklist 기록을 지워도 됨.
     @Column(name = "expires_at", nullable = false)
-    private LocalDateTime expiresAt;
+    lateinit var expiresAt: LocalDateTime
+        protected set
 
-    private AccessTokenBlacklist(String token, LocalDateTime expiresAt) {
-        this.token = token;
-        this.expiresAt = expiresAt;
+    private constructor(token: String, expiresAt: LocalDateTime) : this() {
+        this.token = token
+        this.expiresAt = expiresAt
     }
 
-    public static AccessTokenBlacklist create(String token, LocalDateTime expiresAt) {
-        return new AccessTokenBlacklist(token, expiresAt);
+    companion object {
+        @JvmStatic
+        fun create(token: String, expiresAt: LocalDateTime): AccessTokenBlacklist =
+            AccessTokenBlacklist(token, expiresAt)
     }
 }

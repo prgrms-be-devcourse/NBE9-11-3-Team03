@@ -1,7 +1,7 @@
-package com.example.domain.review.entity;
+package com.example.domain.review.entity
 
-public enum ReviewStatus {
-   ACTIVE,
+enum class ReviewStatus {
+    ACTIVE,
     DELETED,
     BLIND
 }

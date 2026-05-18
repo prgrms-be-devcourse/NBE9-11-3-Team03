@@ -19,14 +19,14 @@ data class MyReviewItemResponse(
         @JvmStatic
         fun from(review: Review): MyReviewItemResponse {
             return MyReviewItemResponse(
-                review.getId(),
-                review.getFestival().getId(),
-                review.getFestival().getTitle(),
-                review.getRating(),
-                review.getContent(),
-                review.getImage(),
-                review.getLikeCount(),
-                review.getCreatedAt()
+                review.id,
+                review.festival.id,
+                review.festival.title,
+                review.rating,
+                review.content,
+                review.image,
+                review.likeCount,
+                review.createdAt
             )
         }
     }

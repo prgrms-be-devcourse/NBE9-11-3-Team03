@@ -1,13 +1,10 @@
-package com.example.domain.reviewlike.repository;
+package com.example.domain.reviewlike.repository
 
-import com.example.domain.reviewlike.entity.ReviewLike;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.domain.reviewlike.entity.ReviewLike
+import org.springframework.data.jpa.repository.JpaRepository
+import java.util.*
 
-import java.util.Optional;
-
-public interface ReviewLikeRepository extends JpaRepository<ReviewLike, Long> {
-
-    boolean existsByMemberIdAndReviewId(Long memberId, Long reviewId);
-
-    Optional<ReviewLike> findByMemberIdAndReviewId(Long memberId, Long reviewId);
+interface ReviewLikeRepository : JpaRepository<ReviewLike, Long> {
+    fun existsByMemberIdAndReviewId(memberId: Long, reviewId: Long): Boolean
+    fun findByMemberIdAndReviewId(memberId: Long, reviewId: Long): ReviewLike?
 }

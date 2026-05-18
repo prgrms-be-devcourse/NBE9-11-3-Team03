@@ -1,281 +1,266 @@
-package com.example.domain.review.service;
+package com.example.domain.review.service
 
-import com.example.domain.admin.dto.response.AdminReviewBlindResponse;
-import com.example.domain.admin.dto.response.AdminReviewReportPageResponse;
-import com.example.domain.festival.entity.Festival;
-import com.example.domain.festival.repository.FestivalRepository;
-import com.example.domain.member.entity.Member;
-import com.example.domain.member.repository.MemberRepository;
-import com.example.domain.review.dto.request.ReviewCreateRequest;
-import com.example.domain.review.dto.request.ReviewUpdateRequest;
-import com.example.domain.review.dto.response.*;
-import com.example.domain.review.entity.Review;
-import com.example.domain.review.entity.ReviewStatus;
-import com.example.domain.review.repository.ReviewRepository;
-import com.example.domain.reviewlike.repository.ReviewLikeRepository;
-import com.example.global.exception.*;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+import com.example.domain.admin.dto.response.AdminReviewBlindResponse
+import com.example.domain.admin.dto.response.AdminReviewReportPageResponse
+import com.example.domain.festival.repository.FestivalRepository
+import com.example.domain.member.repository.MemberRepository
+import com.example.domain.review.dto.request.ReviewCreateRequest
+import com.example.domain.review.dto.request.ReviewUpdateRequest
+import com.example.domain.review.dto.response.*
+import com.example.domain.review.entity.Review
+import com.example.domain.review.entity.ReviewStatus
+import com.example.domain.review.repository.ReviewRepository
+import com.example.domain.reviewlike.repository.ReviewLikeRepository
+import com.example.global.exception.*
+import org.slf4j.LoggerFactory
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
+import org.springframework.data.repository.findByIdOrNull
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.multipart.MultipartFile
 
 @Service
-@RequiredArgsConstructor
 @Transactional(readOnly = true)
-@Slf4j
-public class ReviewService {
-    private final ReviewRepository reviewRepository;
-    private final MemberRepository memberRepository;
-    private final FestivalRepository festivalRepository;
-    private final ReviewLikeRepository reviewLikeRepository;
-    private final FileStorageService fileStorageService;
+class ReviewService(
+    private val reviewRepository: ReviewRepository,
+    private val memberRepository: MemberRepository,
+    private val festivalRepository: FestivalRepository,
+    private val reviewLikeRepository: ReviewLikeRepository,
+    private val fileStorageService: FileStorageService
+) {
 
-    //리뷰 작성
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    // 리뷰 작성
     @Transactional
-    public ReviewResponse createReview(Long festivalId, String loginId,
-                                       ReviewCreateRequest requestDto,
-                                       MultipartFile imageFile) { // 1. 파일 매개변수 추가
+    fun createReview(
+        festivalId: Long,
+        loginId: String,
+        requestDto: ReviewCreateRequest,
+        imageFile: MultipartFile?
+    ): ReviewResponse {
 
         // 1. 로그인한 회원 조회
-        Member member = memberRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다."));
+        val member = memberRepository.findByLoginId(loginId)
+            ?: throw UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.")
 
         // 2. 축제 존재 여부 확인
-        Festival festival = festivalRepository.findById(festivalId)
-                .orElseThrow(() -> new CustomNotFoundException("축제가 존재하지 않습니다."));
+        val festival = festivalRepository.findByIdOrNull(festivalId)
+            ?: throw CustomNotFoundException("축제가 존재하지 않습니다.")
 
         // ++ 같은 회원이 같은 축제에 중복 리뷰 작성 불가
-        if (reviewRepository.existsByMemberIdAndFestivalIdAndStatus(member.getId(), festivalId, ReviewStatus.ACTIVE)) {
-            throw new ConflictException("이미 해당 축제에 리뷰를 작성했습니다.");
+        if (reviewRepository.existsByMemberIdAndFestivalIdAndStatus(member.id, festivalId, ReviewStatus.ACTIVE)) {
+            throw ConflictException("이미 해당 축제에 리뷰를 작성했습니다.")
         }
 
         // 3. 이미지 파일 저장 로직 추가
-        String savedImagePath = null;
-        if (imageFile != null && !imageFile.isEmpty()) {
-            // 이전에 만든 fileStorageService.storeFile(imageFile)를 호출합니다.
-            savedImagePath = fileStorageService.storeFile(imageFile);
-        }
+        val savedImagePath = imageFile
+            ?.takeIf { !it.isEmpty }
+            ?.let { fileStorageService.storeFile(it) }
 
-        // 4. Review 객체 생성 (저장된 파일 경로 사용)
-        Review review = Review.builder()
-                .member(member)
-                .festival(festival)
-                .content(requestDto.getContent())
-                .image(savedImagePath) // 실제 저장된 파일명/경로
-                .rating(requestDto.getRating())
-                .build();
+        // 4. Review 객체 생성 (빌더 대신 코틀린 주 생성자 사용 + String? 예외 처리)
+        val review = Review(
+            member = member,
+            festival = festival,
+            content = requestDto.content ?: throw BadRequestException("리뷰 내용이 누락되었습니다."),
+            image = savedImagePath,
+            rating = requestDto.rating ?: throw BadRequestException("평점이 누락되었습니다.")
+        )
 
-        Review savedReview = reviewRepository.save(review);
+        val savedReview = reviewRepository.save(review)
 
-        return new ReviewResponse(savedReview);
-
+        return ReviewResponse(savedReview)
     }
 
-
-    //리뷰 목록조회
-    public ReviewPageResponse getReviewList(Long festivalId, String loginId, int page, int size) {
-
+    // 리뷰 목록조회
+    fun getReviewList(festivalId: Long, loginId: String?, page: Int, size: Int): ReviewPageResponse {
         // 1. 로그인 체크
-        if (loginId == null || loginId.equals("anonymousUser")) {
-            throw new UnauthorizedException("리뷰 조회는 로그인 후 이용 가능합니다.");
+        if (loginId.isNullOrBlank() || loginId == "anonymousUser") {
+            throw UnauthorizedException("리뷰 조회는 로그인 후 이용 가능합니다.")
         }
-
 
         // 2. 축제 존재 체크
-        festivalRepository.findById(festivalId)
-                .orElseThrow(() -> new CustomNotFoundException("존재하지 않는 축제입니다."));
+        festivalRepository.findByIdOrNull(festivalId)
+            ?: throw CustomNotFoundException("존재하지 않는 축제입니다.")
 
         // 3. 리뷰 조회
-        PageRequest pageRequest = PageRequest.of(
-                page,
-                size,
-                Sort.by(Sort.Direction.DESC, "createdAt")
-        );
+        val pageRequest = PageRequest.of(
+            page,
+            size,
+            Sort.by(Sort.Direction.DESC, "createdAt")
+        )
 
-        Page<Review> reviewPage = reviewRepository.findByFestivalIdAndStatus(
-                festivalId,
-                ReviewStatus.ACTIVE,
-                pageRequest);
+        val reviewPage = reviewRepository.findByFestivalIdAndStatus(
+            festivalId,
+            ReviewStatus.ACTIVE,
+            pageRequest
+        )
 
-        Member loginMember = memberRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다."));
+        val loginMember = memberRepository.findByLoginId(loginId)
+            ?: throw UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.")
 
-        return new ReviewPageResponse(
-                festivalId,
-                reviewPage.getContent().stream()
-                        .map(review -> {
-                            boolean liked = reviewLikeRepository.existsByMemberIdAndReviewId(
-                                    loginMember.getId(),
-                                    review.getId()
-                            );
-                            return ReviewListResponse.from(review, liked);
-                        })
-                        .toList(),
-                reviewPage.getNumber(),
-                reviewPage.getSize(),
-                reviewPage.getTotalElements(),
-                reviewPage.getTotalPages(),
-                reviewPage.hasNext()
-        );
+        return ReviewPageResponse(
+            festivalId,
+            reviewPage.content.map { review ->
+                val liked = reviewLikeRepository.existsByMemberIdAndReviewId(loginMember.id, review.id)
+                ReviewListResponse.from(review, liked)
+            },
+            reviewPage.number,
+            reviewPage.size,
+            reviewPage.totalElements,
+            reviewPage.totalPages,
+            reviewPage.hasNext()
+        )
     }
 
-
-    //리뷰 수정
+    // 리뷰 수정
     @Transactional
-    public ReviewUpdateResponse updateReview(Long reviewId, String loginId, ReviewUpdateRequest requestDto, MultipartFile imageFile) {
-
+    fun updateReview(
+        reviewId: Long,
+        loginId: String?,
+        requestDto: ReviewUpdateRequest,
+        imageFile: MultipartFile?
+    ): ReviewUpdateResponse {
         // 1. 로그인한 회원 조회
-        Member member = memberRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다."));
+        if (loginId == null) throw UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.")
+        val member = memberRepository.findByLoginId(loginId)
+            ?: throw UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.")
 
         // 2. 리뷰 존재 여부 확인
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new CustomNotFoundException("존재하지 않는 리뷰입니다."));
+        val review = reviewRepository.findByIdOrNull(reviewId)
+            ?: throw CustomNotFoundException("존재하지 않는 리뷰입니다.")
 
         // 3. 작성자 본인 여부 확인
-        if (!review.getMember().getId().equals(member.getId())) {
-            throw new ForbiddenException("본인이 작성한 리뷰만 수정할 수 있습니다.");
+        if (review.member.id != member.id) {
+            throw ForbiddenException("본인이 작성한 리뷰만 수정할 수 있습니다.")
         }
 
         // 4. 삭제된 리뷰 수정 불가
-        if (review.getStatus() == ReviewStatus.DELETED) {
-            throw new BadRequestException("삭제된 리뷰는 수정할 수 없습니다.");
-        }
-
         // 5. 블라인드 리뷰 수정 불가
-        if (review.getStatus() == ReviewStatus.BLIND) {
-            throw new ForbiddenException("블라인드 처리된 리뷰는 수정할 수 없습니다.");
+        when (review.status) {
+            ReviewStatus.DELETED -> throw BadRequestException("삭제된 리뷰는 수정할 수 없습니다.")
+            ReviewStatus.BLIND -> throw ForbiddenException("블라인드 처리된 리뷰는 수정할 수 없습니다.")
+            else -> {}
         }
 
         // 6. 평점 검증
-        if (requestDto.getRating() < 1 || requestDto.getRating() > 5) {
-            throw new BadRequestException("평점은 1점부터 5점까지 입력 가능합니다.");
+        val rating = requestDto.rating ?: throw BadRequestException("평점이 누락되었습니다.")
+        if (rating !in 1..5) {
+            throw BadRequestException("평점은 1점부터 5점까지 입력 가능합니다.")
         }
 
-
-        String updateImagePath = review.getImage();
+        var updateImagePath = review.image
 
         // 케이스 1: 클라이언트가 "기존 이미지를 삭제해달라"고 요청한 경우
-        if (requestDto.isDeleteImage()) {
-            if (updateImagePath != null) {
-                fileStorageService.deleteFile(updateImagePath); // 실제 서버에서 파일 삭제
-                updateImagePath = null; // DB에 들어갈 경로도 null로 비워줌
-            }
+        if (requestDto.isDeleteImage) {
+            updateImagePath?.let { fileStorageService.deleteFile(it) }
+            updateImagePath = null
+        } else if (imageFile?.isEmpty == false) {
+            updateImagePath?.let { fileStorageService.deleteFile(it) }
+            updateImagePath = fileStorageService.storeFile(imageFile)
         }
-        // 케이스 2: 이미지 삭제 요청은 없지만, '새로운 이미지 파일'이 들어온 경우
-        else if (imageFile != null && !imageFile.isEmpty()) {
-            if (updateImagePath != null) {
-                fileStorageService.deleteFile(updateImagePath); // 기존 파일이 있으면 덮어써야 하니 먼저 삭제
-            }
-            updateImagePath = fileStorageService.storeFile(imageFile); // 새 이미지를 저장하고 경로 업데이트
-        }
-        // 7. 리뷰 수정 로직 (위에서 결정된 updateImagePath 적용)
+
+        // 7. 리뷰 수정 로직 (String? 예외 처리)
         review.updateReview(
-                requestDto.getContent(),
-                updateImagePath,
-                requestDto.getRating()
-        );
+            content = requestDto.content ?: throw BadRequestException("리뷰 내용이 누락되었습니다."),
+            image = updateImagePath,
+            rating = rating
+        )
 
         // 8. 평균 평점 재계산
-        Festival festival = review.getFestival();
-        Double averageRating = reviewRepository.calculateAverageRatingByFestivalId(festival.getId());
-        festival.updateAverageRating(averageRating == null ? 0.0 : averageRating);
+        val festival = review.festival
+        val averageRating = reviewRepository.calculateAverageRatingByFestivalId(festival.id) ?: 0.0
+        festival.updateAverageRating(averageRating)
 
-        return ReviewUpdateResponse.from(review);
+        return ReviewUpdateResponse.from(review)
     }
 
-    //리뷰 삭제
+    // 리뷰 삭제
     @Transactional
-    public ReviewDeleteResponse deleteReview(Long reviewId, String loginId) {
-
-
+    fun deleteReview(reviewId: Long, loginId: String?): ReviewDeleteResponse {
         // 2. 로그인한 회원 조회
-        Member member = memberRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다."));
+        if (loginId == null) throw UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.")
+        val member = memberRepository.findByLoginId(loginId)
+            ?: throw UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.")
 
         // 3. 리뷰 존재 여부 확인
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new CustomNotFoundException("존재하지 않는 리뷰입니다."));
+        val review = reviewRepository.findByIdOrNull(reviewId)
+            ?: throw CustomNotFoundException("존재하지 않는 리뷰입니다.")
 
         // 4. 작성자 본인 여부 확인
-        if (!review.getMember().getId().equals(member.getId())) {
-            throw new ForbiddenException("본인이 작성한 리뷰만 삭제할 수 있습니다.");
+        if (review.member.id != member.id) {
+            throw ForbiddenException("본인이 작성한 리뷰만 삭제할 수 있습니다.")
         }
 
         // 5. 이미 삭제된 리뷰인지 확인
-        if (review.getStatus() == ReviewStatus.DELETED) {
-            throw new BadRequestException("이미 삭제된 리뷰입니다.");
-        }
-
         // 6. 블라인드 리뷰 삭제 불가
-        if (review.getStatus() == ReviewStatus.BLIND) {
-            throw new ForbiddenException("블라인드 처리된 리뷰는 삭제할 수 없습니다.");
+        when (review.status) {
+            ReviewStatus.DELETED -> throw BadRequestException("이미 삭제된 리뷰입니다.")
+            ReviewStatus.BLIND -> throw ForbiddenException("블라인드 처리된 리뷰는 삭제할 수 없습니다.")
+            else -> {}
         }
 
         // 7. 리뷰 논리 삭제
-        review.deleteReview();
+        review.deleteReview()
 
         // 8. 축제 평균 평점 재계산
-        Festival festival = review.getFestival();
-        Double averageRating = reviewRepository.calculateAverageRatingByFestivalId(festival.getId());
-        festival.updateAverageRating(averageRating == null ? 0.0 : averageRating);
+        val festival = review.festival
+        val averageRating = reviewRepository.calculateAverageRatingByFestivalId(festival.id) ?: 0.0
+        festival.updateAverageRating(averageRating)
 
-        return ReviewDeleteResponse.from(review);
+        return ReviewDeleteResponse.from(review)
     }
 
-
-    // 신고횟수가 5이상인 review리스트를 DTO로 반환하여 주는 함수
-    public AdminReviewReportPageResponse getReportReview(Pageable pageable) {
-        Page<Review> reviews = reviewRepository.findAllByReportCountGreaterThanEqualAndStatus(5, ReviewStatus.ACTIVE, pageable);
-        return AdminReviewReportPageResponse.from(reviews);
+    // 신고횟수가 5이상인 review리스트를 DTO로 반환하여 주는 함수 (Pageable? -> Pageable 수정)
+    fun getReportReview(pageable: Pageable): AdminReviewReportPageResponse {
+        val reviews = reviewRepository.findAllByReportCountGreaterThanEqualAndStatus(5, ReviewStatus.ACTIVE, pageable)
+        return AdminReviewReportPageResponse.from(reviews)
     }
 
-    //리뷰를 검토하여 블라인드처리, 신고횟수 초기화하는 함수
+    // 리뷰를 검토하여 블라인드처리, 신고횟수 초기화하는 함수 (action 파라미터 String? -> String 수정)
     @Transactional
-    public AdminReviewBlindResponse processReviewAction(Long reviewId, String action) {
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() ->
-                {
-                    return new CustomNotFoundException("404", "존재하지 않는 리뷰입니다.");
-                });
-        if (review.getStatus() == ReviewStatus.DELETED) {
-            throw new BadRequestException("삭제된 리뷰는 상태를 변경할 수 없습니다.");
-        }
-        int updatedCount = 0;
+    fun processReviewAction(reviewId: Long, action: String): AdminReviewBlindResponse {
+        val review = reviewRepository.findByIdOrNull(reviewId)
+            ?: throw CustomNotFoundException("404", "존재하지 않는 리뷰입니다.")
 
-        if ("BLIND".equalsIgnoreCase(action)) {
-            updatedCount = reviewRepository.updateStatusToBlindActive(reviewId);
-            if (updatedCount > 0) {
-                Member author = review.getMember();
-                if (author != null) {
-                    memberRepository.incrementReportCount(author.getId());
+        if (review.status == ReviewStatus.DELETED) {
+            throw BadRequestException("삭제된 리뷰는 상태를 변경할 수 없습니다.")
+        }
+
+        var updatedCount = 0
+
+        when (action.uppercase()) {
+            "BLIND" -> {
+                updatedCount = reviewRepository.updateStatusToBlindActive(reviewId)
+                if (updatedCount > 0) {
+                    review.member.let { memberRepository.incrementReportCount(it.id) }
+                    review.reviewBlind()
                 }
-                review.reviewBlind();
             }
-        } else if ("DISMISS".equalsIgnoreCase(action)) {
-            updatedCount = reviewRepository.resetReportCountIfActive(reviewId);
-            if (updatedCount > 0) {
-                review.reportCountReset();
+            "DISMISS" -> {
+                updatedCount = reviewRepository.resetReportCountIfActive(reviewId)
+                if (updatedCount > 0) {
+                    review.reportCountReset()
+                }
             }
-        } else {
-            throw new IllegalArgumentException("허용되지 않은 리뷰 상태입니다.: " + action);
+            else -> throw IllegalArgumentException("허용되지 않은 리뷰 상태입니다.: $action")
         }
+
         if (updatedCount == 0) {
-            log.warn("[ADMIN] 리뷰 상태 변경 실패(이미 처리된 리뷰 또는 동시성 충돌) - reviewId={}, action={}", reviewId, action);
-            throw new ConflictException("이미 다른 관리자가 처리한 리뷰입니다.");
+            log.warn(
+                "[ADMIN] 리뷰 상태 변경 실패(이미 처리된 리뷰 또는 동시성 충돌) - reviewId={}, action={}",
+                reviewId,
+                action
+            )
+            throw ConflictException("이미 다른 관리자가 처리한 리뷰입니다.")
         }
-        return new AdminReviewBlindResponse(
-                review.getId(),
-                review.getStatus(),
-                review.getReportCount()
-        );
 
-
+        return AdminReviewBlindResponse(
+            review.id,
+            review.status,
+            review.reportCount
+        )
     }
 }
-

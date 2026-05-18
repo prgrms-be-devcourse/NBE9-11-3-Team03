@@ -24,8 +24,8 @@ class SecurityConfig(
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         return http // JWT 방식은 서버 세션을 사용하지 않으므로 CSRF 보호끄기
-            .csrf { it.disable() }
-            .formLogin { it.disable() } // 브라우저 기본 로그인창과 Basic Auth를 끄고, 우리가 만든 JWT 필터로 인증
+            .csrf { it.disable() } // 브라우저 기본 로그인창과 Basic Auth를 끄고, 우리가 만든 JWT 필터로 인증
+            .formLogin { it.disable() }
             .httpBasic { it.disable() } // JWT는 요청마다 토큰을 확인하므로 서버에 로그인 세션을 저장하지 않음
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) } // 인증이 필요한 API에 토큰 없이 접근하거나, 잘못된 토큰으로 접근했을 때 실행
             .exceptionHandling { exception ->

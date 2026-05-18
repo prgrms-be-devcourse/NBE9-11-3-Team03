@@ -1,59 +1,64 @@
-package com.example.domain.review.repository;
+package com.example.domain.review.repository
 
-import com.example.domain.review.entity.Review;
-import com.example.domain.review.entity.ReviewStatus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import com.example.domain.review.entity.Review
+import com.example.domain.review.entity.ReviewStatus
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 
-public interface ReviewRepository extends JpaRepository<Review,Long> {
+interface ReviewRepository : JpaRepository<Review, Long> {
 
-    //특정 축제 리뷰 목록 조회(ACTIVE만 조회할 때 사용)
-    Page<Review> findByFestivalIdAndStatus(Long festivalId, ReviewStatus status, Pageable pageable);
+    // 특정 축제 리뷰 목록 조회(ACTIVE만 조회할 때 사용)
+    fun findByFestivalIdAndStatus(festivalId: Long, status: ReviewStatus, pageable: Pageable): Page<Review>
 
-    //평균 평점
-    @Query("select avg(r.rating) from Review r where r.festival.id = :festivalId and r.status = com.example.domain.review.entity.ReviewStatus.ACTIVE")
-    Double calculateAverageRatingByFestivalId(@Param("festivalId") Long festivalId);
+    // 평균 평점
+    @Query("SELECT AVG(r.rating) FROM Review r WHERE r.festival.id = :festivalId AND r.status = com.example.domain.review.entity.ReviewStatus.ACTIVE")
+    fun calculateAverageRatingByFestivalId(@Param("festivalId") festivalId: Long): Double?
 
-    Page<Review> findByFestivalId(Long festivalId, Pageable pageable);
-    Page<Review> findAllByReportCountGreaterThanEqualAndStatus(int reportCount, ReviewStatus status, Pageable pageable);
-    boolean existsByMemberIdAndFestivalIdAndStatus(Long memberId, Long festivalId, ReviewStatus status);
+    fun findByFestivalId(festivalId: Long, pageable: Pageable): Page<Review>
 
-    long countByMemberIdAndStatus(Long memberId, ReviewStatus status);
+    fun findAllByReportCountGreaterThanEqualAndStatus(
+        reportCount: Int,
+        status: ReviewStatus,
+        pageable: Pageable
+    ): Page<Review>
 
-    //사용자가 단 리뷰
-    Page<Review> findByMemberIdAndStatus(Long memberId,ReviewStatus status,Pageable pageable);
+    fun existsByMemberIdAndFestivalIdAndStatus(memberId: Long, festivalId: Long, status: ReviewStatus): Boolean
 
-    //리뷰 신고수 증가
+    fun countByMemberIdAndStatus(memberId: Long, status: ReviewStatus): Long
+
+    // 사용자가 단 리뷰
+    fun findByMemberIdAndStatus(memberId: Long, status: ReviewStatus, pageable: Pageable): Page<Review>
+
+    // 리뷰 신고수 증가
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Review r SET r.reportCount = r.reportCount + 1 WHERE r.id = :reviewId")
-    void increaseReportCount(@Param("reviewId") Long reviewId);
+    fun increaseReportCount(@Param("reviewId") reviewId: Long)
 
     // 현재 리뷰 신고 수 조회
-    @Query("select r.reportCount from Review r where r.id = :reviewId")
-    Integer findReportCountById(@Param("reviewId") Long reviewId);
+    @Query("SELECT r.reportCount FROM Review r WHERE r.id = :reviewId")
+    fun findReportCountById(@Param("reviewId") reviewId: Long): Int?
 
     // 리뷰 좋아요 수 증가
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Review r SET r.likeCount = r.likeCount + 1 WHERE r.id = :reviewId")
-    void increaseLikeCount(@Param("reviewId") Long reviewId);
+    fun increaseLikeCount(@Param("reviewId") reviewId: Long)
 
     // 리뷰 좋아요 수 감소 (0 이하로 떨어지지 않도록 조건 추가)
     @Modifying(clearAutomatically = true)
     @Query("UPDATE Review r SET r.likeCount = r.likeCount - 1 WHERE r.id = :reviewId AND r.likeCount > 0")
-    void decreaseLikeCount(@Param("reviewId") Long reviewId);
+    fun decreaseLikeCount(@Param("reviewId") reviewId: Long)
 
-
-    //리뷰를 블라인드로 바꾸는 함수
+    // 리뷰를 블라인드로 바꾸는 함수
     @Modifying(clearAutomatically = true)
-    @Query("UPDATE Review  r SET r.status = 'BLIND' WHERE r.id=:id AND r.status='ACTIVE'")
-    int updateStatusToBlindActive(@Param("id") Long id);
-    //리뷰가 ACITVE고 신고 횟수가 남아 있을때 0으로 바꾼느 메서드
-    @Modifying(clearAutomatically = true)
-    @Query("UPDATE Review r SET r.reportCount = 0 WHERE r.id=:id AND r.status='ACTIVE' AND r.reportCount>0")
-    int resetReportCountIfActive(@Param("id") Long id);
+    @Query("UPDATE Review r SET r.status = 'BLIND' WHERE r.id = :id AND r.status = 'ACTIVE'")
+    fun updateStatusToBlindActive(@Param("id") id: Long): Int
 
+    // 리뷰가 ACTIVE고 신고 횟수가 남아 있을때 0으로 바꾸는 메서드
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE Review r SET r.reportCount = 0 WHERE r.id = :id AND r.status = 'ACTIVE' AND r.reportCount > 0")
+    fun resetReportCountIfActive(@Param("id") id: Long): Int
 }

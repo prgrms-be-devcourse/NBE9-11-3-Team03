@@ -1,13 +1,10 @@
-package com.example.domain.member.repository;
+package com.example.domain.member.repository
 
-import com.example.domain.member.entity.RefreshToken;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.domain.member.entity.RefreshToken
+import org.springframework.data.jpa.repository.JpaRepository
 
-import java.util.Optional;
+interface RefreshTokenRepository : JpaRepository<RefreshToken, Long> {
+    fun findByToken(token: String): RefreshToken?
 
-public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
-
-    Optional<RefreshToken> findByToken(String token);
-
-    Optional<RefreshToken> findByMemberId(Long memberId);
+    fun findByMemberId(memberId: Long): RefreshToken?
 }
