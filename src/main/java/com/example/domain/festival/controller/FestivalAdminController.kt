@@ -33,8 +33,6 @@ class FestivalAdminController(
         @RequestParam(defaultValue = "200") numOfRows: Int,
         @RequestParam(defaultValue = "20260101") eventStartDate: String
     ): RsData<FestivalSyncResponse> {
-        // API 전체 응답 시간 측정 시작
-        val apiStart = System.currentTimeMillis()
 
         val listResult =
             festivalSyncService.syncFestivalList(pageNo, numOfRows, eventStartDate)
@@ -56,9 +54,6 @@ class FestivalAdminController(
             listResult.updatedCount,
             listResult.failedCount
         )
-
-        // API 전체 응답 시간 측정 종료
-        val apiEnd = System.currentTimeMillis()
 
         val hasFailedItems = listResult.failedCount > 0
         val hasDetailTargets = targetContentIds.isNotEmpty()
