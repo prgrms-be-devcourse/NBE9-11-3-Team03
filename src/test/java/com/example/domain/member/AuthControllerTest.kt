@@ -305,7 +305,6 @@ class AuthControllerTest {
                   "password": "$password",
                   "passwordConfirm": "$passwordConfirm"
                 }
-                
                 """.trimIndent()
     }
 }
