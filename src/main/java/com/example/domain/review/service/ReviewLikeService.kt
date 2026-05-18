@@ -60,7 +60,7 @@ class ReviewLikeService(
             .orElseThrow { CustomNotFoundException("존재하지 않는 리뷰입니다.") }
 
         val reviewLike = reviewLikeRepository.findByMemberIdAndReviewId(member.id, reviewId)
-            .orElseThrow { BadRequestException("좋아요를 누르지 않은 리뷰입니다.") }
+            ?: throw BadRequestException("좋아요를 누르지 않은 리뷰입니다.")
 
         reviewLikeRepository.delete(reviewLike)
         reviewLikeRepository.flush()
