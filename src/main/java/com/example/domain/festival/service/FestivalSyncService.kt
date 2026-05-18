@@ -349,12 +349,14 @@ class FestivalSyncService(
         val finalStopReason = stopReason ?: "없음 (정상 처리 또는 일부 실패)"
 
         log.info(
-            "[FestivalSync] 상세 보강 완료 - target={}, updated={}, failed={}, unprocessed={}, pendingBefore={}, pendingAdded={}, pendingAfter={}, attempted={}, skipped={}, stopReason={}, totalTimeMs={}",
+            "[FestivalSync] 상세 보강 완료 - target={}, updated={}, failed={}, unprocessed={}, pendingBefore={}, pendingFailureBefore={}, pendingUnprocessedBefore={}, pendingAdded={}, pendingAfter={}, attempted={}, skipped={}, stopReason={}, totalTimeMs={}",
             totalTargetCount,
             updatedCount,
             failureCount,
             unprocessedCount,
             beforePendingCount,
+            beforePendingFailureCount,
+            beforePendingUnprocessedCount,
             newPendingCount,
             afterPendingCount,
             attemptedCount,
