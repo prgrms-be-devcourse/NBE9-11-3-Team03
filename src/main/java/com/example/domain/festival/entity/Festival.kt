@@ -3,7 +3,6 @@ package com.example.domain.festival.entity
 import com.example.global.entity.BaseEntity
 import jakarta.persistence.*
 import java.time.LocalDateTime
-import java.util.*
 
 @Entity
 @Table(
