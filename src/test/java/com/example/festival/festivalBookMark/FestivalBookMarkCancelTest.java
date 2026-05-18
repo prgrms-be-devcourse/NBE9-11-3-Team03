@@ -49,9 +49,18 @@ public class FestivalBookMarkCancelTest {
             members.add(memberRepository.save(member));
         }
 
-        Festival initialFestival = Festival.builder()
-                .contentId("FEST-BM-CANCEL").overview("테스트").mapX(126.9).mapY(37.5).title("축제").address("주소")
-                .status(FestivalStatus.ONGOING).startDate(LocalDateTime.now()).endDate(LocalDateTime.now().plusDays(10)).build();
+        Festival initialFestival = new Festival(
+                "FEST-BM-CANCEL",
+                "축제",
+                "테스트",
+                "주소",
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(10),
+                126.9,
+                37.5,
+                null, null, null, null, null,
+                FestivalStatus.ONGOING
+        );
 
         savedFestival = festivalRepository.save(initialFestival);
 

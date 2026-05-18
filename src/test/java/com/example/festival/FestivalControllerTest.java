@@ -52,20 +52,18 @@ public class FestivalControllerTest {
     @BeforeEach
     void setUp() {
         // 테스트용 더미 데이터 세팅
-        Festival festival = Festival.builder()
-                .contentId("FEST-001")
-                .overview("축제 상세조회 테스트용 축제입니다.")
-                .mapX(126.9780)
-                .mapY(37.5665)
-                .title("상세조회 타겟 축제")
-                .address("서울 테스트구")
-                .status(FestivalStatus.ONGOING)
-                .startDate(LocalDateTime.now().minusDays(1))
-                .endDate(LocalDateTime.now().plusDays(10))
-                .viewCount(0)
-                .bookMarkCount(0)
-                .averageRate(0.0)
-                .build();
+        Festival festival = new Festival(
+                "FEST-001",
+                "상세조회 타겟 축제",
+                "축제 상세조회 테스트용 축제입니다.",
+                "서울 테스트구",
+                LocalDateTime.now().minusDays(1),
+                LocalDateTime.now().plusDays(10),
+                126.9780,
+                37.5665,
+                null, null, null, null, null,
+                FestivalStatus.ONGOING
+        );
 
         savedFestival = festivalRepository.save(festival);
     }

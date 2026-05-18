@@ -3,6 +3,7 @@ package com.example.myPage;
 import com.example.domain.bookmark.entity.FestivalBookmark;
 import com.example.domain.bookmark.repository.FestivalBookmarkRepository;
 import com.example.domain.festival.entity.Festival;
+import com.example.domain.festival.entity.FestivalStatus;
 import com.example.domain.festival.repository.FestivalRepository;
 import com.example.domain.member.entity.Member;
 import com.example.domain.member.entity.MemberStatus;
@@ -65,8 +66,19 @@ public class MyPageTest {
         memberRepository.save(member);
 
         // 2. Given: 해당 회원이 작성한 리뷰 2개 생성
-        Festival festival = new Festival("F_006", "서울 세계불꽃축제", "설명", "여의도",
-                LocalDateTime.now(), LocalDateTime.now().plusDays(1), 126.92, 37.52);
+        Festival festival = new Festival(
+                "F_006",
+                "서울 세계불꽃축제",
+                "설명",
+                "여의도",
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(1),
+                126.92,
+                37.52,
+                null, null, null, null, null,
+                FestivalStatus.UPCOMING
+        );
+        festivalRepository.save(festival);
         festivalRepository.save(festival);
 
         Review review1 = new Review(member, festival, "정말 재밌어요!", null, 5);
@@ -99,10 +111,19 @@ public class MyPageTest {
         Member member = new Member("myPageUser", "1234", "홍길동", "mypage@test.com", "길동이t1", 0);
         memberRepository.save(member);
 
-        Festival festival = new Festival("F_TEST", "테스트 축제", "설명", "주소",
-                LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(1), 126.0, 37.0);
+        Festival festival = new Festival(
+                "F_TEST",
+                "테스트 축제",
+                "설명",
+                "주소",
+                LocalDateTime.now().minusDays(1),
+                LocalDateTime.now().plusDays(1),
+                126.0,
+                37.0,
+                null, null, null, null, null,
+                FestivalStatus.UPCOMING
+        );
         festivalRepository.save(festival);
-
         // 2. Given: 해당 회원이 작성한 리뷰 2개 생성 (시간차를 두어 생성)
         Review review1 = new Review(member, festival, "첫 번째 리뷰", null, 5);
         Review review2 = new Review(member, festival, "두 번째 리뷰", null, 4);

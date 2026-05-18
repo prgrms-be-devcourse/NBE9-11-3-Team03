@@ -84,20 +84,18 @@ public class ReviewReportTest {
 
         // 3. 축제 생성
         savedFestival = festivalRepository.save(
-                Festival.builder()
-                        .contentId("FEST-REPORT-CONCURRENCY")
-                        .overview("신고 동시성 테스트용 축제")
-                        .mapX(126.9780)
-                        .mapY(37.5665)
-                        .title("신고 동시성 축제")
-                        .address("서울 테스트구")
-                        .status(FestivalStatus.ONGOING)
-                        .startDate(LocalDateTime.now().minusDays(1))
-                        .endDate(LocalDateTime.now().plusDays(10))
-                        .viewCount(0)
-                        .bookMarkCount(0)
-                        .averageRate(0.0)
-                        .build()
+                new Festival(
+                        "FEST-REPORT-CONCURRENCY",
+                        "신고 동시성 축제",
+                        "신고 동시성 테스트용 축제",
+                        "서울 테스트구",
+                        LocalDateTime.now().minusDays(1),
+                        LocalDateTime.now().plusDays(10),
+                        126.9780,
+                        37.5665,
+                        null, null, null, null, null,
+                        FestivalStatus.ONGOING
+                )
         );
 
         // 4. 리뷰 생성

@@ -222,6 +222,7 @@ class ReviewService(
     // 리뷰를 검토하여 블라인드처리, 신고횟수 초기화하는 함수 (action 파라미터 String? -> String 수정)
     @Transactional
     fun processReviewAction(reviewId: Long, action: String): AdminReviewBlindResponse {
+        // 1. 사전 검증을 위한 최초 조회
         val review = reviewRepository.findByIdOrNull(reviewId)
             ?: throw CustomNotFoundException("404", "존재하지 않는 리뷰입니다.")
 
@@ -229,25 +230,27 @@ class ReviewService(
             throw BadRequestException("삭제된 리뷰는 상태를 변경할 수 없습니다.")
         }
 
-        var updatedCount = 0
+        // 연관 엔티티의 ID를 미리 확보 (영속성 컨텍스트 격리 안전성 확보)
+        val memberId = review.member.id
+        val actionType = action.uppercase()
 
-        when (action.uppercase()) {
+        // 2. 원자적 업데이트 실행
+        val updatedCount = when (actionType) {
             "BLIND" -> {
-                updatedCount = reviewRepository.updateStatusToBlindActive(reviewId)
-                if (updatedCount > 0) {
-                    review.member.let { memberRepository.incrementReportCount(it.id) }
-                    review.reviewBlind()
+                val count = reviewRepository.updateStatusToBlindActive(reviewId)
+                if (count > 0) {
+                    // 작성자의 신고 횟수 증가 (원자적 쿼리 사용 권장)
+                    memberRepository.incrementReportCount(memberId)
                 }
+                count
             }
             "DISMISS" -> {
-                updatedCount = reviewRepository.resetReportCountIfActive(reviewId)
-                if (updatedCount > 0) {
-                    review.reportCountReset()
-                }
+                reviewRepository.resetReportCountIfActive(reviewId)
             }
             else -> throw IllegalArgumentException("허용되지 않은 리뷰 상태입니다.: $action")
         }
 
+        // 3. 동시성 충돌 또는 처리 실패 예외 처리
         if (updatedCount == 0) {
             log.warn(
                 "[ADMIN] 리뷰 상태 변경 실패(이미 처리된 리뷰 또는 동시성 충돌) - reviewId={}, action={}",
@@ -257,10 +260,14 @@ class ReviewService(
             throw ConflictException("이미 다른 관리자가 처리한 리뷰입니다.")
         }
 
+        // 4. 영속성 컨텍스트와 DB 상태 동기화
+        val updatedReview = reviewRepository.findByIdOrNull(reviewId)
+            ?: throw CustomNotFoundException("404", "존재하지 않는 리뷰입니다.")
+
         return AdminReviewBlindResponse(
-            review.id,
-            review.status,
-            review.reportCount
+            reviewId = updatedReview.id,
+            status = updatedReview.status,
+            reportCount = updatedReview.reportCount
         )
     }
 }
