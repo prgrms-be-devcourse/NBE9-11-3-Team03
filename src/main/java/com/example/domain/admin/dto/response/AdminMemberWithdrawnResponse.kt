@@ -11,7 +11,7 @@ data class AdminMemberWithdrawnResponse(
         @JvmStatic
         fun from(member: Member): AdminMemberWithdrawnResponse {
             return AdminMemberWithdrawnResponse(
-                member.getId(),
+                member.id,
                 member.status
             )
         }
