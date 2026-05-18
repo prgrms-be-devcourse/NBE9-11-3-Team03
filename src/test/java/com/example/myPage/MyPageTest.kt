@@ -22,11 +22,8 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.delete
+import org.springframework.test.web.servlet.get
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
@@ -82,15 +79,17 @@ class MyPageTest {
         val bookmark = FestivalBookmark(member, festival)
         festivalBookmarkRepository.save(bookmark)
 
-        mockMvc.perform(get("/api/users/me"))
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.status").value("200"))
-            .andExpect(jsonPath("$.message").value("마이페이지 조회에 성공하였습니다."))
-            .andExpect(jsonPath("$.data.nickname").value("길동이t1"))
-            .andExpect(jsonPath("$.data.email").value("mypage@test.com"))
-            .andExpect(jsonPath("$.data.reviewCount").value(2))
-            .andExpect(jsonPath("$.data.bookMarkCount").value(1))
-            .andDo(print())
+        mockMvc.get("/api/users/me")
+            .andExpect {
+                status { isOk() }
+                jsonPath("$.status") { value("200") }
+                jsonPath("$.message") { value("마이페이지 조회에 성공하였습니다.") }
+                jsonPath("$.data.nickname") { value("길동이t1") }
+                jsonPath("$.data.email") { value("mypage@test.com") }
+                jsonPath("$.data.reviewCount") { value(2) }
+                jsonPath("$.data.bookMarkCount") { value(1) }
+            }
+            .andDo { print() }
     }
 
     @Test
@@ -118,21 +117,20 @@ class MyPageTest {
         val review2 = Review(member, festival, "두 번째 리뷰", null, 4)
         reviewRepository.saveAll(listOf(review1, review2))
 
-        mockMvc.perform(
-            get("/api/users/me/reviews")
-                .param("page", "0")
-                .param("size", "5")
-        )
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.status").value("200"))
-            .andExpect(jsonPath("$.message").value("내가 쓴 리뷰 목록 조회 성공"))
-            .andExpect(jsonPath("$.data.content.length()").value(2))
-            .andExpect(jsonPath("$.data.content[0].content").value("두 번째 리뷰"))
-            .andExpect(jsonPath("$.data.content[0].festivalTitle").value("테스트 축제"))
-            .andExpect(jsonPath("$.data.content[1].content").value("첫 번째 리뷰"))
-            .andExpect(jsonPath("$.data.page").value(0))
-            .andExpect(jsonPath("$.data.totalElements").value(2))
-            .andDo(print())
+        mockMvc.get("/api/users/me/reviews") {
+            param("page", "0")
+            param("size", "5")
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.status") { value("200") }
+            jsonPath("$.message") { value("내가 쓴 리뷰 목록 조회 성공") }
+            jsonPath("$.data.content.length()") { value(2) }
+            jsonPath("$.data.content[0].content") { value("두 번째 리뷰") }
+            jsonPath("$.data.content[0].festivalTitle") { value("테스트 축제") }
+            jsonPath("$.data.content[1].content") { value("첫 번째 리뷰") }
+            jsonPath("$.data.page") { value(0) }
+            jsonPath("$.data.totalElements") { value(2) }
+        }.andDo { print() }
     }
 
     @Test
@@ -158,14 +156,13 @@ class MyPageTest {
             }
         """.trimIndent()
 
-        mockMvc.perform(
-            delete("/api/users/me/withdraw")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody)
-        )
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.message").value("탈퇴처리가 성공적으로 수행되었습니다."))
-            .andDo(print())
+        mockMvc.delete("/api/users/me/withdraw") {
+            contentType = MediaType.APPLICATION_JSON
+            content = requestBody
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.message") { value("탈퇴처리가 성공적으로 수행되었습니다.") }
+        }.andDo { print() }
 
         val withdrawnMember = memberRepository.findById(member.id).orElseThrow()
         assertThat(withdrawnMember.status).isEqualTo(MemberStatus.WITHDRAWN)
@@ -192,13 +189,12 @@ class MyPageTest {
             }
         """.trimIndent()
 
-        mockMvc.perform(
-            delete("/api/users/me/withdraw")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody)
-        )
-            .andExpect(status().isUnauthorized)
-            .andExpect(jsonPath("$.message").value("비밀번호가 일치하지 않습니다."))
-            .andDo(print())
+        mockMvc.delete("/api/users/me/withdraw") {
+            contentType = MediaType.APPLICATION_JSON
+            content = requestBody
+        }.andExpect {
+            status { isUnauthorized() }
+            jsonPath("$.message") { value("비밀번호가 일치하지 않습니다.") }
+        }.andDo { print() }
     }
 }
