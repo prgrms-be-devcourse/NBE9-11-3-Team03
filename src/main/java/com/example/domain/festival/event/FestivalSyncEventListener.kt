@@ -16,7 +16,7 @@ class FestivalSyncEventListener(
     fun handleFestivalSyncCompleted(event: FestivalSyncCompletedEvent) {
         val changedContentIds = event.changedContentIds
 
-        if (changedContentIds.isNullOrEmpty()) {
+        if (changedContentIds.isEmpty()) {
             return
         }
 
