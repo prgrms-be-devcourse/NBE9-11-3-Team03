@@ -31,86 +31,70 @@ public class FestivalRepositoryImplTest {
     @BeforeEach
     void setUp() {
         // 테스트용 더미 데이터 세팅
-        festivalRepository.save(Festival.builder()
-                .contentId("FEST-001")
-                .overview("서울 벚꽃축제 개요입니다.")
-                .mapX(126.9780)
-                .mapY(37.5665)
-                .lDongRegnCd("11")
-                .title("진행중인 서울 벚꽃축제")
-                .address("서울 영등포구")
-                .status(FestivalStatus.ONGOING)
-                .startDate(LocalDateTime.now().minusDays(2))
-                .endDate(LocalDateTime.now().plusDays(5))
-                .viewCount(100)
-                .bookMarkCount(10)
-                // 만약 averageRate 도 NOT NULL 이라면 .averageRate(0.0) 추가!
-                .averageRate(4.5)
-                .build());
+        festivalRepository.save(new Festival(
+                "FEST-001",
+                "진행중인 서울 벚꽃축제",
+                "서울 벚꽃축제 개요입니다.",
+                "서울 영등포구",
+                LocalDateTime.now().minusDays(2),
+                LocalDateTime.now().plusDays(5),
+                126.9780,
+                37.5665,
+                null, null, null, null, "11",
+                FestivalStatus.ONGOING
+        ));
 
-        festivalRepository.save(Festival.builder()
-                .contentId("FEST-002")
-                .overview("경기 불꽃축제 개요입니다.")
-                .mapX(127.0)
-                .mapY(37.0)
-                .lDongRegnCd("41")
-                .title("예정된 경기 불꽃축제")
-                .address("경기 가평군")
-                .status(FestivalStatus.UPCOMING)
-                .startDate(LocalDateTime.now().plusDays(10))
-                .endDate(LocalDateTime.now().plusDays(12))
-                .viewCount(500)
-                .bookMarkCount(50)
-                .averageRate(0.0)
-                .build());
+        festivalRepository.save(new Festival(
+                "FEST-002",
+                "예정된 경기 불꽃축제",
+                "경기 불꽃축제 개요입니다.",
+                "경기 가평군",
+                LocalDateTime.now().plusDays(10),
+                LocalDateTime.now().plusDays(12),
+                127.0,
+                37.0,
+                null, null, null, null, "41",
+                FestivalStatus.UPCOMING
+        ));
 
-        festivalRepository.save(Festival.builder()
-                .contentId("FEST-003")
-                .overview("부산 바다축제 개요입니다.")
-                .mapX(129.0)
-                .mapY(35.0)
-                .lDongRegnCd("26")
-                .title("종료된 부산 바다축제")
-                .address("부산 해운대구")
-                .status(FestivalStatus.ENDED)
-                .startDate(LocalDateTime.now().minusDays(20))
-                .endDate(LocalDateTime.now().minusDays(15))
-                .viewCount(1000)
-                .bookMarkCount(100)
-                .averageRate(4.8)
-                .build());
+        festivalRepository.save(new Festival(
+                "FEST-003",
+                "종료된 부산 바다축제",
+                "부산 바다축제 개요입니다.",
+                "부산 해운대구",
+                LocalDateTime.now().minusDays(20),
+                LocalDateTime.now().minusDays(15),
+                129.0,
+                35.0,
+                null, null, null, null, "26",
+                FestivalStatus.ENDED
+        ));
 
-        festivalRepository.save(Festival.builder()
-                .contentId("FEST-004")
-                .overview("제주 감귤축제 개요입니다.")
-                .mapX(126.5)
-                .mapY(33.4)
-                .lDongRegnCd("50")
-                .title("진행중인 제주 감귤축제")
-                .address("제주 서귀포시")
-                .status(FestivalStatus.ONGOING)
-                .startDate(LocalDateTime.now().minusDays(1))
-                .endDate(LocalDateTime.now().plusDays(10))
-                .viewCount(50)
-                .bookMarkCount(5)
-                .averageRate(3.5)
-                .build());
+        festivalRepository.save(new Festival(
+                "FEST-004",
+                "진행중인 제주 감귤축제",
+                "제주 감귤축제 개요입니다.",
+                "제주 서귀포시",
+                LocalDateTime.now().minusDays(1),
+                LocalDateTime.now().plusDays(10),
+                126.5,
+                33.4,
+                null, null, null, null, "50",
+                FestivalStatus.ONGOING
+        ));
 
-        festivalRepository.save(Festival.builder()
-                .contentId("FEST-005")
-                .overview("강릉 커피축제 개요입니다.")
-                .mapX(128.876)
-                .mapY(37.751)
-                .lDongRegnCd("51")
-                .title("종료된 강릉 커피축제")
-                .address("강원도 강릉시")
-                .status(FestivalStatus.ENDED)
-                .startDate(LocalDateTime.now().minusDays(10))
-                .endDate(LocalDateTime.now().minusDays(5)) // 부산(-15일)보다 최근에 끝남!
-                .viewCount(2000)
-                .bookMarkCount(300)
-                .averageRate(4.9)
-                .build());
+        festivalRepository.save(new Festival(
+                "FEST-005",
+                "종료된 강릉 커피축제",
+                "강릉 커피축제 개요입니다.",
+                "강원도 강릉시",
+                LocalDateTime.now().minusDays(10),
+                LocalDateTime.now().minusDays(5),
+                128.876,
+                37.751,
+                null, null, null, null, "51",
+                FestivalStatus.ENDED
+        ));
     }
 
     @Test

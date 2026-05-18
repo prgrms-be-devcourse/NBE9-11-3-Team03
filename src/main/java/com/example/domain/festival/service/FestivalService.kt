@@ -53,8 +53,10 @@ class FestivalService(
     @Transactional
     fun getFestivalDetail(id: Long, loginId: String?): FestivalDetailResponse {
         val festival = getFestival(id)
-        val member = loginId?.let { memberRepository.findByLoginId(it) }
-        val isBookmarked = member?.let { festivalBookmarkRepository.existsByMemberIdAndFestivalId(it.id, id) } ?: false
+        val isBookmarked = loginId
+            ?.let { memberRepository.findByLoginId(it) }
+            ?.let { festivalBookmarkRepository.existsByMemberIdAndFestivalId(it.id, id) }
+            ?: false
         return FestivalDetailResponse.from(festival, isBookmarked)
     }
 

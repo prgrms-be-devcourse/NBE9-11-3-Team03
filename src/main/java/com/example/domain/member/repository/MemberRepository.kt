@@ -23,7 +23,7 @@ interface MemberRepository : JpaRepository<Member, Long> {
 
     // loginId로 회원 한 명을 조회한다.
     // 로그인 시도 시 회원 존재 여부를 확인할 때 사용한다.
-    fun findByLoginId(loginId: String): Member?
+        fun findByLoginId(loginId: String): Member?
 
     // 회원가입 시 loginId 중복 여부를 확인한다.
     fun existsByLoginId(loginId: String): Boolean

@@ -55,7 +55,7 @@ public class ReviewLikeTest {
     void setUp() {
         // 1. 100명의 서로 다른 유저 생성 (한 유저는 한 리뷰에 1번만 좋아요 가능하므로)
         for (int i = 0; i < THREAD_COUNT; i++) {
-            Member member = new Member(
+            Member member = Member.create(
                     "유저" + i,
                     "1234",
                     "user" + i,
@@ -68,20 +68,18 @@ public class ReviewLikeTest {
 
         // 2. 축제 생성
         savedFestival = festivalRepository.save(
-                Festival.builder()
-                        .contentId("FEST-CONCURRENCY")
-                        .overview("동시성 테스트용 축제")
-                        .mapX(126.9780)
-                        .mapY(37.5665)
-                        .title("동시성 축제")
-                        .address("서울 테스트구")
-                        .status(FestivalStatus.ONGOING)
-                        .startDate(LocalDateTime.now().minusDays(1))
-                        .endDate(LocalDateTime.now().plusDays(10))
-                        .viewCount(0)
-                        .bookMarkCount(0)
-                        .averageRate(0.0)
-                        .build()
+                new Festival(
+                        "FEST-CONCURRENCY",
+                        "동시성 축제",
+                        "동시성 테스트용 축제",
+                        "서울 테스트구",
+                        LocalDateTime.now().minusDays(1),
+                        LocalDateTime.now().plusDays(10),
+                        126.9780,
+                        37.5665,
+                        null, null, null, null, null,
+                        FestivalStatus.ONGOING
+                )
         );
 
         // 3. 리뷰 생성 (작성자는 첫 번째 유저로 지정)

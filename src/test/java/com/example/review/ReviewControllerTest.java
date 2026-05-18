@@ -57,7 +57,7 @@ class ReviewControllerTest {
     @BeforeEach
     void setUp() {
         savedMember = memberRepository.save(
-                new Member(
+                Member.create(
                         "유저2",
                         "1234",
                         "user2",
@@ -68,7 +68,7 @@ class ReviewControllerTest {
         );
 
         otherMember = memberRepository.save(
-                new Member(
+                 Member.create(
                         "유저3",
                         "1234",
                         "user3",
@@ -79,20 +79,18 @@ class ReviewControllerTest {
         );
 
         savedFestival = festivalRepository.save(
-                Festival.builder()
-                        .contentId("FEST-001")
-                        .overview("리뷰 테스트용 축제")
-                        .mapX(126.9780)
-                        .mapY(37.5665)
-                        .title("리뷰 테스트 축제")
-                        .address("서울 테스트구")
-                        .status(FestivalStatus.ONGOING)
-                        .startDate(LocalDateTime.now().minusDays(1))
-                        .endDate(LocalDateTime.now().plusDays(10))
-                        .viewCount(0)
-                        .bookMarkCount(0)
-                        .averageRate(0.0)
-                        .build()
+                new Festival(
+                        "FEST-001",
+                        "리뷰 테스트 축제",
+                        "리뷰 테스트용 축제",
+                        "서울 테스트구",
+                        LocalDateTime.now().minusDays(1),
+                        LocalDateTime.now().plusDays(10),
+                        126.9780,
+                        37.5665,
+                        null, null, null, null, null,
+                        FestivalStatus.ONGOING
+                )
         );
 
         savedReview = reviewRepository.save(
@@ -110,20 +108,18 @@ class ReviewControllerTest {
     @DisplayName("리뷰 작성 성공 - 로그인한 사용자가 축제 리뷰를 작성한다.")
     void createReview_success() throws Exception {
         Festival newFestival = festivalRepository.save(
-                Festival.builder()
-                        .contentId("FEST-002")
-                        .overview("리뷰 작성 성공 테스트용 축제")
-                        .mapX(127.0000)
-                        .mapY(37.5000)
-                        .title("리뷰 작성 성공 축제")
-                        .address("서울 테스트동")
-                        .status(FestivalStatus.ONGOING)
-                        .startDate(LocalDateTime.now().minusDays(1))
-                        .endDate(LocalDateTime.now().plusDays(5))
-                        .viewCount(0)
-                        .bookMarkCount(0)
-                        .averageRate(0.0)
-                        .build()
+                new Festival(
+                        "FEST-002",
+                        "리뷰 작성 성공 축제",
+                        "리뷰 작성 성공 테스트용 축제",
+                        "서울 테스트동",
+                        LocalDateTime.now().minusDays(1),
+                        LocalDateTime.now().plusDays(5),
+                        127.0000,
+                        37.5000,
+                        null, null, null, null, null,
+                        FestivalStatus.ONGOING
+                )
         );
 
         String requestBody = """
@@ -323,20 +319,18 @@ class ReviewControllerTest {
     @DisplayName("리뷰 작성 실패 - 비로그인 사용자는 리뷰를 작성할 수 없다.")
     void createReview_fail_unauthorized() throws Exception {
         Festival newFestival = festivalRepository.save(
-                Festival.builder()
-                        .contentId("FEST-003")
-                        .overview("비로그인 리뷰 작성 테스트용 축제")
-                        .mapX(127.1000)
-                        .mapY(37.6000)
-                        .title("비로그인 테스트 축제")
-                        .address("서울 테스트구")
-                        .status(FestivalStatus.ONGOING)
-                        .startDate(LocalDateTime.now().minusDays(1))
-                        .endDate(LocalDateTime.now().plusDays(5))
-                        .viewCount(0)
-                        .bookMarkCount(0)
-                        .averageRate(0.0)
-                        .build()
+                new Festival(
+                        "FEST-003",
+                        "비로그인 테스트 축제",
+                        "비로그인 리뷰 작성 테스트용 축제",
+                        "서울 테스트구",
+                        LocalDateTime.now().minusDays(1),
+                        LocalDateTime.now().plusDays(5),
+                        127.1000,
+                        37.6000,
+                        null, null, null, null, null,
+                        FestivalStatus.ONGOING
+                )
         );
 
         String requestBody = """

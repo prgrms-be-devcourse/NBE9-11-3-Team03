@@ -33,20 +33,18 @@ public class FestivalConcurrencyTest {
     @BeforeEach
     void setUp() {
         // 테스트 전: 조회수가 0인 축제 생성
-        Festival festival = Festival.builder()
-                .contentId("FEST-CONCURRENCY")
-                .title("동시성 테스트 축제")
-                .overview("동시성 테스트용 축제입니다.")
-                .mapX(126.9780)
-                .mapY(37.5665)
-                .address("서울 테스트구")
-                .status(FestivalStatus.ONGOING)
-                .startDate(LocalDateTime.now())
-                .endDate(LocalDateTime.now().plusDays(10))
-                .viewCount(0) // 초기 조회수 0
-                .bookMarkCount(0)
-                .averageRate(0.0)
-                .build();
+        Festival festival = new Festival(
+                "FEST-CONCURRENCY",
+                "동시성 테스트 축제",
+                "동시성 테스트용 축제입니다.",
+                "서울 테스트구",
+                LocalDateTime.now(),
+                LocalDateTime.now().plusDays(10),
+                126.9780,
+                37.5665,
+                null, null, null, null, null,
+                FestivalStatus.ONGOING
+        );
 
         savedFestival = festivalRepository.saveAndFlush(festival);
     }
