@@ -204,19 +204,14 @@ class AuthService(
     }
 
     private fun validateRefreshToken(refreshToken: String?) {
-        if (!StringUtils.hasText(refreshToken) || !jwtUtil.validateToken(refreshToken) || !jwtUtil.isRefreshToken(refreshToken)) {
+        if (refreshToken.isNullOrBlank() || !jwtUtil.validateToken(refreshToken) || !jwtUtil.isRefreshToken(refreshToken)){
             throw UnauthorizedException("유효하지 않은 refresh token입니다.")
         }
     }
 
-    private fun requireText(value: String?, message: String): String {
-        val text = value?.takeIf { StringUtils.hasText(it) }
-        if (text == null) {
-            throw BadRequestException(message)
-        }
+    private fun requireText(value: String?, message: String): String =
+        value?.takeIf { it.isNotBlank() } ?: throw BadRequestException(message)
 
-        return text
-    }
 
     private fun findRefreshToken(refreshToken: String): RefreshToken {
         return refreshTokenRepository.findByToken(refreshToken)

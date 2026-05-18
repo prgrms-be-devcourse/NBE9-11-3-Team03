@@ -7,7 +7,7 @@ import java.time.LocalDate
 data class FestivalListResponse(
     val id: Long,
     val title: String,
-    val thumbnail: String,
+    val thumbnail: String?,
     val startDate: LocalDate,
     val endDate: LocalDate,
     val address: String,
@@ -24,7 +24,8 @@ data class FestivalListResponse(
             return FestivalListResponse(
                 id = festival.id,
                 title = festival.title,
-                thumbnail = festival.thumbnailUrl,
+                thumbnail =
+                    festival.thumbnailUrl,
                 startDate = festival.startDate.toLocalDate(),
                 endDate = festival.endDate.toLocalDate(),
                 address = festival.address,
