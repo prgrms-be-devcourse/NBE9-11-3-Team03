@@ -79,7 +79,6 @@ public class MyPageTest {
                 FestivalStatus.UPCOMING
         );
         festivalRepository.save(festival);
-        festivalRepository.save(festival);
 
         Review review1 = new Review(member, festival, "정말 재밌어요!", null, 5);
         Review review2 = new Review(member, festival, "또 가고 싶네요.", null, 4);
