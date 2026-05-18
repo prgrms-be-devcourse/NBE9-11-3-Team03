@@ -44,7 +44,7 @@ class ReviewService(
 
         // 1. 로그인한 회원 조회
         val member = memberRepository.findByLoginId(loginId)
-            .orElseThrow { UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.") }
+            ?: throw UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.")
 
         // 2. 축제 존재 여부 확인
         val festival = festivalRepository.findByIdOrNull(festivalId)
@@ -99,7 +99,7 @@ class ReviewService(
         )
 
         val loginMember = memberRepository.findByLoginId(loginId)
-            .orElseThrow { UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.") }
+            ?: throw UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.")
 
         return ReviewPageResponse(
             festivalId,
@@ -124,7 +124,8 @@ class ReviewService(
         imageFile: MultipartFile?
     ): ReviewUpdateResponse {
         // 1. 로그인한 회원 조회
-        val member = loginId?.let { memberRepository.findByLoginId(it).orElse(null) }
+        if (loginId == null) throw UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.")
+        val member = memberRepository.findByLoginId(loginId)
             ?: throw UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.")
 
         // 2. 리뷰 존재 여부 확인
@@ -180,7 +181,8 @@ class ReviewService(
     @Transactional
     fun deleteReview(reviewId: Long, loginId: String?): ReviewDeleteResponse {
         // 2. 로그인한 회원 조회
-        val member = loginId?.let { memberRepository.findByLoginId(it).orElse(null) }
+        if (loginId == null) throw UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.")
+        val member = memberRepository.findByLoginId(loginId)
             ?: throw UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.")
 
         // 3. 리뷰 존재 여부 확인

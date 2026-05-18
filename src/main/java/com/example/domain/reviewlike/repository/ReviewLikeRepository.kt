@@ -6,6 +6,5 @@ import java.util.*
 
 interface ReviewLikeRepository : JpaRepository<ReviewLike, Long> {
     fun existsByMemberIdAndReviewId(memberId: Long, reviewId: Long): Boolean
-
-    fun findByMemberIdAndReviewId(memberId: Long, reviewId: Long): ReviewLike
+    fun findByMemberIdAndReviewId(memberId: Long, reviewId: Long): ReviewLike?
 }

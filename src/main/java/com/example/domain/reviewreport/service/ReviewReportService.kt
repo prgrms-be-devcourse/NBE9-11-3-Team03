@@ -28,7 +28,7 @@ class ReviewReportService(
     fun reportReview(reviewId: Long, loginId: String): ReviewReportResponse {
 
         val reporter = memberRepository.findByLoginId(loginId)
-            .orElseThrow { UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.") }
+            ?: throw UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.")
 
         val review = reviewRepository.findByIdOrNull(reviewId)
             ?: throw EntityNotFoundException("존재하지 않는 리뷰입니다.")

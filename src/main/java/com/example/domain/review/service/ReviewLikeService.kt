@@ -1,5 +1,6 @@
 package com.example.domain.review.service
 
+import com.example.domain.member.entity.QMember.member
 import com.example.domain.member.repository.MemberRepository
 import com.example.domain.review.entity.ReviewStatus
 import com.example.domain.review.repository.ReviewRepository
@@ -24,7 +25,7 @@ class ReviewLikeService(
     @Transactional
     fun likeReview(reviewId: Long, loginId: String): ReviewLikeResponse {
         val member = memberRepository.findByLoginId(loginId)
-            .orElseThrow { UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.") }
+            ?: throw  UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.")
 
         val review = reviewRepository.findById(reviewId)
             .orElseThrow { CustomNotFoundException("존재하지 않는 리뷰입니다.") }
@@ -54,7 +55,7 @@ class ReviewLikeService(
     @Transactional
     fun cancelLikeReview(reviewId: Long, loginId: String): ReviewLikeResponse {
         val member = memberRepository.findByLoginId(loginId)
-            .orElseThrow { UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.") }
+            ?: throw  UnauthorizedException("로그인한 회원 정보를 찾을 수 없습니다.")
 
         val review = reviewRepository.findById(reviewId)
             .orElseThrow { CustomNotFoundException("존재하지 않는 리뷰입니다.") }
