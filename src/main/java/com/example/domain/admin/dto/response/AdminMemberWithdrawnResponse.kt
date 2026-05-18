@@ -12,7 +12,7 @@ data class AdminMemberWithdrawnResponse(
         fun from(member: Member): AdminMemberWithdrawnResponse {
             return AdminMemberWithdrawnResponse(
                 member.getId(),
-                member.getStatus()
+                member.status
             )
         }
     }

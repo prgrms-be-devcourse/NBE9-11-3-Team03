@@ -24,7 +24,7 @@ class MyPageService(
 
     private fun findMemberByLoginId(loginId: String) =
         memberRepository.findByLoginId(loginId)
-            .orElseThrow { CustomNotFoundException("로그인한 회원 정보를 찾을 수 없습니다.") }
+            ?: throw CustomNotFoundException("로그인한 회원 정보를 찾을 수 없습니다.")
 
     //마이페이지의 자신을 조회하는 메서드입니다.
     fun getMyPage(loginId: String): MyPageResponse {

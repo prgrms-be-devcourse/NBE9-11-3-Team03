@@ -3,12 +3,12 @@ package com.example.domain.member.service
 import com.example.domain.admin.dto.response.AdminMemberWithdrawnResponse
 import com.example.domain.admin.dto.response.MemberPageResponse
 import com.example.domain.member.entity.MemberStatus
-import com.example.domain.member.entity.RefreshToken
 import com.example.domain.member.repository.MemberRepository
 import com.example.domain.member.repository.RefreshTokenRepository
 import com.example.global.exception.CustomNotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Pageable
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -35,8 +35,8 @@ class MemberService(
 
     @Transactional
     fun memberWithdraw(memberId: Long): AdminMemberWithdrawnResponse {
-        val member = memberRepository.findById(memberId)
-            .orElseThrow { CustomNotFoundException("404", "존재하지 않는 회원입니다.") }
+        val member = memberRepository.findByIdOrNull(memberId)
+            ?: throw CustomNotFoundException("404", "존재하지 않는 회원입니다.")
 
         if (member.status == MemberStatus.WITHDRAWN) {
             log.warn("[ADMIN] 회원 강제 탈퇴 실패(이미 탈퇴한 회원) - memberId={}", memberId)
@@ -44,8 +44,7 @@ class MemberService(
         }
 
         member.withdraw()
-        refreshTokenRepository.findByMemberId(member.id)
-            .ifPresent(RefreshToken::logout)
+        refreshTokenRepository.findByMemberId(member.id)?.logout()
 
         return AdminMemberWithdrawnResponse.from(member)
     }

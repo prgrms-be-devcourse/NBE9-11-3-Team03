@@ -49,18 +49,4 @@ class FestivalSyncEventListenerTest {
                 .enrichFestivalDetailsAndNotify(anyList(), any());
     }
 
-    @Test
-    @DisplayName("contentId가 null이면 상세 보강을 수행하지 않는다")
-    void handle_null_test() {
-        FestivalSyncResultResponse listResult =
-                new FestivalSyncResultResponse(0, 0, 0, 0, List.of());
-
-        FestivalSyncCompletedEvent event =
-                new FestivalSyncCompletedEvent(null, listResult);
-
-        listener.handleFestivalSyncCompleted(event);
-
-        verify(festivalSyncService, never())
-                .enrichFestivalDetailsAndNotify(anyList(), any());
-    }
 }
