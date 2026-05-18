@@ -50,15 +50,25 @@ public class ReviewLikeCancelTest {
     void setUp() {
         // 1. 100명의 유저 생성
         for (int i = 0; i < THREAD_COUNT; i++) {
-            Member member = new Member("유저" + i, "1234", "user" + i, "user" + i + "@test.com", "닉네임" + i, Role.USER);
+            Member member =Member.create("유저" + i, "1234", "user" + i, "user" + i + "@test.com", "닉네임" + i, Role.USER);
             members.add(memberRepository.save(member));
         }
 
         // 2. 축제 생성 및 DB 저장
-        savedFestival = festivalRepository.save(Festival.builder()
-                .contentId("FEST-CANCEL").overview("테스트").mapX(126.9).mapY(37.5).title("축제").address("주소")
-                .status(FestivalStatus.ONGOING).startDate(LocalDateTime.now()).endDate(LocalDateTime.now().plusDays(10)).build());
-
+        savedFestival = festivalRepository.save(
+                new Festival(
+                        "FEST-CANCEL",
+                        "축제",
+                        "테스트",
+                        "주소",
+                        LocalDateTime.now(),
+                        LocalDateTime.now().plusDays(10),
+                        126.9,
+                        37.5,
+                        null, null, null, null, null,
+                        FestivalStatus.ONGOING
+                )
+        );
         // 3. 리뷰를 먼저 DB에 저장하여 ID를 부여받습니다.
         Review initialReview = new Review(members.get(0), savedFestival, "내용", "이미지", 5);
         savedReview = reviewRepository.save(initialReview);
