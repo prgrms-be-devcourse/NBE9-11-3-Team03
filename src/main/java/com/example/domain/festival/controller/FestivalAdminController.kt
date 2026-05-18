@@ -37,6 +37,22 @@ class FestivalAdminController(
         val listResult =
             festivalSyncService.syncFestivalList(pageNo, numOfRows, eventStartDate)
 
+        if (listResult.totalCount == 0 && listResult.failedCount > 0) {
+            festivalSyncService.notifyFestivalSyncResultOnly(listResult)
+
+            val response = FestivalSyncResponse(
+                listResult.totalCount,
+                listResult.createdCount,
+                listResult.updatedCount,
+                listResult.failedCount
+            )
+
+            return RsData.success(
+                "축제 목록 동기화에 실패하여 상세 보강은 수행하지 않았습니다.",
+                response
+            )
+        }
+
         // 이번 목록 변경분 + 이전 상세 실패/미시도 대상까지 합쳐 상세 보강 대상으로 수집
         val targetContentIds =
             festivalSyncService.collectDetailEnrichTargetContentIds(listResult.changedContentIds)
