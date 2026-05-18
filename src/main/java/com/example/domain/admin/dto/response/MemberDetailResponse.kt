@@ -17,14 +17,14 @@ data class MemberDetailResponse(
         @JvmStatic
         fun from(member: Member): MemberDetailResponse {
             return MemberDetailResponse(
-                member.getId(),
+                member.id,
                 member.loginId,
                 member.email,
                 member.nickname,
                 member.reportCount,
                 member.status.name,
                 member.role.name,
-                member.getCreatedAt()
+                member.createdAt
             )
         }
     }
