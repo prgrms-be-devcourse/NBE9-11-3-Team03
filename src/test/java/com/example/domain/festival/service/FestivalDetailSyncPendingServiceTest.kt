@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.any
+import org.mockito.BDDMockito.given
 import org.mockito.Mockito.*
 
 internal class FestivalDetailSyncPendingServiceTest {
@@ -16,7 +17,7 @@ internal class FestivalDetailSyncPendingServiceTest {
     @Test
     @DisplayName("pending이 없으면 새로 생성한다")
     fun saveOrUpdate_create_test() {
-        `when`(repository.findByContentId("1001")).thenReturn(null)
+        given(repository.findByContentId("1001")).willReturn(null)
 
         service.saveOrUpdate("1001", DetailSyncPendingReason.EXCEPTION)
 
@@ -28,7 +29,7 @@ internal class FestivalDetailSyncPendingServiceTest {
     fun saveOrUpdate_update_test() {
         val existing = create("1001", DetailSyncPendingReason.EXCEPTION)
 
-        `when`(repository.findByContentId("1001")).thenReturn(existing)
+        given(repository.findByContentId("1001")).willReturn(existing)
 
         service.saveOrUpdate("1001", DetailSyncPendingReason.SERVER_ERROR)
 
@@ -51,7 +52,7 @@ internal class FestivalDetailSyncPendingServiceTest {
         val p1 = create("1001", DetailSyncPendingReason.EXCEPTION)
         val p2 = create("1002", DetailSyncPendingReason.SERVER_ERROR)
 
-        `when`(repository.findAllByOrderByLastFailedAtAsc()).thenReturn(listOf(p1, p2))
+        given(repository.findAllByOrderByLastFailedAtAsc()).willReturn(listOf(p1, p2))
 
         val result = service.findAllContentIds()
 
@@ -61,11 +62,11 @@ internal class FestivalDetailSyncPendingServiceTest {
     @Test
     @DisplayName("sync-status 조회 시 pending이 없으면 needsRetry는 false이다")
     fun getSyncStatus_empty_test() {
-        `when`(repository.count()).thenReturn(0L)
-        `when`(repository.countByReason(DetailSyncPendingReason.RATE_LIMIT)).thenReturn(0L)
-        `when`(repository.countByReason(DetailSyncPendingReason.SERVER_ERROR)).thenReturn(0L)
-        `when`(repository.countByReason(DetailSyncPendingReason.EXCEPTION)).thenReturn(0L)
-        `when`(repository.countByReason(DetailSyncPendingReason.UNPROCESSED)).thenReturn(0L)
+        given(repository.count()).willReturn(0L)
+        given(repository.countByReason(DetailSyncPendingReason.RATE_LIMIT)).willReturn(0L)
+        given(repository.countByReason(DetailSyncPendingReason.SERVER_ERROR)).willReturn(0L)
+        given(repository.countByReason(DetailSyncPendingReason.EXCEPTION)).willReturn(0L)
+        given(repository.countByReason(DetailSyncPendingReason.UNPROCESSED)).willReturn(0L)
 
         val result = service.getSyncStatus()
 
@@ -80,11 +81,11 @@ internal class FestivalDetailSyncPendingServiceTest {
     @Test
     @DisplayName("sync-status 조회 시 pending breakdown과 needsRetry를 반환한다")
     fun getSyncStatus_with_pending_test() {
-        `when`(repository.count()).thenReturn(3L)
-        `when`(repository.countByReason(DetailSyncPendingReason.RATE_LIMIT)).thenReturn(1L)
-        `when`(repository.countByReason(DetailSyncPendingReason.SERVER_ERROR)).thenReturn(0L)
-        `when`(repository.countByReason(DetailSyncPendingReason.EXCEPTION)).thenReturn(0L)
-        `when`(repository.countByReason(DetailSyncPendingReason.UNPROCESSED)).thenReturn(2L)
+        given(repository.count()).willReturn(3L)
+        given(repository.countByReason(DetailSyncPendingReason.RATE_LIMIT)).willReturn(1L)
+        given(repository.countByReason(DetailSyncPendingReason.SERVER_ERROR)).willReturn(0L)
+        given(repository.countByReason(DetailSyncPendingReason.EXCEPTION)).willReturn(0L)
+        given(repository.countByReason(DetailSyncPendingReason.UNPROCESSED)).willReturn(2L)
 
         val result = service.getSyncStatus()
 
