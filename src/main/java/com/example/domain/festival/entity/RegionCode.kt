@@ -1,13 +1,6 @@
-package com.example.domain.festival.entity;
+package com.example.domain.festival.entity
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-import java.util.Arrays;
-
-@Getter
-@AllArgsConstructor
-public enum RegionCode {
+enum class RegionCode(val code: String, val displayName: String) {
     SEOUL("11", "서울특별시"),
     BUSAN("26", "부산광역시"),
     DAEGU("27", "대구광역시"),
@@ -28,15 +21,9 @@ public enum RegionCode {
 
     UNKNOWN("99", "기타/미분류");
 
-    private final String code;
-    private final String name;
-
-    //코드->한글 지역명 반환
-    public static String getNameByCode(String code) {
-        return Arrays.stream(values())
-                .filter(region -> region.getCode().equals(code))
-                .findFirst()
-                .orElse(UNKNOWN)
-                .getName();
+    companion object {
+        //코드->한글 지역명 반환
+        fun getNameByCode(code: String?): String =
+            entries.firstOrNull { it.code == code }?.displayName ?: UNKNOWN.displayName
     }
 }
