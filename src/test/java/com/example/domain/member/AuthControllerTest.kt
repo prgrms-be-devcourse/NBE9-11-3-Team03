@@ -284,7 +284,6 @@ class AuthControllerTest {
                   "email": "$email",
                   "nickname": "$nickname"
                 }
-                
                 """.trimIndent()
     }
 
@@ -294,7 +293,6 @@ class AuthControllerTest {
                   "loginId": "$loginId",
                   "password": "$password"
                 }
-                
                 """.trimIndent()
     }
 
