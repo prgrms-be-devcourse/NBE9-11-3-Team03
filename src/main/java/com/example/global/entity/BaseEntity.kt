@@ -11,7 +11,7 @@ import java.time.LocalDateTime
 abstract class BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long =0
+    var id: Long = 0
         protected set
 
     // 엔티티가 처음 저장될 때의 시간
