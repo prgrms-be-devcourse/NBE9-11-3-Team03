@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
-import java.util.Optional
 
 // Member 엔티티에 대한 조회/저장 책임을 가지는 Repository다.
 // Spring Data JPA가 메서드 이름을 해석해서 필요한 쿼리를 자동으로 만들어준다.
@@ -24,16 +23,16 @@ interface MemberRepository : JpaRepository<Member, Long> {
 
     // loginId로 회원 한 명을 조회한다.
     // 로그인 시도 시 회원 존재 여부를 확인할 때 사용한다.
-    fun findByLoginId(loginId: String?): Optional<Member>
+    fun findByLoginId(loginId: String): Member?
 
     // 회원가입 시 loginId 중복 여부를 확인한다.
-    fun existsByLoginId(loginId: String?): Boolean
+    fun existsByLoginId(loginId: String): Boolean
 
     // 회원가입 시 email 중복 여부를 확인한다.
-    fun existsByEmail(email: String?): Boolean
+    fun existsByEmail(email: String): Boolean
 
     // 회원가입 시 nickname 중복 여부를 확인한다.
-    fun existsByNickname(nickname: String?): Boolean
+    fun existsByNickname(nickname: String): Boolean
 
     // DB에서 직접 신고횟수를 1 증가시키는 로직
     @Modifying(clearAutomatically = true)

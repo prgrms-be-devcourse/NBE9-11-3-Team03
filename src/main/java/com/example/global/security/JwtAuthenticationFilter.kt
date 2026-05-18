@@ -92,9 +92,7 @@ class JwtAuthenticationFilter(
 
     // DB에 남아있는 회원 상태가 ACTIVE인 경우에만 인증을 허용.
     private fun isActiveMember(loginId: String): Boolean =
-        memberRepository.findByLoginId(loginId)
-            .map { member -> member.status == MemberStatus.ACTIVE }
-            .orElse(false)
+        memberRepository.findByLoginId(loginId)?.status == MemberStatus.ACTIVE
 
     private fun isBlacklisted(token: String): Boolean {
         // 로그아웃된 access token이면 다시 인증하지 않음.
@@ -134,15 +132,14 @@ class JwtAuthenticationFilter(
 
     // Spring Security 권한 이름은 ROLE_USER, ROLE_ADMIN처럼 ROLE_ 접두사를 붙여 사용한다.
     private fun toAuthority(role: String?): String {
-        if (!StringUtils.hasText(role)) {
-            return ROLE_PREFIX + "USER"
+        val authorityRole = role?.takeIf { StringUtils.hasText(it) }
+            ?: return ROLE_PREFIX + "USER"
+
+        if (authorityRole.startsWith(ROLE_PREFIX)) {
+            return authorityRole
         }
 
-        if (role!!.startsWith(ROLE_PREFIX)) {
-            return role
-        }
-
-        return ROLE_PREFIX + role
+        return ROLE_PREFIX + authorityRole
     }
 
     companion object {

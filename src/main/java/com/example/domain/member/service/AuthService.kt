@@ -38,15 +38,21 @@ class AuthService(
 
     @Transactional
     fun signup(request: SignupRequest): SignupResponse {
-        validateDuplicateSignupInfo(request)
+        val userName = requireText(request.userName, "이름을 입력해주세요.")
+        val loginId = requireText(request.loginId, "아이디를 입력해주세요.")
+        val password = requireText(request.password, "비밀번호를 입력해주세요.")
+        val email = requireText(request.email, "이메일을 입력해주세요.")
+        val nickname = requireText(request.nickname, "닉네임을 입력해주세요.")
 
-        val encodedPassword = encodePassword(request.password)
+        validateDuplicateSignupInfo(loginId, email, nickname)
+
+        val encodedPassword = encodePassword(password)
         val member = Member.create(
-            request.userName!!,
+            userName,
             encodedPassword,
-            request.loginId!!,
-            request.email!!,
-            request.nickname!!
+            loginId,
+            email,
+            nickname
         )
 
         val savedMember = memberRepository.save(member)
@@ -57,9 +63,11 @@ class AuthService(
 
     @Transactional
     fun login(request: LoginRequest): LoginResponse {
-        val member = findMemberByLoginId(request.loginId)
+        val loginId = requireText(request.loginId, "아이디를 입력해주세요.")
+        val password = requireText(request.password, "비밀번호를 입력해주세요.")
+        val member = findMemberByLoginId(loginId)
         validateMemberCanLogin(member)
-        validateLoginPassword(request.loginId, request.password, member.password)
+        validateLoginPassword(loginId, password, member.password)
 
         val accessToken = createAccessToken(member)
         val refreshToken = createAndSaveRefreshToken(member)
@@ -77,7 +85,8 @@ class AuthService(
     fun reissue(refreshTokenValue: String?): TokenReissueResponse {
         validateRefreshToken(refreshTokenValue)
 
-        val refreshToken = findRefreshToken(refreshTokenValue)
+        val tokenValue = requireText(refreshTokenValue, "refresh token을 입력해주세요.")
+        val refreshToken = findRefreshToken(tokenValue)
         validateRefreshTokenActive(refreshToken)
         validateRefreshTokenNotExpired(refreshToken)
 
@@ -95,8 +104,7 @@ class AuthService(
     @Transactional
     fun logout(loginId: String, accessToken: String?) {
         val member = findMemberByLoginId(loginId)
-        refreshTokenRepository.findByMemberId(member.id)
-            .ifPresent(RefreshToken::logout)
+        refreshTokenRepository.findByMemberId(member.id)?.logout()
 
         saveAccessTokenBlacklist(accessToken)
         log.info("[Member] 로그아웃 처리 - loginId={}", member.loginId)
@@ -105,7 +113,7 @@ class AuthService(
     @Transactional
     fun selfWithdraw(loginId: String, password: String?, accessToken: String?): WithdrawResponse {
         val member = memberRepository.findByLoginId(loginId)
-            .orElseThrow { CustomNotFoundException("회원을 찾을 수 없습니다.") }
+            ?: throw CustomNotFoundException("회원을 찾을 수 없습니다.")
 
         if (member.status == MemberStatus.WITHDRAWN) {
             throw BadRequestException("이미 탈퇴 처리된 계정입니다.")
@@ -113,8 +121,7 @@ class AuthService(
 
         validatePassword(password, member.password)
         member.withdraw()
-        refreshTokenRepository.findByMemberId(member.id)
-            .ifPresent(RefreshToken::logout)
+        refreshTokenRepository.findByMemberId(member.id)?.logout()
 
         saveAccessTokenBlacklist(accessToken)
         log.info("[Member] 회원 탈퇴 처리 - loginId={}", loginId)
@@ -136,23 +143,23 @@ class AuthService(
         )
     }
 
-    private fun validateDuplicateSignupInfo(request: SignupRequest) {
-        if (memberRepository.existsByLoginId(request.loginId)) {
+    private fun validateDuplicateSignupInfo(loginId: String, email: String, nickname: String) {
+        if (memberRepository.existsByLoginId(loginId)) {
             throw DuplicateResourceException("409", "이미 사용 중인 아이디입니다.")
         }
 
-        if (memberRepository.existsByEmail(request.email)) {
+        if (memberRepository.existsByEmail(email)) {
             throw DuplicateResourceException("409", "이미 사용 중인 이메일입니다.")
         }
 
-        if (memberRepository.existsByNickname(request.nickname)) {
+        if (memberRepository.existsByNickname(nickname)) {
             throw DuplicateResourceException("409", "이미 사용 중인 닉네임입니다.")
         }
     }
 
-    private fun findMemberByLoginId(loginId: String?): Member {
+    private fun findMemberByLoginId(loginId: String): Member {
         return memberRepository.findByLoginId(loginId)
-            .orElseThrow { CustomNotFoundException("404", "존재하지 않는 계정입니다.") }
+            ?: throw CustomNotFoundException("404", "존재하지 않는 계정입니다.")
     }
 
     private fun validateMemberCanLogin(member: Member) {
@@ -161,7 +168,7 @@ class AuthService(
         }
     }
 
-    private fun encodePassword(rawPassword: String?): String {
+    private fun encodePassword(rawPassword: String): String {
         return passwordEncoder.encode(rawPassword)
     }
 
@@ -186,7 +193,7 @@ class AuthService(
         val refreshTokenValue = jwtUtil.createRefreshToken(member)
         val expiresAt = jwtUtil.getExpirationDateTime(refreshTokenValue)
 
-        val refreshToken = refreshTokenRepository.findByMemberId(member.id).orElse(null)
+        val refreshToken = refreshTokenRepository.findByMemberId(member.id)
         if (refreshToken != null) {
             refreshToken.update(refreshTokenValue, expiresAt)
         } else {
@@ -202,9 +209,18 @@ class AuthService(
         }
     }
 
-    private fun findRefreshToken(refreshToken: String?): RefreshToken {
+    private fun requireText(value: String?, message: String): String {
+        val text = value?.takeIf { StringUtils.hasText(it) }
+        if (text == null) {
+            throw BadRequestException(message)
+        }
+
+        return text
+    }
+
+    private fun findRefreshToken(refreshToken: String): RefreshToken {
         return refreshTokenRepository.findByToken(refreshToken)
-            .orElseThrow { UnauthorizedException("유효하지 않은 refresh token입니다.") }
+            ?: throw UnauthorizedException("유효하지 않은 refresh token입니다.")
     }
 
     private fun validateRefreshTokenActive(refreshToken: RefreshToken) {
