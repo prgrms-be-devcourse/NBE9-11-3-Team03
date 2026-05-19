@@ -1,21 +1,17 @@
 package com.example.admin
 
-import com.example.domain.festival.entity.Festival
 import com.example.domain.festival.repository.FestivalRepository
 import com.example.domain.member.entity.Member
 import com.example.domain.member.entity.MemberStatus
 import com.example.domain.member.entity.Role
 import com.example.domain.member.repository.MemberRepository
-import com.example.domain.review.entity.Review
 import com.example.domain.review.repository.ReviewRepository
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -24,7 +20,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.transaction.annotation.Transactional
-import java.time.LocalDateTime
 
 @SpringBootTest
 @ActiveProfiles("test")

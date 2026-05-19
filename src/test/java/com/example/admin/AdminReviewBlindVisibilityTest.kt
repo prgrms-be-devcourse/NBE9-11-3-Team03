@@ -3,7 +3,6 @@ package com.example.admin
 import com.example.domain.festival.entity.Festival
 import com.example.domain.festival.repository.FestivalRepository
 import com.example.domain.member.entity.Member
-import com.example.domain.member.entity.Role
 import com.example.domain.member.repository.MemberRepository
 import com.example.domain.review.entity.Review
 import com.example.domain.review.entity.ReviewStatus
@@ -14,7 +13,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.util.ReflectionTestUtils
