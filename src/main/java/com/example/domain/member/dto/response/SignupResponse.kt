@@ -12,7 +12,6 @@ data class SignupResponse(
     val status: MemberStatus
 ) {
     companion object {
-        @JvmStatic
         fun from(member: Member): SignupResponse {
             return SignupResponse(
                 memberId = member.id,

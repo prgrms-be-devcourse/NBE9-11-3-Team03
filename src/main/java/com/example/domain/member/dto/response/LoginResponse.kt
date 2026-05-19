@@ -16,7 +16,6 @@ data class LoginResponse(
     val status: MemberStatus
 ) {
     companion object {
-        @JvmStatic
         fun of(accessToken: String, refreshToken: String, member: Member): LoginResponse {
             return LoginResponse(
                 accessToken = accessToken,

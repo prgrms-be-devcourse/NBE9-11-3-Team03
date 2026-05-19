@@ -1,553 +1,396 @@
-package com.example.domain.festival.service;
+package com.example.domain.festival.service
 
-import com.example.domain.festival.client.FestivalApiClient;
-import com.example.domain.festival.converter.FestivalApiConverter;
-import com.example.domain.festival.dto.external.*;
-import com.example.domain.festival.dto.response.FestivalSyncResultResponse;
-import com.example.domain.festival.dto.response.FestivalSyncStatusResponse;
-import com.example.domain.festival.entity.DetailSyncPendingReason;
-import com.example.domain.festival.entity.Festival;
-import com.example.domain.festival.entity.FestivalStatus;
-import com.example.domain.festival.event.FestivalSyncEventPublisher;
-import com.example.domain.festival.notification.FestivalSyncSlackMessageFactory;
-import com.example.domain.festival.repository.FestivalRepository;
-import com.example.global.notification.SlackNotificationService;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
+import com.example.domain.festival.client.FestivalApiClient
+import com.example.domain.festival.converter.FestivalApiConverter
+import com.example.domain.festival.dto.external.*
+import com.example.domain.festival.dto.response.FestivalSyncResultResponse
+import com.example.domain.festival.dto.response.FestivalSyncStatusResponse
+import com.example.domain.festival.entity.DetailSyncPendingReason
+import com.example.domain.festival.entity.Festival
+import com.example.domain.festival.entity.FestivalStatus
+import com.example.domain.festival.event.FestivalSyncEventPublisher
+import com.example.domain.festival.notification.FestivalSyncSlackMessageFactory
+import com.example.domain.festival.repository.FestivalRepository
+import com.example.global.notification.SlackNotificationService
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.mockito.BDDMockito.given
+import org.mockito.Mockito.*
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.web.client.HttpClientErrorException
+import org.springframework.web.client.HttpServerErrorException
+import java.time.LocalDateTime
+import java.util.*
 
-import java.lang.reflect.Field;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+internal class FestivalSyncServiceTest {
+    private val festivalApiClient = mock(FestivalApiClient::class.java)
+    private val festivalApiConverter = mock(FestivalApiConverter::class.java)
+    private val festivalRepository = mock(FestivalRepository::class.java)
+    private val festivalSyncEventPublisher = mock(FestivalSyncEventPublisher::class.java)
+    private val pendingService = mock(FestivalDetailSyncPendingService::class.java)
+    private val slackNotificationService = mock(SlackNotificationService::class.java)
+    private val festivalSyncSlackMessageFactory = mock(FestivalSyncSlackMessageFactory::class.java)
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
-
-class FestivalSyncServiceTest {
-
-    private final FestivalApiClient festivalApiClient = mock(FestivalApiClient.class);
-    private final FestivalApiConverter festivalApiConverter = mock(FestivalApiConverter.class);
-    private final FestivalRepository festivalRepository = mock(FestivalRepository.class);
-    private final FestivalSyncEventPublisher festivalSyncEventPublisher = mock(FestivalSyncEventPublisher.class);
-    private final FestivalDetailSyncPendingService pendingService = mock(FestivalDetailSyncPendingService.class);
-    private final SlackNotificationService slackNotificationService = mock(SlackNotificationService.class);
-    private final FestivalSyncSlackMessageFactory festivalSyncSlackMessageFactory = mock(FestivalSyncSlackMessageFactory.class);
-
-    private final FestivalSyncService festivalSyncService = new FestivalSyncService(
-            festivalApiClient,
-            festivalApiConverter,
-            festivalRepository,
-            festivalSyncEventPublisher,
-            pendingService,
-            slackNotificationService,
-            festivalSyncSlackMessageFactory
-    );
+    private val festivalSyncService = FestivalSyncService(
+        festivalApiClient,
+        festivalApiConverter,
+        festivalRepository,
+        festivalSyncEventPublisher,
+        pendingService,
+        slackNotificationService,
+        festivalSyncSlackMessageFactory
+    )
 
     @Nested
     @DisplayName("목록 동기화 테스트")
-    class SyncFestivalListTest {
-
+    internal inner class SyncFestivalListTest {
         @Test
         @DisplayName("신규 축제면 저장한다")
-        void syncFestivalList_create_test() throws Exception {
-            FestivalApiItem item = createApiItem("1001", "가야문화축제");
-            FestivalApiResponse response = createResponse(List.of(item));
+        fun syncFestivalList_create_test() {
+            val item = createApiItem("1001", "가야문화축제")
+            val response = createResponse(listOf(item))
+            val newFestival = createFestival("1001", "가야문화축제")
 
-            Festival newFestival = new Festival(
-                    "1001",
-                    "가야문화축제",
-                    "상세 설명 없음",
-                    "경상남도 김해시 대성동",
-                    LocalDateTime.of(2026, 4, 30, 0, 0),
-                    LocalDateTime.of(2026, 5, 3, 23, 59, 59),
-                    128.87,
-                    35.23,
-                    "055-330-6840",
-                    "image1.jpg",
-                    "image2.jpg",
-                    "https://test.com",
-                    "48",
-                    FestivalStatus.UPCOMING
-            );
+            given(festivalApiClient.fetchFestivalList(1, 10, "20260101"))
+                .willReturn(response)
+            given(festivalRepository.findAllByContentIdIn(listOf("1001")))
+                .willReturn(emptyList())
+            given(festivalApiConverter.toEntityFromListItem(item))
+                .willReturn(newFestival)
 
-            when(festivalApiClient.fetchFestivalList(1, 10, "20260101")).thenReturn(response);
-            when(festivalRepository.findAllByContentIdIn(List.of("1001"))).thenReturn(List.of());
-            when(festivalApiConverter.toEntityFromListItem(item)).thenReturn(newFestival);
+            val result = festivalSyncService.syncFestivalList(1, 10, "20260101")
 
-            FestivalSyncResultResponse result = festivalSyncService.syncFestivalList(1, 10, "20260101");
+            assertThat(result.totalCount).isEqualTo(1)
+            assertThat(result.createdCount).isEqualTo(1)
+            assertThat(result.updatedCount).isEqualTo(0)
+            assertThat(result.failedCount).isEqualTo(0)
+            assertThat(result.changedContentIds).containsExactly("1001")
 
-            assertThat(result.getTotalCount()).isEqualTo(1);
-            assertThat(result.getCreatedCount()).isEqualTo(1);
-            assertThat(result.getUpdatedCount()).isEqualTo(0);
-            assertThat(result.getFailedCount()).isEqualTo(0);
-            assertThat(result.getChangedContentIds()).containsExactly("1001");
-
-            verify(festivalRepository).save(newFestival);
-            verify(festivalApiConverter).toEntityFromListItem(item);
+            verify(festivalRepository).save(newFestival)
+            verify(festivalApiConverter).toEntityFromListItem(item)
         }
 
         @Test
         @DisplayName("기존 축제면서 목록 정보가 변경된 경우 수정한다")
-        void syncFestivalList_update_test() throws Exception {
-            FestivalApiItem item = createApiItem("1001", "수정된 축제명");
-            FestivalApiResponse response = createResponse(List.of(item));
+        fun syncFestivalList_update_test() {
+            val item = createApiItem("1001", "수정된 축제명")
+            val response = createResponse(listOf(item))
+            val existingFestival = createFestival("1001", "기존 축제명")
 
-            Festival existingFestival = new Festival(
-                    "1001",
-                    "기존 축제명",
-                    "기존 설명",
-                    "기존 주소",
-                    LocalDateTime.of(2026, 4, 1, 0, 0),
-                    LocalDateTime.of(2026, 4, 2, 23, 59, 59),
-                    127.0,
-                    37.0,
-                    "055-1111-1111",
-                    "old1.jpg",
-                    "old2.jpg",
-                    "https://old.com",
-                    "11",
-                    FestivalStatus.UPCOMING
-            );
+            given(festivalApiClient.fetchFestivalList(1, 10, "20260101"))
+                .willReturn(response)
+            given(festivalRepository.findAllByContentIdIn(listOf("1001")))
+                .willReturn(listOf(existingFestival))
+            given(festivalApiConverter.hasListChanges(existingFestival, item))
+                .willReturn(true)
 
-            when(festivalApiClient.fetchFestivalList(1, 10, "20260101")).thenReturn(response);
-            when(festivalRepository.findAllByContentIdIn(List.of("1001"))).thenReturn(List.of(existingFestival));
-            when(festivalApiConverter.hasListChanges(existingFestival, item)).thenReturn(true);
+            val result = festivalSyncService.syncFestivalList(1, 10, "20260101")
 
-            FestivalSyncResultResponse result = festivalSyncService.syncFestivalList(1, 10, "20260101");
+            assertThat(result.totalCount).isEqualTo(1)
+            assertThat(result.createdCount).isEqualTo(0)
+            assertThat(result.updatedCount).isEqualTo(1)
+            assertThat(result.failedCount).isEqualTo(0)
+            assertThat(result.changedContentIds).containsExactly("1001")
 
-            assertThat(result.getTotalCount()).isEqualTo(1);
-            assertThat(result.getCreatedCount()).isEqualTo(0);
-            assertThat(result.getUpdatedCount()).isEqualTo(1);
-            assertThat(result.getFailedCount()).isEqualTo(0);
-            assertThat(result.getChangedContentIds()).containsExactly("1001");
-
-            verify(festivalApiConverter).updateFromListItem(existingFestival, item);
-            verify(festivalRepository, never()).save(any(Festival.class));
+            verify(festivalApiConverter).updateFromListItem(existingFestival, item)
+            verify(festivalRepository, never()).save(existingFestival)
         }
 
         @Test
         @DisplayName("기존 축제지만 목록 정보가 변경되지 않은 경우 수정하지 않는다")
-        void syncFestivalList_no_change_test() throws Exception {
-            FestivalApiItem item = createApiItem("1001", "기존 축제명");
-            FestivalApiResponse response = createResponse(List.of(item));
+        fun syncFestivalList_no_change_test() {
+            val item = createApiItem("1001", "기존 축제명")
+            val response = createResponse(listOf(item))
+            val existingFestival = createFestival("1001", "기존 축제명")
 
-            Festival existingFestival = new Festival(
-                    "1001",
-                    "기존 축제명",
-                    "기존 설명",
-                    "기존 주소",
-                    LocalDateTime.of(2026, 4, 1, 0, 0),
-                    LocalDateTime.of(2026, 4, 2, 23, 59, 59),
-                    127.0,
-                    37.0,
-                    "055-1111-1111",
-                    "old1.jpg",
-                    "old2.jpg",
-                    "https://old.com",
-                    "11",
-                    FestivalStatus.UPCOMING
-            );
+            given(festivalApiClient.fetchFestivalList(1, 10, "20260101"))
+                .willReturn(response)
+            given(festivalRepository.findAllByContentIdIn(listOf("1001")))
+                .willReturn(listOf(existingFestival))
+            given(festivalApiConverter.hasListChanges(existingFestival, item))
+                .willReturn(false)
 
-            when(festivalApiClient.fetchFestivalList(1, 10, "20260101")).thenReturn(response);
-            when(festivalRepository.findAllByContentIdIn(List.of("1001"))).thenReturn(List.of(existingFestival));
-            when(festivalApiConverter.hasListChanges(existingFestival, item)).thenReturn(false);
+            val result = festivalSyncService.syncFestivalList(1, 10, "20260101")
 
-            FestivalSyncResultResponse result = festivalSyncService.syncFestivalList(1, 10, "20260101");
+            assertThat(result.totalCount).isEqualTo(1)
+            assertThat(result.createdCount).isEqualTo(0)
+            assertThat(result.updatedCount).isEqualTo(0)
+            assertThat(result.failedCount).isEqualTo(0)
+            assertThat(result.changedContentIds).isEmpty()
 
-            assertThat(result.getTotalCount()).isEqualTo(1);
-            assertThat(result.getCreatedCount()).isEqualTo(0);
-            assertThat(result.getUpdatedCount()).isEqualTo(0);
-            assertThat(result.getFailedCount()).isEqualTo(0);
-            assertThat(result.getChangedContentIds()).isEmpty();
-
-            verify(festivalApiConverter, never()).updateFromListItem(any(), any());
-            verify(festivalRepository, never()).save(any(Festival.class));
+            verify(festivalApiConverter, never()).updateFromListItem(existingFestival, item)
+            verify(festivalRepository, never()).save(existingFestival)
         }
     }
 
     @Nested
     @DisplayName("목록 동기화 예외 처리 테스트")
-    class SyncFestivalListFailureTest {
-
+    internal inner class SyncFestivalListFailureTest {
         @Test
         @DisplayName("목록 동기화 중 한 건이 실패해도 failedCount에 반영되고 나머지는 계속 처리된다")
-        void syncFestivalList_item_failure_test() throws Exception {
-            FestivalApiItem item1 = createApiItem("1001", "가야문화축제");
-            FestivalApiItem item2 = createApiItem("1002", "오류축제");
+        fun syncFestivalList_item_failure_test() {
+            val item1 = createApiItem("1001", "가야문화축제")
+            val item2 = createApiItem("1002", "오류축제")
+            val response = createResponse(listOf(item1, item2))
+            val newFestival = createFestival("1001", "가야문화축제")
 
-            FestivalApiResponse response = createResponse(List.of(item1, item2));
+            given(festivalApiClient.fetchFestivalList(1, 10, "20260101"))
+                .willReturn(response)
+            given(festivalRepository.findAllByContentIdIn(listOf("1001", "1002")))
+                .willReturn(emptyList())
+            given(festivalApiConverter.toEntityFromListItem(item1))
+                .willReturn(newFestival)
+            given(festivalApiConverter.toEntityFromListItem(item2))
+                .willThrow(RuntimeException("변환 실패"))
 
-            Festival newFestival = new Festival(
-                    "1001",
-                    "가야문화축제",
-                    "상세 설명 없음",
-                    "경상남도 김해시 대성동",
-                    LocalDateTime.of(2026, 4, 30, 0, 0),
-                    LocalDateTime.of(2026, 5, 3, 23, 59, 59),
-                    128.87,
-                    35.23,
-                    "055-330-6840",
-                    "image1.jpg",
-                    "image2.jpg",
-                    "https://test.com",
-                    "48",
-                    FestivalStatus.UPCOMING
-            );
+            val result = festivalSyncService.syncFestivalList(1, 10, "20260101")
 
-            when(festivalApiClient.fetchFestivalList(1, 10, "20260101")).thenReturn(response);
-            when(festivalRepository.findAllByContentIdIn(List.of("1001", "1002"))).thenReturn(List.of());
-            when(festivalApiConverter.toEntityFromListItem(item1)).thenReturn(newFestival);
-            when(festivalApiConverter.toEntityFromListItem(item2)).thenThrow(new RuntimeException("변환 실패"));
+            assertThat(result.totalCount).isEqualTo(2)
+            assertThat(result.createdCount).isEqualTo(1)
+            assertThat(result.updatedCount).isEqualTo(0)
+            assertThat(result.failedCount).isEqualTo(1)
+            assertThat(result.changedContentIds).containsExactly("1001")
 
-            FestivalSyncResultResponse result = festivalSyncService.syncFestivalList(1, 10, "20260101");
-
-            assertThat(result.getTotalCount()).isEqualTo(2);
-            assertThat(result.getCreatedCount()).isEqualTo(1);
-            assertThat(result.getUpdatedCount()).isEqualTo(0);
-            assertThat(result.getFailedCount()).isEqualTo(1);
-            assertThat(result.getChangedContentIds()).containsExactly("1001");
-
-            verify(festivalRepository).save(newFestival);
+            verify(festivalRepository).save(newFestival)
         }
     }
 
     @Nested
     @DisplayName("이벤트 발행 테스트")
-    class PublishSyncCompletedEventTest {
-
+    internal inner class PublishSyncCompletedEventTest {
         @Test
         @DisplayName("변경된 contentId가 있으면 목록 결과와 함께 동기화 완료 이벤트를 발행한다")
-        void publishSyncCompletedEvent_success_test() {
-            List<String> changedContentIds = List.of("1001", "1002");
+        fun publishSyncCompletedEvent_success_test() {
+            val changedContentIds = listOf("1001", "1002")
+            val listResult = FestivalSyncResultResponse(2, 1, 1, 0, changedContentIds)
 
-            FestivalSyncResultResponse listResult =
-                    new FestivalSyncResultResponse(2, 1, 1, 0, changedContentIds);
-
-            festivalSyncService.publishSyncCompletedEvent(changedContentIds, listResult);
+            festivalSyncService.publishSyncCompletedEvent(changedContentIds, listResult)
 
             verify(festivalSyncEventPublisher, times(1))
-                    .publishSyncCompleted(changedContentIds, listResult);
+                .publishSyncCompleted(changedContentIds, listResult)
         }
 
         @Test
         @DisplayName("변경된 contentId가 없으면 동기화 완료 이벤트를 발행하지 않는다")
-        void publishSyncCompletedEvent_empty_test() {
-            FestivalSyncResultResponse listResult =
-                    new FestivalSyncResultResponse(0, 0, 0, 0, List.of());
+        fun publishSyncCompletedEvent_empty_test() {
+            val listResult = FestivalSyncResultResponse(0, 0, 0, 0, emptyList())
 
-            festivalSyncService.publishSyncCompletedEvent(List.of(), listResult);
+            festivalSyncService.publishSyncCompletedEvent(emptyList(), listResult)
 
             verify(festivalSyncEventPublisher, never())
-                    .publishSyncCompleted(anyList(), any());
+                .publishSyncCompleted(emptyList(), listResult)
         }
     }
 
     @Test
     @DisplayName("상세 보강 대상이 없으면 목록 결과만으로 Slack 알림을 전송한다")
-    void notifyFestivalSyncResultOnly_test() {
-        FestivalSyncResultResponse listResult =
-                new FestivalSyncResultResponse(200, 0, 0, 0, List.of());
+    fun notifyFestivalSyncResultOnly_test() {
+        val listResult = FestivalSyncResultResponse(200, 0, 0, 0, emptyList())
+        val emptyDetailResult = FestivalSyncResultResponse(0, 0, 0, 0, emptyList())
+        val status = createSyncStatus()
+        val message = "[축제 데이터 동기화 결과] 변경 없음"
 
-        FestivalSyncStatusResponse status =
-                new FestivalSyncStatusResponse(
-                        0L,
-                        Map.of(
-                                "RATE_LIMIT", 0L,
-                                "SERVER_ERROR", 0L,
-                                "EXCEPTION", 0L,
-                                "UNPROCESSED", 0L
-                        ),
-                        false
-                );
+        given(pendingService.getSyncStatus()).willReturn(status)
+        given(festivalSyncSlackMessageFactory.createMessage(listResult, emptyDetailResult, status))
+            .willReturn(message)
 
-        String message = "[축제 데이터 동기화 결과] 변경 없음";
+        festivalSyncService.notifyFestivalSyncResultOnly(listResult)
 
-        given(pendingService.getSyncStatus()).willReturn(status);
-        given(festivalSyncSlackMessageFactory.createMessage(
-                eq(listResult),
-                any(FestivalSyncResultResponse.class),
-                eq(status)
-        )).willReturn(message);
-
-        festivalSyncService.notifyFestivalSyncResultOnly(listResult);
-
-        verify(pendingService, times(1)).getSyncStatus();
-
+        verify(pendingService, times(1)).getSyncStatus()
         verify(festivalSyncSlackMessageFactory, times(1))
-                .createMessage(
-                        eq(listResult),
-                        argThat(detailResult ->
-                                detailResult.getTotalCount() == 0
-                                        && detailResult.getCreatedCount() == 0
-                                        && detailResult.getUpdatedCount() == 0
-                                        && detailResult.getFailedCount() == 0
-                                        && detailResult.getChangedContentIds().isEmpty()
-                        ),
-                        eq(status)
-                );
-
-        verify(slackNotificationService, times(1)).sendMessage(message);
+            .createMessage(listResult, emptyDetailResult, status)
+        verify(slackNotificationService, times(1)).sendMessage(message)
     }
 
     @Test
     @DisplayName("상세 보강 완료 후 목록 결과와 상세 결과를 포함해 Slack 알림을 전송한다")
-    void enrichFestivalDetailsAndNotify_test() {
-        List<String> contentIds = List.of();
+    fun enrichFestivalDetailsAndNotify_test() {
+        val contentIds = emptyList<String>()
+        val listResult = FestivalSyncResultResponse(200, 3, 2, 0, listOf("1001", "1002"))
+        val detailResult = FestivalSyncResultResponse(0, 0, 0, 0, emptyList())
+        val status = createSyncStatus()
+        val message = "[축제 데이터 동기화 결과] 성공"
 
-        FestivalSyncResultResponse listResult =
-                new FestivalSyncResultResponse(200, 3, 2, 0, List.of("1001", "1002"));
+        given(pendingService.getSyncStatus()).willReturn(status)
+        given(festivalSyncSlackMessageFactory.createMessage(listResult, detailResult, status))
+            .willReturn(message)
 
-        FestivalSyncStatusResponse status =
-                new FestivalSyncStatusResponse(
-                        0L,
-                        Map.of(
-                                "RATE_LIMIT", 0L,
-                                "SERVER_ERROR", 0L,
-                                "EXCEPTION", 0L,
-                                "UNPROCESSED", 0L
-                        ),
-                        false
-                );
+        festivalSyncService.enrichFestivalDetailsAndNotify(contentIds, listResult)
 
-        String message = "[축제 데이터 동기화 결과] 성공";
-
-        given(pendingService.getSyncStatus()).willReturn(status);
-        given(festivalSyncSlackMessageFactory.createMessage(
-                eq(listResult),
-                any(FestivalSyncResultResponse.class),
-                eq(status)
-        )).willReturn(message);
-
-        festivalSyncService.enrichFestivalDetailsAndNotify(contentIds, listResult);
-
-        verify(pendingService, times(1)).getSyncStatus();
-
+        verify(pendingService, times(1)).getSyncStatus()
         verify(festivalSyncSlackMessageFactory, times(1))
-                .createMessage(
-                        eq(listResult),
-                        argThat(detailResult ->
-                                detailResult.getTotalCount() == 0
-                                        && detailResult.getCreatedCount() == 0
-                                        && detailResult.getUpdatedCount() == 0
-                                        && detailResult.getFailedCount() == 0
-                        ),
-                        eq(status)
-                );
-
-        verify(slackNotificationService, times(1)).sendMessage(message);
+            .createMessage(listResult, detailResult, status)
+        verify(slackNotificationService, times(1)).sendMessage(message)
     }
 
     @Nested
     @DisplayName("상세 보강 예외 정책 테스트")
-    class EnrichFestivalDetailsFailureTest {
-
+    internal inner class EnrichFestivalDetailsFailureTest {
         @Test
         @DisplayName("상세 보강 중 429가 발생하면 현재 건과 뒤 미시도 건을 pending에 저장하고 즉시 중단한다")
-        void enrichFestivalDetailsByContentIds_429_break_test() {
-            // 축제 1 생성 (필수 인자 8개 + 중간 null 채우기 + 14번째 status 지정)
-            Festival festival1 = new Festival(
-                    "1001",                                          // 1. contentId
-                    "축제1",                                         // 2. title
-                    "기존 상세 설명",                                 // 3. overview
-                    "서울",                                          // 4. address
-                    LocalDateTime.now(),                             // 5. startDate
-                    LocalDateTime.now().plusDays(1),                 // 6. endDate
-                    127.0,                                           // 7. mapX (경도)
-                    37.0,                                            // 8. mapY (위도)
-                    null, null, null, null, null,                    // 9~13. 선택적 필드 기본값(null) 채우기
-                    FestivalStatus.UPCOMING                          // 14. status
-            );
+        fun enrichFestivalDetailsByContentIds_429_break_test() {
+            val festival1 = createFestival("1001", "축제1")
+            val festival2 = createFestival("1002", "축제2")
 
-// 축제 2 생성
-            Festival festival2 = new Festival(
-                    "1002",                                          // 1. contentId
-                    "축제2",                                         // 2. title
-                    "기존 상세 설명",                                 // 3. overview
-                    "부산",                                          // 4. address
-                    LocalDateTime.now(),                             // 5. startDate
-                    LocalDateTime.now().plusDays(1),                 // 6. endDate
-                    128.0,                                           // 7. mapX (경도)
-                    35.0,                                            // 8. mapY (위도)
-                    null, null, null, null, null,                    // 9~13. 선택적 필드 기본값(null) 채우기
-                    FestivalStatus.UPCOMING                          // 14. status
-            );
+            given(festivalRepository.findByContentId("1001")).willReturn(Optional.of(festival1))
+            given(festivalRepository.findByContentId("1002")).willReturn(Optional.of(festival2))
+            given(festivalApiConverter.isDetailIncomplete(festival1)).willReturn(false)
 
-            when(festivalRepository.findByContentId("1001")).thenReturn(Optional.of(festival1));
-            when(festivalRepository.findByContentId("1002")).thenReturn(Optional.of(festival2));
-            when(festivalApiConverter.isDetailIncomplete(any(Festival.class))).thenReturn(false);
+            given(festivalApiClient.fetchFestivalDetail("1001"))
+                .willThrow(
+                    HttpClientErrorException.create(
+                        HttpStatus.TOO_MANY_REQUESTS,
+                        "Too Many Requests",
+                        HttpHeaders.EMPTY,
+                        ByteArray(0),
+                        null
+                    )
+                )
 
-            when(festivalApiClient.fetchFestivalDetail("1001"))
-                    .thenThrow(HttpClientErrorException.create(
-                            HttpStatus.TOO_MANY_REQUESTS,
-                            "Too Many Requests",
-                            HttpHeaders.EMPTY,
-                            new byte[0],
-                            null
-                    ));
+            val result = festivalSyncService.enrichFestivalDetailsByContentIds(listOf("1001", "1002"))
 
-            FestivalSyncResultResponse result =
-                    festivalSyncService.enrichFestivalDetailsByContentIds(List.of("1001", "1002"));
+            assertThat(result.totalCount).isEqualTo(2)
+            assertThat(result.updatedCount).isEqualTo(0)
+            assertThat(result.failedCount).isEqualTo(1)
 
-            assertThat(result.getTotalCount()).isEqualTo(2);
-            assertThat(result.getUpdatedCount()).isEqualTo(0);
-            assertThat(result.getFailedCount()).isEqualTo(1);
-
-            verify(festivalApiClient).fetchFestivalDetail("1001");
-            verify(festivalApiClient, never()).fetchFestivalDetail("1002");
-            verify(pendingService).saveOrUpdate("1001", DetailSyncPendingReason.RATE_LIMIT);
-            verify(pendingService).saveOrUpdate("1002", DetailSyncPendingReason.UNPROCESSED);
+            verify(festivalApiClient).fetchFestivalDetail("1001")
+            verify(festivalApiClient, never()).fetchFestivalDetail("1002")
+            verify(pendingService).saveOrUpdate("1001", DetailSyncPendingReason.RATE_LIMIT)
+            verify(pendingService).saveOrUpdate("1002", DetailSyncPendingReason.UNPROCESSED)
         }
 
         @Test
         @DisplayName("상세 보강 중 5xx가 발생하면 해당 건을 pending에 저장하고 다음 건으로 진행한다")
-        void enrichFestivalDetailsByContentIds_5xx_continue_test() throws Exception {
-            // 축제 1 생성 (필수 인자 8개 + 중간 null 채우기 + 14번째 status 지정)
-            Festival festival1 = new Festival(
-                    "1001",                                          // 1. contentId
-                    "축제1",                                         // 2. title
-                    "기존 상세 설명",                                 // 3. overview
-                    "서울",                                          // 4. address
-                    LocalDateTime.now(),                             // 5. startDate
-                    LocalDateTime.now().plusDays(1),                 // 6. endDate
-                    127.0,                                           // 7. mapX (경도)
-                    37.0,                                            // 8. mapY (위도)
-                    null, null, null, null, null,                    // 9~13. 선택적 필드 기본값(null) 채우기
-                    FestivalStatus.UPCOMING                          // 14. status
-            );
+        fun enrichFestivalDetailsByContentIds_5xx_continue_test() {
+            val festival1 = createFestival("1001", "축제1")
+            val festival2 = createFestival("1002", "축제2")
+            val detailItem = createApiItem("1002", "축제2").apply {
+                overview = "새 상세 설명"
+                homepage = "https://test.com"
+            }
+            val detailResponse = createResponse(listOf(detailItem))
 
-// 축제 2 생성
-            Festival festival2 = new Festival(
-                    "1002",                                          // 1. contentId
-                    "축제2",                                         // 2. title
-                    "기존 상세 설명",                                 // 3. overview
-                    "부산",                                          // 4. address
-                    LocalDateTime.now(),                             // 5. startDate
-                    LocalDateTime.now().plusDays(1),                 // 6. endDate
-                    128.0,                                           // 7. mapX (경도)
-                    35.0,                                            // 8. mapY (위도)
-                    null, null, null, null, null,                    // 9~13. 선택적 필드 기본값(null) 채우기
-                    FestivalStatus.UPCOMING                          // 14. status
-            );
+            given(festivalRepository.findByContentId("1001")).willReturn(Optional.of(festival1))
+            given(festivalRepository.findByContentId("1002")).willReturn(Optional.of(festival2))
+            given(festivalApiConverter.isDetailIncomplete(festival1)).willReturn(false)
+            given(festivalApiConverter.isDetailIncomplete(festival2)).willReturn(false)
 
-            FestivalApiItem detailItem = createApiItem("1002", "축제2");
-            setField(detailItem, "overview", "새 상세 설명");
-            setField(detailItem, "homepage", "https://test.com");
+            given(festivalApiClient.fetchFestivalDetail("1001"))
+                .willThrow(HttpServerErrorException(HttpStatus.BAD_GATEWAY))
+            given(festivalApiClient.fetchFestivalDetail("1002"))
+                .willReturn(detailResponse)
+            given(festivalApiConverter.hasDetailChanges(festival2, detailItem))
+                .willReturn(true)
 
-            FestivalApiResponse detailResponse = createResponse(List.of(detailItem));
+            val result = festivalSyncService.enrichFestivalDetailsByContentIds(listOf("1001", "1002"))
 
-            when(festivalRepository.findByContentId("1001")).thenReturn(Optional.of(festival1));
-            when(festivalRepository.findByContentId("1002")).thenReturn(Optional.of(festival2));
-            when(festivalApiConverter.isDetailIncomplete(any(Festival.class))).thenReturn(false);
+            assertThat(result.totalCount).isEqualTo(2)
+            assertThat(result.updatedCount).isEqualTo(1)
+            assertThat(result.failedCount).isEqualTo(1)
 
-            when(festivalApiClient.fetchFestivalDetail("1001"))
-                    .thenThrow(new HttpServerErrorException(HttpStatus.BAD_GATEWAY));
-            when(festivalApiClient.fetchFestivalDetail("1002"))
-                    .thenReturn(detailResponse);
-
-            when(festivalApiConverter.hasDetailChanges(festival2, detailItem)).thenReturn(true);
-
-            FestivalSyncResultResponse result =
-                    festivalSyncService.enrichFestivalDetailsByContentIds(List.of("1001", "1002"));
-
-            assertThat(result.getTotalCount()).isEqualTo(2);
-            assertThat(result.getUpdatedCount()).isEqualTo(1);
-            assertThat(result.getFailedCount()).isEqualTo(1);
-
-            verify(pendingService).saveOrUpdate("1001", DetailSyncPendingReason.SERVER_ERROR);
-            verify(festivalApiConverter).updateDetailFields(festival2, detailItem);
-            verify(pendingService).remove("1002");
+            verify(pendingService).saveOrUpdate("1001", DetailSyncPendingReason.SERVER_ERROR)
+            verify(festivalApiConverter).updateDetailFields(festival2, detailItem)
+            verify(pendingService).remove("1002")
         }
 
         @Test
         @DisplayName("상세 응답 구조가 비정상이면 pending에 저장한다")
-        void enrichFestivalDetailsByContentIds_invalid_response_save_pending_test() {
-            Festival festival = new Festival(
-                    "1001",                                          // 1. contentId
-                    "축제1",                                         // 2. title
-                    "기존 상세 설명",                                 // 3. overview
-                    "서울",                                          // 4. address
-                    LocalDateTime.now(),                             // 5. startDate
-                    LocalDateTime.now().plusDays(1),                 // 6. endDate
-                    127.0,                                           // 7. mapX (경도)
-                    37.0,                                            // 8. mapY (위도)
-                    null, null, null, null, null,                    // 9~13. 선택적 필드 기본값(null) 채우기
-                    FestivalStatus.UPCOMING                          // 14. status
-            );
+        fun enrichFestivalDetailsByContentIds_invalid_response_save_pending_test() {
+            val festival = createFestival("1001", "축제1")
 
-            when(festivalRepository.findByContentId("1001")).thenReturn(Optional.of(festival));
-            when(festivalApiClient.fetchFestivalDetail("1001")).thenReturn(null);
-            when(festivalApiConverter.isDetailIncomplete(festival)).thenReturn(false);
+            given(festivalRepository.findByContentId("1001")).willReturn(Optional.of(festival))
+            given(festivalApiClient.fetchFestivalDetail("1001")).willReturn(null)
+            given(festivalApiConverter.isDetailIncomplete(festival)).willReturn(false)
 
-            FestivalSyncResultResponse result =
-                    festivalSyncService.enrichFestivalDetailsByContentIds(List.of("1001"));
+            val result = festivalSyncService.enrichFestivalDetailsByContentIds(listOf("1001"))
 
-            assertThat(result.getUpdatedCount()).isEqualTo(0);
-            assertThat(result.getFailedCount()).isEqualTo(1);
+            assertThat(result.updatedCount).isEqualTo(0)
+            assertThat(result.failedCount).isEqualTo(1)
 
-            verify(pendingService).saveOrUpdate("1001", DetailSyncPendingReason.EXCEPTION);
-            verify(pendingService, never()).remove("1001");
+            verify(pendingService).saveOrUpdate("1001", DetailSyncPendingReason.EXCEPTION)
+            verify(pendingService, never()).remove("1001")
         }
     }
 
-    private FestivalApiItem createApiItem(String contentId, String title) throws Exception {
-        FestivalApiItem item = new FestivalApiItem();
+    private fun createFestival(
+        contentId: String,
+        title: String
+    ): Festival =
+        Festival(
+            contentId = contentId,
+            title = title,
+            overview = "기존 상세 설명",
+            address = "서울",
+            startDate = LocalDateTime.of(2026, 4, 30, 0, 0),
+            endDate = LocalDateTime.of(2026, 5, 3, 23, 59, 59),
+            mapX = 127.0,
+            mapY = 37.0,
+            contactNumber = "055-330-6840",
+            firstImageUrl = "image1.jpg",
+            thumbnailUrl = "image2.jpg",
+            homepageUrl = "https://test.com",
+            lDongRegnCd = "48",
+            status = FestivalStatus.UPCOMING
+        )
 
-        setField(item, "contentid", contentId);
-        setField(item, "title", title);
-        setField(item, "overview", "상세 설명 없음");
-        setField(item, "tel", "055-330-6840");
-        setField(item, "addr1", "경상남도 김해시");
-        setField(item, "addr2", "대성동");
-        setField(item, "homepage", "https://test.com");
-        setField(item, "firstimage", "image1.jpg");
-        setField(item, "firstimage2", "image2.jpg");
-        setField(item, "mapx", "128.87");
-        setField(item, "mapy", "35.23");
-        setField(item, "lDongRegnCd", "48");
-        setField(item, "eventstartdate", "20260430");
-        setField(item, "eventenddate", "20260503");
+    private fun createApiItem(
+        contentId: String,
+        title: String
+    ): FestivalApiItem =
+        FestivalApiItem(
+            contentid = contentId,
+            title = title,
+            tel = "055-330-6840",
+            addr1 = "경상남도 김해시",
+            addr2 = "대성동",
+            homepage = "https://test.com",
+            overview = "상세 설명 없음",
+            firstimage = "image1.jpg",
+            firstimage2 = "image2.jpg",
+            mapx = "128.87",
+            mapy = "35.23",
+            lDongRegnCd = "48",
+            eventstartdate = "20260430",
+            eventenddate = "20260503"
+        )
 
-        return item;
+    private fun createResponse(itemList: List<FestivalApiItem>): FestivalApiResponse {
+        val body = FestivalApiBody().apply {
+            setPrivateItems(FestivalApiItems(itemList))
+            numOfRows = itemList.size
+            pageNo = 1
+            totalCount = itemList.size
+        }
+
+        return FestivalApiResponse(
+            response = FestivalApiResponse.Response(
+                header = FestivalApiHeader(
+                    resultCode = "0000",
+                    resultMsg = "OK"
+                ),
+                body = body
+            )
+        )
     }
 
-    private FestivalApiResponse createResponse(List<FestivalApiItem> itemList) throws Exception {
-        FestivalApiHeader header = new FestivalApiHeader();
-
-        setField(header, "resultCode", "0000");
-        setField(header, "resultMsg", "OK");
-
-        FestivalApiItems items = new FestivalApiItems();
-        setField(items, "item", itemList);
-
-        FestivalApiBody body = new FestivalApiBody();
-        setField(body, "items", items);
-        setField(body, "numOfRows", itemList.size());
-        setField(body, "pageNo", 1);
-        setField(body, "totalCount", itemList.size());
-
-        FestivalApiResponse.Response responseInner = new FestivalApiResponse.Response();
-
-        setField(responseInner, "header", header);
-        setField(responseInner, "body", body);
-
-        FestivalApiResponse response = new FestivalApiResponse();
-
-        setField(response, "response", responseInner);
-
-        return response;
+    private fun FestivalApiBody.setPrivateItems(items: FestivalApiItems) {
+        val field = javaClass.getDeclaredField("items")
+        field.isAccessible = true
+        field.set(this, items)
     }
 
-    private void setField(Object target, String fieldName, Object value) throws Exception {
-        Field field = target.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(target, value);
-    }
+    private fun createSyncStatus(): FestivalSyncStatusResponse =
+        FestivalSyncStatusResponse(
+            pendingCount = 0L,
+            pendingBreakdown = mapOf(
+                "RATE_LIMIT" to 0L,
+                "SERVER_ERROR" to 0L,
+                "EXCEPTION" to 0L,
+                "UNPROCESSED" to 0L
+            ),
+            needsRetry = false
+        )
 }

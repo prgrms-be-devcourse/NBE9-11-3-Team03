@@ -1,112 +1,113 @@
-package com.example.domain.festival.client;
+package com.example.domain.festival.client
 
-import com.example.domain.festival.dto.external.FestivalApiResponse;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
-import org.springframework.web.client.RestTemplate;
+import com.example.domain.festival.dto.external.FestivalApiResponse
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.eq
+import org.mockito.BDDMockito.given
+import org.mockito.Mockito.*
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.web.client.HttpClientErrorException
+import org.springframework.web.client.HttpClientErrorException.TooManyRequests
+import org.springframework.web.client.HttpServerErrorException
+import org.springframework.web.client.RestTemplate
+import java.net.URI
 
-import java.net.URI;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
-class FestivalApiClientRetryTest {
-
-    private RestTemplate restTemplate;
-    private FestivalApiClient festivalApiClient;
-
-    @BeforeEach
-    void setUp() {
-        restTemplate = mock(RestTemplate.class);
-        festivalApiClient = new FestivalApiClient(restTemplate, "test-key", "https://test.com");
-
-        ReflectionTestUtils.setField(festivalApiClient, "serviceKey", "test-key");
-        ReflectionTestUtils.setField(festivalApiClient, "baseUrl", "http://test.com");
-    }
+internal class FestivalApiClientRetryTest {
+    private val restTemplate = mock(RestTemplate::class.java)
+    private val festivalApiClient = FestivalApiClient(
+        restTemplate = restTemplate,
+        serviceKey = "test-key",
+        baseUrl = "https://test.com"
+    )
 
     @Test
     @DisplayName("429 발생 시 재시도 없이 즉시 예외를 던진다")
-    void fetchFestivalList_TooManyRequests_ThrowsImmediately() {
-        when(restTemplate.getForObject(any(URI.class), eq(FestivalApiResponse.class)))
-                .thenThrow(HttpClientErrorException.create(
-                        HttpStatus.TOO_MANY_REQUESTS,
-                        "Too Many Requests",
-                        HttpHeaders.EMPTY,
-                        new byte[0],
-                        null
-                ));
+    fun fetchFestivalList_TooManyRequests_ThrowsImmediately() {
+        val exception = HttpClientErrorException.create(
+            HttpStatus.TOO_MANY_REQUESTS,
+            "Too Many Requests",
+            HttpHeaders.EMPTY,
+            ByteArray(0),
+            null
+        )
 
-        assertThrows(HttpClientErrorException.TooManyRequests.class,
-                () -> festivalApiClient.fetchFestivalList(1, 10, "20260101"));
+        given(restTemplate.getForObject(any(URI::class.java), eq(FestivalApiResponse::class.java)))
+            .willThrow(exception)
+
+        assertThatThrownBy {
+            festivalApiClient.fetchFestivalList(1, 10, "20260101")
+        }.isInstanceOf(TooManyRequests::class.java)
 
         verify(restTemplate, times(1))
-                .getForObject(any(URI.class), eq(FestivalApiResponse.class));
+            .getForObject(any(URI::class.java), eq(FestivalApiResponse::class.java))
     }
 
     @Test
     @DisplayName("502 발생 시 최대 2번까지 재시도 후 실패한다")
-    void fetchFestivalList_BadGateway_RetriesThenThrows() {
-        when(restTemplate.getForObject(any(URI.class), eq(FestivalApiResponse.class)))
-                .thenThrow(new HttpServerErrorException(HttpStatus.BAD_GATEWAY))
-                .thenThrow(new HttpServerErrorException(HttpStatus.BAD_GATEWAY));
+    fun fetchFestivalList_BadGateway_RetriesThenThrows() {
+        val exception = HttpServerErrorException(HttpStatus.BAD_GATEWAY)
 
-        assertThrows(HttpServerErrorException.class,
-                () -> festivalApiClient.fetchFestivalList(1, 10, "20260101"));
+        given(restTemplate.getForObject(any(URI::class.java), eq(FestivalApiResponse::class.java)))
+            .willThrow(exception)
+
+        assertThatThrownBy {
+            festivalApiClient.fetchFestivalList(1, 10, "20260101")
+        }.isSameAs(exception)
 
         verify(restTemplate, times(2))
-                .getForObject(any(URI.class), eq(FestivalApiResponse.class));
+            .getForObject(any(URI::class.java), eq(FestivalApiResponse::class.java))
     }
 
     @Test
     @DisplayName("502 후 두 번째 시도에서 성공하면 응답을 반환한다")
-    void fetchFestivalList_BadGateway_ThenSuccess() {
-        FestivalApiResponse response = new FestivalApiResponse();
+    fun fetchFestivalList_BadGateway_ThenSuccess() {
+        val response = FestivalApiResponse()
 
-        when(restTemplate.getForObject(any(URI.class), eq(FestivalApiResponse.class)))
-                .thenThrow(new HttpServerErrorException(HttpStatus.BAD_GATEWAY))
-                .thenReturn(response);
+        given(restTemplate.getForObject(any(URI::class.java), eq(FestivalApiResponse::class.java)))
+            .willThrow(HttpServerErrorException(HttpStatus.BAD_GATEWAY))
+            .willReturn(response)
 
-        FestivalApiResponse result = festivalApiClient.fetchFestivalList(1, 10, "20260101");
+        val result = festivalApiClient.fetchFestivalList(1, 10, "20260101")
 
-        assertNotNull(result);
-        assertSame(response, result);
-
+        assertThat(result).isSameAs(response)
         verify(restTemplate, times(2))
-                .getForObject(any(URI.class), eq(FestivalApiResponse.class));
+            .getForObject(any(URI::class.java), eq(FestivalApiResponse::class.java))
     }
 
     @Test
     @DisplayName("500은 재시도 대상이 아니므로 즉시 실패한다")
-    void fetchFestivalList_InternalServerError_NoRetry() {
-        when(restTemplate.getForObject(any(URI.class), eq(FestivalApiResponse.class)))
-                .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+    fun fetchFestivalList_InternalServerError_NoRetry() {
+        val exception = HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)
 
-        assertThrows(HttpServerErrorException.class,
-                () -> festivalApiClient.fetchFestivalList(1, 10, "20260101"));
+        given(restTemplate.getForObject(any(URI::class.java), eq(FestivalApiResponse::class.java)))
+            .willThrow(exception)
+
+        assertThatThrownBy {
+            festivalApiClient.fetchFestivalList(1, 10, "20260101")
+        }.isSameAs(exception)
 
         verify(restTemplate, times(1))
-                .getForObject(any(URI.class), eq(FestivalApiResponse.class));
+            .getForObject(any(URI::class.java), eq(FestivalApiResponse::class.java))
     }
 
     @Test
     @DisplayName("상세 조회도 502 발생 시 최대 2번까지 재시도한다")
-    void fetchFestivalDetail_BadGateway_RetriesThenThrows() {
-        when(restTemplate.getForObject(any(URI.class), eq(FestivalApiResponse.class)))
-                .thenThrow(new HttpServerErrorException(HttpStatus.BAD_GATEWAY))
-                .thenThrow(new HttpServerErrorException(HttpStatus.BAD_GATEWAY));
+    fun fetchFestivalDetail_BadGateway_RetriesThenThrows() {
+        val exception = HttpServerErrorException(HttpStatus.BAD_GATEWAY)
 
-        assertThrows(HttpServerErrorException.class,
-                () -> festivalApiClient.fetchFestivalDetail("content-1"));
+        given(restTemplate.getForObject(any(URI::class.java), eq(FestivalApiResponse::class.java)))
+            .willThrow(exception)
+
+        assertThatThrownBy {
+            festivalApiClient.fetchFestivalDetail("content-1")
+        }.isSameAs(exception)
 
         verify(restTemplate, times(2))
-                .getForObject(any(URI.class), eq(FestivalApiResponse.class));
+            .getForObject(any(URI::class.java), eq(FestivalApiResponse::class.java))
     }
 }

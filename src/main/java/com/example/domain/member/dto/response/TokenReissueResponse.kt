@@ -8,7 +8,6 @@ data class TokenReissueResponse(
     val refreshToken: String
 ) {
     companion object {
-        @JvmStatic
         fun of(accessToken: String, refreshToken: String): TokenReissueResponse {
             return TokenReissueResponse(accessToken, refreshToken)
         }
