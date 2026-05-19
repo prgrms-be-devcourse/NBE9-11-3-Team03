@@ -48,7 +48,6 @@ class ReviewLikeCancelTest {
 
     @BeforeEach
     fun setUp() {
-        // 1. 100명의 유저 생성
         repeat(THREAD_COUNT) { index ->
             val member = Member.create(
                 "유저$index",
@@ -62,7 +61,6 @@ class ReviewLikeCancelTest {
             members.add(memberRepository.save(member))
         }
 
-        // 2. 축제 생성 및 DB 저장
         savedFestival = festivalRepository.save(
             Festival(
                 "FEST-CANCEL",
@@ -82,7 +80,6 @@ class ReviewLikeCancelTest {
             )
         )
 
-        // 3. 리뷰를 먼저 DB에 저장하여 ID를 부여받습니다.
         val initialReview = Review(
             members[0],
             savedFestival,
@@ -93,13 +90,11 @@ class ReviewLikeCancelTest {
 
         savedReview = reviewRepository.save(initialReview)
 
-        // 4. 이미 DB에 저장된 savedReview를 참조하여 100개의 좋아요를 저장합니다.
         members.forEach { member ->
             reviewLikeRepository.save(ReviewLike(member, savedReview))
             savedReview.increaseLikeCount()
         }
 
-        // 5. 카운트가 100으로 올라간 상태를 다시 DB에 반영합니다.
         savedReview = reviewRepository.save(savedReview)
     }
 
@@ -116,20 +111,24 @@ class ReviewLikeCancelTest {
     @DisplayName("리뷰 좋아요 취소 동시성 테스트 - 좋아요가 100인 상태에서 100명이 동시에 취소하면 0이 되어야 한다.")
     fun cancelLikeReview_Concurrency() {
         val executorService = Executors.newFixedThreadPool(32)
-        val latch = CountDownLatch(THREAD_COUNT)
+        val startLatch = CountDownLatch(1)
+        val doneLatch = CountDownLatch(THREAD_COUNT)
 
         repeat(THREAD_COUNT) { index ->
             executorService.submit {
                 try {
+                    startLatch.await()
+
                     val loginId = members[index].loginId
                     reviewLikeService.cancelLikeReview(savedReview.id, loginId)
                 } finally {
-                    latch.countDown()
+                    doneLatch.countDown()
                 }
             }
         }
 
-        latch.await()
+        startLatch.countDown()
+        doneLatch.await()
         executorService.shutdown()
 
         val updatedReview = reviewRepository.findById(savedReview.id).orElseThrow()

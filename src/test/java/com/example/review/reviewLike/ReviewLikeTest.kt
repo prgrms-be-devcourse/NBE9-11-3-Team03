@@ -47,7 +47,6 @@ class ReviewLikeTest {
 
     @BeforeEach
     fun setUp() {
-        // 1. 100명의 서로 다른 유저 생성
         repeat(THREAD_COUNT) { index ->
             val member = Member.create(
                 "유저$index",
@@ -61,7 +60,6 @@ class ReviewLikeTest {
             members.add(memberRepository.save(member))
         }
 
-        // 2. 축제 생성
         savedFestival = festivalRepository.save(
             Festival(
                 "FEST-CONCURRENCY",
@@ -81,7 +79,6 @@ class ReviewLikeTest {
             )
         )
 
-        // 3. 리뷰 생성
         savedReview = reviewRepository.save(
             Review(
                 members[0],
@@ -106,20 +103,24 @@ class ReviewLikeTest {
     @DisplayName("리뷰 좋아요 동시성 테스트 - 100명이 동시에 좋아요를 누르면 likeCount가 100이 되어야 한다.")
     fun likeReview_Concurrency() {
         val executorService = Executors.newFixedThreadPool(32)
-        val latch = CountDownLatch(THREAD_COUNT)
+        val startLatch = CountDownLatch(1)
+        val doneLatch = CountDownLatch(THREAD_COUNT)
 
         repeat(THREAD_COUNT) { index ->
             executorService.submit {
                 try {
+                    startLatch.await()
+
                     val loginId = members[index].loginId
                     reviewLikeService.likeReview(savedReview.id, loginId)
                 } finally {
-                    latch.countDown()
+                    doneLatch.countDown()
                 }
             }
         }
 
-        latch.await()
+        startLatch.countDown()
+        doneLatch.await()
         executorService.shutdown()
 
         val updatedReview = reviewRepository.findById(savedReview.id).orElseThrow()

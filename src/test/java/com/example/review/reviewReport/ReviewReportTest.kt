@@ -49,7 +49,6 @@ class ReviewReportTest {
 
     @BeforeEach
     fun setUp() {
-        // 1. 리뷰 작성자를 먼저 따로 생성합니다.
         writer = memberRepository.save(
             Member.create(
                 "리뷰작성자",
@@ -61,7 +60,6 @@ class ReviewReportTest {
             )
         )
 
-        // 2. 100명의 서로 다른 신고자를 생성합니다.
         repeat(THREAD_COUNT) { index ->
             val member = Member.create(
                 "신고자$index",
@@ -75,7 +73,6 @@ class ReviewReportTest {
             reporters.add(memberRepository.save(member))
         }
 
-        // 3. 축제 생성
         savedFestival = festivalRepository.save(
             Festival(
                 "FEST-REPORT-CONCURRENCY",
@@ -95,7 +92,6 @@ class ReviewReportTest {
             )
         )
 
-        // 4. 리뷰 생성
         savedReview = reviewRepository.save(
             Review(
                 writer,
@@ -120,20 +116,24 @@ class ReviewReportTest {
     @DisplayName("리뷰 신고 동시성 테스트 - 100명이 동시에 신고하면 reportCount가 100이 되어야 한다.")
     fun reportReview_Concurrency() {
         val executorService = Executors.newFixedThreadPool(32)
-        val latch = CountDownLatch(THREAD_COUNT)
+        val startLatch = CountDownLatch(1)
+        val doneLatch = CountDownLatch(THREAD_COUNT)
 
         repeat(THREAD_COUNT) { index ->
             executorService.submit {
                 try {
+                    startLatch.await()
+
                     val loginId = reporters[index].loginId
                     reviewReportService.reportReview(savedReview.id, loginId)
                 } finally {
-                    latch.countDown()
+                    doneLatch.countDown()
                 }
             }
         }
 
-        latch.await()
+        startLatch.countDown()
+        doneLatch.await()
         executorService.shutdown()
 
         val updatedReview = reviewRepository.findById(savedReview.id).orElseThrow()
