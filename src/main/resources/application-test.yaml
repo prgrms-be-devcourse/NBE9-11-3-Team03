@@ -16,11 +16,10 @@ jwt:
 
 security:
   dev-token:
-    enabled: false
-
-    value: ""
-    login-id: "test-user"
-    role: "USER"
+    enabled: true
+    value: "dev-temp-token"
+    login-id: "test01"
+    role: "ADMIN"
 
 api:
   public-data:
