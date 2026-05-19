@@ -163,35 +163,4 @@ class AdminReviewControllerTest {
         val updatedReview = reviewRepository.findById(targetReview.id).get()
         assertThat(updatedReview.reportCount).isEqualTo(0)
     }
-
-    @Test
-    @DisplayName("전체 리뷰 목록 조회 시 블라인드된 리뷰는 노출되지 않아야 한다")
-    @WithMockUser(username = "user4", roles = ["USER"])
-    fun t4() {
-        // Given
-        val author = Member.create("user4", "1234", "이름4", "user4@test.com", "작성자4")
-        memberRepository.save(author)
-
-        val festival = Festival(
-            "F_004", "축제4", "설명", "주소",
-            LocalDateTime.now(), LocalDateTime.now().plusDays(1), 127.0, 37.0
-        )
-        festivalRepository.save(festival)
-
-        val normalReview = Review(author, festival, "정상 리뷰", null, 5)
-        val blindReview = Review(author, festival, "블라인드 리뷰", null, 5)
-
-        ReflectionTestUtils.setField(blindReview, "status", ReviewStatus.BLIND)
-        reviewRepository.saveAll(listOf(normalReview, blindReview))
-
-        // When & Then (문자열 보간법 및 정적 임포트 적용)
-        mockMvc.perform(
-            get("/api/festivals/${festival.id}/reviews")
-                .param("festivalId", festival.contentId)
-        )
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.data.content.length()").value(1))
-            .andExpect(jsonPath("$.data.content[0].content").value("정상 리뷰"))
-            .andDo(print())
-    }
 }

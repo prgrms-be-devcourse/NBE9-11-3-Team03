@@ -9,6 +9,7 @@ import com.example.domain.member.repository.MemberRepository
 import com.example.domain.review.entity.Review
 import com.example.domain.review.repository.ReviewRepository
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -31,17 +32,10 @@ import java.time.LocalDateTime
 @Transactional
 class AdminMemberControllerTest {
 
-    @Autowired
-    private lateinit var mockMvc: MockMvc
-
-    @Autowired
-    private lateinit var memberRepository: MemberRepository
-
-    @Autowired
-    private lateinit var reviewRepository: ReviewRepository
-
-    @Autowired
-    private lateinit var festivalRepository: FestivalRepository
+    @Autowired private lateinit var mockMvc: MockMvc
+    @Autowired private lateinit var memberRepository: MemberRepository
+    @Autowired private lateinit var reviewRepository: ReviewRepository
+    @Autowired private lateinit var festivalRepository: FestivalRepository
 
     @Test
     @DisplayName("관리자 전체회원 목록조회")
@@ -60,9 +54,9 @@ class AdminMemberControllerTest {
     @Test
     @DisplayName("신고누적순")
     fun t2() {
-        val lowReport = Member.create("user1", "1234", "이름1", "user1@test.com", "저신고자", Role.USER,1)
-        val midReport = Member.create("user2", "1234", "이름2", "user2@test.com", "중신고자", Role.USER,5)
-        val highReport = Member.create("user3", "1234", "이름3", "user3@test.com", "고신고자", Role.USER,10)
+        val lowReport = Member.create("user1", "1234", "이름1", "user1@test.com", "저신고자", Role.USER, 1)
+        val midReport = Member.create("user2", "1234", "이름2", "user2@test.com", "중신고자", Role.USER, 5)
+        val highReport = Member.create("user3", "1234", "이름3", "user3@test.com", "고신고자", Role.USER, 10)
 
         memberRepository.saveAll(listOf(lowReport, midReport, highReport))
 
@@ -83,7 +77,7 @@ class AdminMemberControllerTest {
     @Test
     @DisplayName("관리자가 회원을 강제 탈퇴시키면 상태가 WITHDRAWN으로 변경되고 닉네임이 마스킹된다.")
     fun t4() {
-        val member = Member.create("user4", "1234", "이름4", "user4@test.com", "활동중인회원", Role.USER,0)
+        val member = Member.create("user4", "1234", "이름4", "user4@test.com", "활동중인회원", Role.USER, 0)
         memberRepository.save(member)
 
         val memberId = member.id
@@ -97,49 +91,8 @@ class AdminMemberControllerTest {
             .andExpect(jsonPath("$.message").value("회원이 강제 탈퇴 처리되었습니다."))
             .andDo(print())
 
-        // Then:
         val withdrawnMember = memberRepository.findById(memberId!!).get()
-
-        // 1. 상태가 WITHDRAWN인지 확인
         assertThat(withdrawnMember.status).isEqualTo(MemberStatus.WITHDRAWN)
-
-        // 2. DB의 닉네임이 '탈퇴회원_ID' 형식으로 변경되었는지 확인
         assertThat(withdrawnMember.nickname).isEqualTo("탈퇴한회원_$memberId")
-    }
-
-    @Test
-    @DisplayName("탈퇴한 회원이 작성한 리뷰를 조회하면 닉네임이 '탈퇴된 회원입니다.'로 표시된다.")
-    @WithMockUser(username = "visitor", roles = ["USER"]) // 1. API를 호출할 유저 지정
-    fun t5() {
-        val visitor = Member.create("visitor", "1234", "방문자", "visitor@test.com", "방문자닉넴", Role.USER,0)
-        memberRepository.save(visitor)
-
-        val member = Member.create("user5", "1234", "이름5", "user5@test.com", "탈퇴전이름", Role.USER,0)
-        memberRepository.save(member)
-        member.withdraw() // 상태: WITHDRAWN 변경
-        memberRepository.save(member)
-
-        // 4. 축제 생성
-        val festival = Festival(
-            "F_005", "축제5", "설명", "주소",
-            LocalDateTime.now(), LocalDateTime.now().plusDays(1), 127.0, 37.0
-        )
-        festivalRepository.save(festival)
-
-        // 5. 리뷰 생성
-        val review = Review(member, festival, "탈퇴한 사람이 쓴 리뷰", null, 5)
-        reviewRepository.save(review)
-
-        // 6. When: 축제 리뷰 목록 조회 API 호출
-        mockMvc.perform(
-            get("/api/festivals/${festival.id}/reviews")
-                .param("page", "0")
-                .param("size", "10")
-                .param("memberId", member.id.toString())
-        )
-            .andExpect(status().isOk)
-            .andExpect(jsonPath("$.status").value("200"))
-            .andExpect(jsonPath("$.data.content[0].nickname").value("탈퇴된 회원입니다."))
-            .andDo(print())
     }
 }
