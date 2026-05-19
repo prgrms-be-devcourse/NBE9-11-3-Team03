@@ -1,7 +1,6 @@
 package com.example.domain.festival.service
 
 import com.example.domain.festival.client.FestivalApiClient
-import com.example.domain.festival.converter.FestivalApiConverter
 import com.example.domain.festival.dto.external.FestivalApiItem
 import com.example.domain.festival.dto.external.FestivalApiResponse
 import com.example.domain.festival.dto.response.FestivalSyncResultResponse
@@ -19,10 +18,9 @@ import org.springframework.web.client.HttpServerErrorException
 import java.time.LocalDateTime
 
 @Service
-@Transactional
 class FestivalSyncService(
     private val festivalApiClient: FestivalApiClient,
-    private val festivalApiConverter: FestivalApiConverter,
+    private val festivalSyncPersistenceService: FestivalSyncPersistenceService,
     private val festivalRepository: FestivalRepository,
     private val festivalSyncEventPublisher: FestivalSyncEventPublisher,
     private val pendingService: FestivalDetailSyncPendingService,
@@ -30,7 +28,6 @@ class FestivalSyncService(
     private val festivalSyncSlackMessageFactory: FestivalSyncSlackMessageFactory
 ) {
     /** 스케줄러 전용 실행 메서드 */
-    @Transactional
     fun runScheduledSync(eventStartDate: String, pageNo: Int, numOfRows: Int) {
         log.info(
             "[FestivalScheduler] 축제 동기화 시작 - pageNo={}, numOfRows={}, eventStartDate={}",
@@ -122,68 +119,24 @@ class FestivalSyncService(
             return FestivalSyncResultResponse(0, 0, 0, 0, emptyList())
         }
 
-        var createdCount = 0
-        var updatedCount = 0
-        var failedCount = 0
-        val changedContentIds = mutableListOf<String>()
-
         val dbStart = System.currentTimeMillis()
-
-        val contentIds = items
-            .mapNotNull { it.contentid }
-            .distinct()
-
-        val existingFestivalMap = festivalRepository.findAllByContentIdIn(contentIds)
-            .associateBy { it.contentId }
-
-        for (item in items) {
-            try {
-                val contentId = item.contentid
-
-                val existingFestival = existingFestivalMap[contentId]
-
-                if (existingFestival == null) {
-                    val newFestival = festivalApiConverter.toEntityFromListItem(item)
-                    festivalRepository.save(newFestival)
-                    createdCount++
-                    changedContentIds.add(requireNotNull(contentId))
-                } else if (festivalApiConverter.hasListChanges(existingFestival, item)) {
-                    festivalApiConverter.updateFromListItem(existingFestival, item)
-                    updatedCount++
-                    changedContentIds.add(requireNotNull(contentId))
-                }
-            } catch (e: Exception) {
-                failedCount++
-                log.warn(
-                    "[FestivalSync] 목록 동기화 항목 실패 - contentId={}, message={}",
-                    item.contentid,
-                    e.message
-                )
-            }
-        }
-
+        val result = festivalSyncPersistenceService.saveListItems(items)
         val dbEnd = System.currentTimeMillis()
         val totalEnd = System.currentTimeMillis()
 
         log.info(
             "[FestivalSync] 목록 동기화 완료 - total={}, created={}, updated={}, failed={}, changed={}, apiTimeMs={}, dbTimeMs={}, totalTimeMs={}",
             items.size,
-            createdCount,
-            updatedCount,
-            failedCount,
-            changedContentIds.size,
+            result.createdCount,
+            result.updatedCount,
+            result.failedCount,
+            result.changedContentIds.size,
             apiEnd - apiStart,
             dbEnd - dbStart,
             totalEnd - totalStart
         )
 
-        return FestivalSyncResultResponse(
-            items.size,
-            createdCount,
-            updatedCount,
-            failedCount,
-            changedContentIds
-        )
+        return result
     }
 
     // 목록 동기화 완료 후, 변경된 contentId 목록에 대한 상세 보강 이벤트를 발행함
@@ -240,13 +193,6 @@ class FestivalSyncService(
             val contentId = contentIds[i]
 
             try {
-                val festival = festivalRepository.findByContentId(contentId)
-                    .orElseThrow {
-                        NoSuchElementException("해당 contentId의 축제를 찾을 수 없습니다. contentId=$contentId")
-                    }
-
-                val wasDetailIncomplete = festivalApiConverter.isDetailIncomplete(festival)
-
                 val apiStart = System.currentTimeMillis()
                 apiCallCount++
 
@@ -282,13 +228,7 @@ class FestivalSyncService(
 
                 val detailItem = detailItems[0]
 
-                if (wasDetailIncomplete || festivalApiConverter.hasDetailChanges(festival, detailItem)) {
-                    festivalApiConverter.updateDetailFields(festival, detailItem)
-
-                    if (!wasDetailIncomplete) {
-                        updatedCount++
-                    }
-                }
+                updatedCount += festivalSyncPersistenceService.updateDetailFields(contentId, detailItem)
 
                 pendingService.remove(contentId)
             } catch (e: TooManyRequests) {
@@ -375,13 +315,7 @@ class FestivalSyncService(
     }
 
     // 상세 API 기반 상세 정보 보강 (특정 축제 1건)
-    @Transactional
     fun enrichFestivalDetailByContentId(contentId: String) {
-        val festival = festivalRepository.findByContentId(contentId)
-            .orElseThrow {
-                NoSuchElementException("해당 contentId의 축제를 찾을 수 없습니다. contentId=$contentId")
-            }
-
         val response =
             festivalApiClient.fetchFestivalDetail(contentId)
 
@@ -403,9 +337,7 @@ class FestivalSyncService(
 
         val detailItem = items[0]
 
-        if (festivalApiConverter.hasDetailChanges(festival, detailItem)) {
-            festivalApiConverter.updateDetailFields(festival, detailItem)
-        }
+        festivalSyncPersistenceService.updateDetailFields(contentId, detailItem)
 
         pendingService.remove(contentId)
     }
