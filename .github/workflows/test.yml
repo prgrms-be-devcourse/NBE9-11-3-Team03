@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - develop
-      - refactor/kotlin-migration-festival
   pull_request:
     branches:
       - main
@@ -40,6 +39,9 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Run tests
+        env:
+          SPRING_PROFILES_ACTIVE: test
+          JWT_SECRET: ci-test-secret-key-for-actions-only-1234567890abcdef
         run: ./gradlew test --no-daemon
 
       - name: Upload test report (on failure)

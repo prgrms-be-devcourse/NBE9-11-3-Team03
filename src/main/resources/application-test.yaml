@@ -1,9 +1,41 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=MySQL # 메모리 DB 사용
+    url: jdbc:h2:mem:testdb;MODE=MySQL
     driver-class-name: org.h2.Driver
     username: sa
     password:
   jpa:
     hibernate:
       ddl-auto: create-drop
+    show-sql: false
+
+jwt:
+  secret: test-jwt-secret-key-for-ci-environment-1234567890abcdef
+  access-token-expiration-ms: 3600000
+  refresh-token-expiration-ms: 1209600000
+
+security:
+  dev-token:
+    enabled: false
+
+    value: ""
+    login-id: "test-user"
+    role: "USER"
+
+api:
+  public-data:
+    key: test-api-key-not-used-in-tests
+    base-url: http://localhost:9999/mock
+
+file:
+  upload-dir: /tmp/test-uploads/
+
+slack:
+  webhook:
+    url: ""
+
+cookie:
+  refresh-token:
+    secure: false
+    same-site: Lax
+    path: /api/auth
