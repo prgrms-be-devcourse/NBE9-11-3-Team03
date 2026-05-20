@@ -176,105 +176,7 @@
 
 ---
 
-### 🧩 주요 전환 사례
 
-#### 1. Java DTO class → Kotlin data class
-
-기존 Java DTO는 Lombok의 `@Getter`, `@Builder`, `@AllArgsConstructor` 등에 의존했습니다.
-
-Kotlin 전환 후에는 `data class`를 사용하여 생성자, getter, equals/hashCode 등 반복 코드를 줄이고 DTO 구조를 더 직관적으로 표현했습니다.
-
-```kotlin
-data class ReviewLikeResponse(
-    val reviewId: Long,
-    val memberId: Long,
-    val isLiked: Boolean,
-    val likeCount: Int
-)
-```
-
-#### 2. Service 계층 Kotlin 전환
-
-Java Service class는 Lombok `@RequiredArgsConstructor`를 사용해 생성자 주입을 처리했습니다.
-
-Kotlin 전환 후에는 주 생성자 기반 의존성 주입을 적용하여 의존 관계를 클래스 선언부에서 바로 확인할 수 있도록 개선했습니다.
-
-```kotlin
-@Service
-@Transactional(readOnly = true)
-class ReviewLikeService(
-    private val reviewLikeRepository: ReviewLikeRepository,
-    private val reviewRepository: ReviewRepository,
-    private val memberRepository: MemberRepository
-)
-```
-
-#### 3. Named Arguments를 통한 DTO 생성 가독성 개선
-
-Java에서는 생성자 파라미터 순서에 의존해야 했지만, Kotlin에서는 named arguments를 사용해 어떤 값이 어떤 필드에 매핑되는지 명확하게 표현했습니다.
-
-```kotlin
-return ReviewLikeResponse(
-    reviewId = review.id,
-    memberId = member.id,
-    isLiked = true,
-    likeCount = review.likeCount + 1
-)
-```
-
-#### 4. Property Access 적용
-
-Java의 getter 호출 방식은 Kotlin property 접근 방식으로 변경했습니다.
-
-| Java | Kotlin |
-|---|---|
-| `review.getId()` | `review.id` |
-| `member.getLoginId()` | `member.loginId` |
-| `review.getLikeCount()` | `review.likeCount` |
-| `review.getReportCount()` | `review.reportCount` |
-
-#### 5. Controller 단일 표현식 함수 적용
-
-Controller 계층에서는 단순히 Service를 호출하고 응답을 반환하는 메서드에 Kotlin 단일 표현식 함수를 적용하여 불필요한 `return`, `new`, 중괄호를 줄였습니다.
-
-```kotlin
-@PostMapping
-fun likeReview(
-    @PathVariable reviewId: Long,
-    authentication: Authentication
-): ResponseEntity<ApiRes<ReviewLikeResponse>> =
-    reviewLikeService.likeReview(reviewId, authentication.name)
-        .let { ResponseEntity.ok(ApiRes(200, "좋아요 상태가 변경되었습니다.", it)) }
-```
-
-#### 6. 동시성 테스트 구조 개선
-
-기존 동시성 테스트는 `CountDownLatch`를 완료 대기 용도로만 사용했습니다.
-
-개선 후에는 `startLatch`와 `doneLatch`를 분리하여 모든 작업이 같은 시점에 시작되도록 보완했습니다.
-
-```kotlin
-val startLatch = CountDownLatch(1)
-val doneLatch = CountDownLatch(THREAD_COUNT)
-
-repeat(THREAD_COUNT) { index ->
-    executorService.submit {
-        try {
-            startLatch.await()
-
-            val loginId = members[index].loginId
-            reviewLikeService.likeReview(savedReview.id, loginId)
-        } finally {
-            doneLatch.countDown()
-        }
-    }
-}
-
-startLatch.countDown()
-doneLatch.await()
-```
-
----
 
 ### 📈 마이그레이션 개선 효과
 
@@ -457,12 +359,12 @@ Client
 
 ## 📂 프로젝트 구조
 
-> Java에서 Kotlin으로 점진적 마이그레이션을 진행 중이며, 현재는 기존 패키지 구조를 유지한 상태에서 `.java`와 `.kt` 파일을 함께 관리합니다.
+> 
 
 ```text
 src/
 ├─ main/
-│  ├─ java/com/example/              # Java / Kotlin source root
+│  ├─ kotlin/com/example/              # Java / Kotlin source root
 │  │  ├─ FestivalApplication.java
 │  │  ├─ domain/
 │  │  │  ├─ admin/
