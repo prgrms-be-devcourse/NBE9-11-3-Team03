@@ -1,13 +1,76 @@
 ## 🎆 오늘의 축제
+
 * 전국 축제 정보를 한눈에 확인하고, 리뷰와 찜을 통해 나만의 축제 경험을 관리하는 서비스입니다.
 
 ---
 
 ## 🥤 프로젝트 소개
-*본 프로젝트는 기존 Java/Spring Boot 기반 코드를 Kotlin으로 점진적으로 마이그레이션했습니다.  
-*기존 기능 동작은 유지하면서 DTO, Service, Controller, Repository, Test 코드를 Kotlin 문법에 맞게 전환하고, 일부 테스트 구조를 개선했습니다.
+
+* 공공데이터포털 관광공사 API를 활용하여 전국 축제 정보를 제공합니다.
+* 사용자는 축제 목록/상세 조회, 지역/상태/월별 검색, 내 주변 축제 조회를 할 수 있습니다.
+* 로그인한 사용자는 축제를 찜하거나 리뷰를 작성하고, 마이페이지에서 활동 내역을 확인할 수 있습니다.
+* 관리자는 축제 데이터 동기화, 신고 리뷰 관리, 신고 회원 관리 기능을 사용할 수 있습니다.
+* 기존 Java/Spring Boot 기반 프로젝트를 Kotlin으로 점진적으로 마이그레이션하여 코드 가독성과 유지보수성을 개선했습니다.
 
 ---
+
+## 📚 프로젝트 개요
+
+* 이 서비스는 전국 축제 정보를 편리하게 탐색하고, 사용자 경험을 리뷰와 찜으로 관리할 수 있도록 하는 것을 목표로 합니다.
+* 축제 데이터는 공공데이터포털 관광공사 API를 통해 가져오고, 서비스 DB에 저장하여 관리합니다.
+* 축제 검색은 지역, 진행 상태, 월, 키워드, 내 위치 기반 조건을 지원합니다.
+* 회원 인증은 JWT 기반으로 구현하였으며, Access Token과 Refresh Token을 분리하여 인증과 재발급을 처리합니다.
+* 리뷰, 좋아요, 신고, 관리자 블라인드 처리 등 사용자 참여와 운영 관리를 위한 기능을 제공합니다.
+* Java와 Kotlin이 함께 동작하는 점진적 마이그레이션 방식으로 기존 기능을 유지하면서 코드 구조를 개선했습니다.
+
+---
+
+## ⚙️ 기술 스택
+
+### 🔙 Backend
+
+![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk)
+![Kotlin](https://img.shields.io/badge/Kotlin-1.9.25-7F52FF?logo=kotlin&logoColor=white)
+![Spring Boot](https://img.shields.io/badge/SpringBoot-3.5.13-6DB33F?logo=springboot&logoColor=white)
+![Spring Web](https://img.shields.io/badge/Spring%20Web-6DB33F?logo=spring)
+![Spring Data JPA](https://img.shields.io/badge/Spring%20Data%20JPA-6DB33F?logo=spring)
+![Gradle](https://img.shields.io/badge/Gradle-Kotlin%20DSL-02303A?logo=gradle)
+
+### 🔐 Security
+
+![Spring Security](https://img.shields.io/badge/Spring%20Security-6DB33F?logo=springsecurity&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?logo=jsonwebtokens&logoColor=white)
+![Validation](https://img.shields.io/badge/Jakarta%20Validation-FF6F00)
+
+### 🗄 Database
+
+![H2](https://img.shields.io/badge/H2-Database-blue)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)
+
+### 🔎 Query
+
+![QueryDSL](https://img.shields.io/badge/QueryDSL-0769AD)
+
+### 📄 API 문서화
+
+![Swagger](https://img.shields.io/badge/Swagger-85EA2D?logo=swagger&logoColor=black)
+
+### 🐳 Infra
+
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![Docker Compose](https://img.shields.io/badge/Docker%20Compose-2496ED?logo=docker&logoColor=white)
+
+### 🌐 Frontend
+
+![Next.js](https://img.shields.io/badge/Next.js-black?logo=nextdotjs)
+![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black)
+
+---
+
+## 🔄 Kotlin Migration
+
+본 프로젝트는 기존 Java/Spring Boot 기반 코드를 Kotlin으로 점진적으로 마이그레이션했습니다.  
+기존 기능 동작은 유지하면서 DTO, Service, Controller, Repository, Test 코드를 Kotlin 문법에 맞게 전환하고, 일부 테스트 구조를 개선했습니다.
 
 ### 🎯 마이그레이션 목표
 
@@ -19,57 +82,77 @@
 
 ---
 
-## 📚 프로젝트 개요
-* 이 서비스는 전국 축제 정보를 편리하게 탐색하고, 사용자 경험을 리뷰와 찜으로 관리할 수 있도록 하는 것을 목표로 합니다.
-* 축제 데이터는 공공데이터포털 관광공사 API를 통해 가져오고, 서비스 DB에 저장하여 관리합니다.
-* 축제 검색은 지역, 진행 상태, 월, 키워드, 내 위치 기반 조건을 지원합니다.
-* 회원 인증은 JWT 기반으로 구현하였으며, Access Token과 Refresh Token을 분리하여 인증과 재발급을 처리합니다.
-* 리뷰, 좋아요, 신고, 관리자 블라인드 처리 등 사용자 참여와 운영 관리를 위한 기능을 제공합니다.
+### 📌 주요 마이그레이션 범위
+
+| 구분 | 전환 내용 |
+|---|---|
+| Build / Config | Kotlin JVM, Spring, JPA, all-open, kapt, Lombok Kotlin 플러그인 설정 |
+| Global | BaseEntity getter 직접 구현 및 Kotlin 호환성 보완 |
+| Member | Member Entity Lombok getter 제거 및 직접 getter 구현, MyPageService Kotlin 전환 |
+| Admin | 관리자 요청/응답 DTO Kotlin 전환, 신고 리뷰/회원 관리 응답 구조 Kotlin화 |
+| Festival | FestivalSearchRequest Kotlin 전환, FestivalRepositoryImpl 및 일부 Festival 관련 코드 Kotlin 전환 |
+| Review | 리뷰 작성/수정 요청 DTO 및 응답 DTO Kotlin 전환 |
+| ReviewLike | ReviewLikeResponse DTO, ReviewLikeService Kotlin 전환 |
+| ReviewReport | ReviewReportController, ReviewReportService Kotlin 전환 및 신고 5회 임계치 warn 로그 추가 |
+| Test | Review / ReviewLike / ReviewReport 테스트 코드 Kotlin 전환 |
+| Concurrency Test | 좋아요, 좋아요 취소, 신고 동시성 테스트에 `startLatch` / `doneLatch` 구조 적용 |
 
 ---
 
-## ⚙️ 기술 스택
+### 🧩 주요 전환 사례
 
-### 🔙 Backend
-![Java](https://img.shields.io/badge/Java-21-orange?logo=openjdk)
-![Spring Boot](https://img.shields.io/badge/SpringBoot-3.5.13-6DB33F?logo=springboot&logoColor=white)
-![Spring Web](https://img.shields.io/badge/Spring%20Web-6DB33F?logo=spring)
-![Spring Data JPA](https://img.shields.io/badge/Spring%20Data%20JPA-6DB33F?logo=spring)
-![Gradle](https://img.shields.io/badge/Gradle-Kotlin%20DSL-02303A?logo=gradle)
+#### 1. Java DTO class → Kotlin data class
 
-### 🔐 Security
-![Spring Security](https://img.shields.io/badge/Spring%20Security-6DB33F?logo=springsecurity&logoColor=white)
-![JWT](https://img.shields.io/badge/JWT-000000?logo=jsonwebtokens&logoColor=white)
-![Validation](https://img.shields.io/badge/Jakarta%20Validation-FF6F00)
+기존 Java DTO는 Lombok의 `@Getter`, `@Builder`, `@AllArgsConstructor` 등에 의존했습니다.  
+Kotlin 전환 후에는 `data class`를 사용하여 생성자, getter, equals/hashCode 등 반복 코드를 줄였습니다.
 
-### 🗄 Database
-![H2](https://img.shields.io/badge/H2-Database-blue)
-![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)
 
-### 🔎 Query
-![QueryDSL](https://img.shields.io/badge/QueryDSL-0769AD)
-
-### 📄 API 문서화
-![Swagger](https://img.shields.io/badge/Swagger-85EA2D?logo=swagger&logoColor=black)
-
-### 🐳 Infra
-![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
-![Docker Compose](https://img.shields.io/badge/Docker%20Compose-2496ED?logo=docker&logoColor=white)
-
-### 🌐 Frontend
-![Next.js](https://img.shields.io/badge/Next.js-black?logo=nextdotjs)
-![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black)
 
 ---
 
-![Kotlin](https://img.shields.io/badge/Kotlin-1.9.25-7F52FF?logo=kotlin&logoColor=white)
+### 📈 마이그레이션 개선 효과
 
+| 개선 항목 | Before | After |
+|---|---|---|
+| DTO 표현 | Java class + Lombok | Kotlin data class |
+| 의존성 주입 | `@RequiredArgsConstructor` | Kotlin 주 생성자 |
+| Getter 접근 | `getId()`, `getStatus()` | `id`, `status` |
+| 응답 생성 | 생성자 순서 의존 | named arguments |
+| 테스트 코드 | Java 기반 테스트 | Kotlin 기반 테스트 |
+| 동시성 테스트 | 완료 대기 latch만 사용 | 시작/완료 latch 분리 |
+| 로그 관리 | 단순 신고 처리 | 신고 5회 임계치 warn 로그 추가 |
 
+---
 
+### 🧪 마이그레이션 검증
 
+마이그레이션 후 컴파일 및 주요 테스트를 통해 정상 동작을 확인했습니다.
 
+```bash
+./gradlew clean compileJava compileKotlin
+./gradlew test
+```
 
+주요 개별 테스트:
 
+```bash
+./gradlew test --tests "com.example.review.reviewLike.ReviewLikeControllerTest"
+./gradlew test --tests "com.example.review.reviewLike.ReviewLikeCancelTest"
+./gradlew test --tests "com.example.review.reviewLike.ReviewLikeTest"
+./gradlew test --tests "com.example.review.reviewReport.ReviewReportControllerTest"
+./gradlew test --tests "com.example.review.reviewReport.ReviewReportTest"
+```
+
+---
+
+### ✅ Kotlin Migration Summary
+
+* DTO를 Kotlin `data class`로 전환하여 반복 코드 감소
+* Service 계층에 Kotlin 주 생성자 기반 DI 적용
+* Java getter 호출을 Kotlin property access로 변경
+* named arguments를 활용해 DTO 필드 매핑 명확화
+* Review 신고 5회 임계치 warn 로그 추가
+* 테스트 코드 Kotlin 전환 및 동시성 테스트 신뢰도 개선
 
 ---
 
@@ -117,8 +200,11 @@ Client
              └─ WebMvc
 ```
 
+---
 
 ## 📂 프로젝트 구조
+
+> Java와 Kotlin 파일은 점진적 마이그레이션 방식으로 동일한 패키지 구조 내에서 함께 관리합니다.
 
 ```text
 src/
@@ -192,6 +278,7 @@ src/
 ## 🧩 주요 기능
 
 ### 👤 Member / Auth
+
 * 회원가입
 * 로그인
 * JWT Access Token 발급
@@ -205,6 +292,7 @@ src/
 * 내가 찜한 축제 조회
 
 ### 🎆 Festival
+
 * 축제 목록 조회
 * 축제 상세 조회
 * 지역/월/상태/키워드 기반 검색
@@ -214,6 +302,7 @@ src/
 * 동기화 실패/미처리 대상 관리
 
 ### ✍️ Review
+
 * 축제 리뷰 작성
 * 축제별 리뷰 목록 조회
 * 리뷰 수정
@@ -222,11 +311,13 @@ src/
 * 리뷰 신고
 
 ### 🔖 Bookmark
+
 * 축제 찜 등록
 * 축제 찜 취소
 * 마이페이지 찜 목록 조회
 
 ### 🛠 Admin
+
 * 회원 목록 조회
 * 신고 누적 회원 조회
 * 신고 리뷰 조회
@@ -332,14 +423,20 @@ http://localhost:8080/swagger-ui/index.html
 * Review Report
 * Admin
 * Global Exception
+* Kotlin Migration Test
+
+
+
+동시성 테스트는 `startLatch`와 `doneLatch`를 분리하여 요청 시작 시점을 맞추고, 좋아요/좋아요 취소/신고 카운트 정합성을 검증했습니다.
 
 ---
 
 ## 🎬 프로젝트 기능 구현 영상
 
-> TODO: 기능 시연 GIF 추가
+> 
 
 ### 주요 기능
+
 * 축제 목록/상세 조회
 * 지역/상태/월별 축제 검색
 * 내 주변 축제 조회
