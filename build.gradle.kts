@@ -5,7 +5,6 @@ plugins {
     kotlin("plugin.jpa") version "1.9.25"
     kotlin("plugin.allopen") version "1.9.25"
     kotlin("kapt") version "1.9.25"
-    kotlin("plugin.lombok") version "1.9.25"
     id("org.springframework.boot") version "3.5.13"
     id("io.spring.dependency-management") version "1.1.7"
 
@@ -44,20 +43,14 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:0.12.6")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    compileOnly("org.projectlombok:lombok")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("com.h2database:h2")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
-    //일단 H2로 구현
-    runtimeOnly("com.mysql:mysql-connector-j")
-    annotationProcessor("org.projectlombok:lombok")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     //db및 swagger체크용을 잠시 꺼둠
     testImplementation("org.springframework.security:spring-security-test")
-    testCompileOnly("org.projectlombok:lombok")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testAnnotationProcessor("org.projectlombok:lombok")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17")
     // Querydsl (Spring Boot 3.x / Jakarta 환경)
     implementation("com.querydsl:querydsl-jpa:5.0.0:jakarta")
@@ -83,15 +76,6 @@ allOpen {
     annotation("jakarta.persistence.MappedSuperclass")
     annotation("jakarta.persistence.Embeddable")
 }
-
-kotlinLombok {
-    lombokConfigurationFile(file("lombok.config"))
-}
-
-kapt {
-    keepJavacAnnotationProcessors = true
-}
-
 
 tasks.withType<Test> {
     useJUnitPlatform()
