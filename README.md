@@ -4,10 +4,18 @@
 ---
 
 ## 🥤 프로젝트 소개
-* 공공데이터포털 관광공사 API를 활용하여 전국 축제 정보를 제공합니다.
-* 사용자는 축제 목록/상세 조회, 지역/상태/월별 검색, 내 주변 축제 조회를 할 수 있습니다.
-* 로그인한 사용자는 축제를 찜하거나 리뷰를 작성하고, 마이페이지에서 활동 내역을 확인할 수 있습니다.
-* 관리자는 축제 데이터 동기화, 신고 리뷰 관리, 신고 회원 관리 기능을 사용할 수 있습니다.
+*본 프로젝트는 기존 Java/Spring Boot 기반 코드를 Kotlin으로 점진적으로 마이그레이션했습니다.  
+*기존 기능 동작은 유지하면서 DTO, Service, Controller, Repository, Test 코드를 Kotlin 문법에 맞게 전환하고, 일부 테스트 구조를 개선했습니다.
+
+---
+
+### 🎯 마이그레이션 목표
+
+* Java 코드의 반복적인 getter, 생성자, Lombok 의존을 줄이고 코드 가독성 개선
+* Kotlin `data class`, `property access`, `named arguments`, `scope function` 등을 활용한 표현력 향상
+* Java와 Kotlin이 함께 동작하는 점진적 마이그레이션 구조 경험
+* 테스트 코드 Kotlin 전환을 통한 유지보수성 향상
+* 동시성 테스트 보완을 통한 검증 신뢰도 향상
 
 ---
 
@@ -51,6 +59,17 @@
 ### 🌐 Frontend
 ![Next.js](https://img.shields.io/badge/Next.js-black?logo=nextdotjs)
 ![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black)
+
+---
+
+![Kotlin](https://img.shields.io/badge/Kotlin-1.9.25-7F52FF?logo=kotlin&logoColor=white)
+
+
+
+
+
+
+
 
 ---
 
