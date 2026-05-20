@@ -10,18 +10,25 @@
 * 사용자는 축제 목록/상세 조회, 지역/상태/월별 검색, 내 주변 축제 조회를 할 수 있습니다.
 * 로그인한 사용자는 축제를 찜하거나 리뷰를 작성하고, 마이페이지에서 활동 내역을 확인할 수 있습니다.
 * 관리자는 축제 데이터 동기화, 신고 리뷰 관리, 신고 회원 관리 기능을 사용할 수 있습니다.
-* 기존 Java/Spring Boot 기반 프로젝트를 Kotlin으로 점진적으로 마이그레이션하여 코드 가독성과 유지보수성을 개선했습니다.
+* 기존 Java/Spring Boot 기반 프로젝트를 Kotlin으로 점진적으로 마이그레이션하여 코드 가독성, 유지보수성, 테스트 신뢰도를 개선했습니다.
 
 ---
 
-## 📚 프로젝트 개요
+## 📚 3차 프로젝트 개요
 
-* 이 서비스는 전국 축제 정보를 편리하게 탐색하고, 사용자 경험을 리뷰와 찜으로 관리할 수 있도록 하는 것을 목표로 합니다.
-* 축제 데이터는 공공데이터포털 관광공사 API를 통해 가져오고, 서비스 DB에 저장하여 관리합니다.
-* 축제 검색은 지역, 진행 상태, 월, 키워드, 내 위치 기반 조건을 지원합니다.
-* 회원 인증은 JWT 기반으로 구현하였으며, Access Token과 Refresh Token을 분리하여 인증과 재발급을 처리합니다.
-* 리뷰, 좋아요, 신고, 관리자 블라인드 처리 등 사용자 참여와 운영 관리를 위한 기능을 제공합니다.
-* Java와 Kotlin이 함께 동작하는 점진적 마이그레이션 방식으로 기존 기능을 유지하면서 코드 구조를 개선했습니다.
+본 프로젝트는 2차 프로젝트에서 구현한 Java 기반 축제 플랫폼 API 서버를 Kotlin으로 점진적으로 마이그레이션하는 것을 목표로 진행했습니다.
+
+단순히 Java 파일을 Kotlin으로 변환하는 것에 그치지 않고, Kotlin의 `data class`, `property access`, `named arguments`, `scope function` 등 언어적 장점을 활용하여 코드의 반복을 줄이고 가독성을 개선했습니다.
+
+또한 기존 프로젝트에서 확인된 개선 포인트였던 로깅, Slack 알림, Access Token Blacklist, 파일 업로드 검증, 동시성 테스트 구조도 함께 보완했습니다.
+
+### 핵심 목표
+
+* Java 기반 REST API 서버를 Kotlin으로 점진적 마이그레이션
+* 기존 기능 동작을 유지하면서 코드 품질 및 유지보수성 개선
+* DTO, Controller, Service, Repository, Entity, Global, Test 계층별 Kotlin 전환
+* 로깅 및 Slack 알림 도입으로 운영 관찰성 개선
+* 동시성 테스트와 k6 테스트를 통한 검증 신뢰도 향상
 
 ---
 
@@ -55,10 +62,12 @@
 
 ![Swagger](https://img.shields.io/badge/Swagger-85EA2D?logo=swagger&logoColor=black)
 
-### 🐳 Infra
+### 🐳 Infra / Monitoring
 
 ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
 ![Docker Compose](https://img.shields.io/badge/Docker%20Compose-2496ED?logo=docker&logoColor=white)
+![Slack](https://img.shields.io/badge/Slack%20Webhook-4A154B?logo=slack&logoColor=white)
+![k6](https://img.shields.io/badge/k6-Performance%20Test-7D64FF?logo=k6&logoColor=white)
 
 ### 🌐 Frontend
 
@@ -69,8 +78,9 @@
 
 ## 🔄 Kotlin Migration
 
-본 프로젝트는 기존 Java/Spring Boot 기반 코드를 Kotlin으로 점진적으로 마이그레이션했습니다.  
-기존 기능 동작은 유지하면서 DTO, Service, Controller, Repository, Test 코드를 Kotlin 문법에 맞게 전환하고, 일부 테스트 구조를 개선했습니다.
+본 프로젝트는 기존 Java/Spring Boot 기반 코드를 Kotlin으로 점진적으로 마이그레이션했습니다.
+
+기존 기능 동작은 유지하면서 DTO, Controller, Service, Repository, Entity, Global, Test 코드를 Kotlin 문법에 맞게 전환하고, 일부 테스트 구조와 운영 보조 기능을 개선했습니다.
 
 ### 🎯 마이그레이션 목표
 
@@ -79,23 +89,90 @@
 * Java와 Kotlin이 함께 동작하는 점진적 마이그레이션 구조 경험
 * 테스트 코드 Kotlin 전환을 통한 유지보수성 향상
 * 동시성 테스트 보완을 통한 검증 신뢰도 향상
+* 로깅 및 Slack 알림을 통한 운영 관찰성 개선
 
 ---
 
 ### 📌 주요 마이그레이션 범위
 
-| 구분 | 전환 내용 |
+| 계층 | 전환 내용 |
 |---|---|
 | Build / Config | Kotlin JVM, Spring, JPA, all-open, kapt, Lombok Kotlin 플러그인 설정 |
-| Global | BaseEntity getter 직접 구현 및 Kotlin 호환성 보완 |
-| Member | Member Entity Lombok getter 제거 및 직접 getter 구현, MyPageService Kotlin 전환 |
-| Admin | 관리자 요청/응답 DTO Kotlin 전환, 신고 리뷰/회원 관리 응답 구조 Kotlin화 |
-| Festival | FestivalSearchRequest Kotlin 전환, FestivalRepositoryImpl 및 일부 Festival 관련 코드 Kotlin 전환 |
-| Review | 리뷰 작성/수정 요청 DTO 및 응답 DTO Kotlin 전환 |
-| ReviewLike | ReviewLikeResponse DTO, ReviewLikeService Kotlin 전환 |
-| ReviewReport | ReviewReportController, ReviewReportService Kotlin 전환 및 신고 5회 임계치 warn 로그 추가 |
-| Test | Review / ReviewLike / ReviewReport 테스트 코드 Kotlin 전환 |
+| DTO | Festival, Member/Auth, MyPage, Review, Admin, Bookmark, Report DTO를 Kotlin data class로 전환 |
+| Controller | FestivalAdminController, AdminController, ReviewReportController, FestivalController, FestivalBookmarkController, ReviewController, MyPageController, AuthController 등 전환 |
+| Service | ReviewLikeService, FestivalSyncService, SlackNotificationService, FestivalService, MyPageService, FestivalBookmarkService, ReviewReportService, FileStorageService, AuthService, MemberService 등 전환 |
+| Repository | FestivalRepository, FestivalRepositoryCustom, FestivalRepositoryImpl, MemberRepository, RefreshTokenRepository, AccessTokenBlacklistRepository 등 전환 |
+| Entity | Festival, Member, ReviewReport, FestivalBookmark, RefreshToken, AccessTokenBlacklist 등 주요 Entity Kotlin 호환성 보완 및 일부 전환 |
+| Global | BaseEntity, BaseCreatedEntity, ApiRes, Security/JWT/Exception/Config 관련 코드 전환 진행 |
+| Test | ReviewControllerTest, ReviewLikeTest, ReviewLikeCancelTest, ReviewReportTest 등 Kotlin 전환 |
 | Concurrency Test | 좋아요, 좋아요 취소, 신고 동시성 테스트에 `startLatch` / `doneLatch` 구조 적용 |
+
+---
+
+### ✅ DTO Kotlin 전환 목록
+
+<details>
+<summary>DTO Kotlin 전환 목록 보기</summary>
+
+### Festival
+
+* FestivalSearchRequest
+* FestivalDetailResponse
+* FestivalListResponse
+* FestivalMarkerResponse
+* FestivalPageResponse
+* FestivalSyncResponse
+* FestivalSyncResultResponse
+* FestivalSyncStatusResponse
+* FestivalApiResponse
+* FestivalApiHeader
+* FestivalApiBody
+* FestivalApiItems
+* FestivalApiItem
+
+### Member / Auth / MyPage
+
+* SignupRequest
+* LoginRequest
+* TokenReissueRequest
+* WithdrawRequest
+* SignupResponse
+* LoginResponse
+* TokenReissueResponse
+* WithdrawResponse
+* MyPageResponse
+* MyBookMarkItemResponse
+* MyBookMarkPageResponse
+* MyReviewItemResponse
+* MyReviewPageResponse
+
+### Review / Like
+
+* ReviewCreateRequest
+* ReviewUpdateRequest
+* ReviewResponse
+* ReviewListResponse
+* ReviewPageResponse
+* ReviewUpdateResponse
+* ReviewDeleteResponse
+* ReviewLikeResponse
+
+### Admin
+
+* ReviewProcessRequest
+* AdminMemberWithdrawnResponse
+* AdminReviewBlindResponse
+* AdminReviewReportResponse
+* AdminReviewReportPageResponse
+* MemberDetailResponse
+* MemberPageResponse
+
+### Bookmark / Report
+
+* FestivalBookmarkResponse
+* ReviewReportResponse
+
+</details>
 
 ---
 
@@ -103,10 +180,99 @@
 
 #### 1. Java DTO class → Kotlin data class
 
-기존 Java DTO는 Lombok의 `@Getter`, `@Builder`, `@AllArgsConstructor` 등에 의존했습니다.  
-Kotlin 전환 후에는 `data class`를 사용하여 생성자, getter, equals/hashCode 등 반복 코드를 줄였습니다.
+기존 Java DTO는 Lombok의 `@Getter`, `@Builder`, `@AllArgsConstructor` 등에 의존했습니다.
 
+Kotlin 전환 후에는 `data class`를 사용하여 생성자, getter, equals/hashCode 등 반복 코드를 줄이고 DTO 구조를 더 직관적으로 표현했습니다.
 
+```kotlin
+data class ReviewLikeResponse(
+    val reviewId: Long,
+    val memberId: Long,
+    val isLiked: Boolean,
+    val likeCount: Int
+)
+```
+
+#### 2. Service 계층 Kotlin 전환
+
+Java Service class는 Lombok `@RequiredArgsConstructor`를 사용해 생성자 주입을 처리했습니다.
+
+Kotlin 전환 후에는 주 생성자 기반 의존성 주입을 적용하여 의존 관계를 클래스 선언부에서 바로 확인할 수 있도록 개선했습니다.
+
+```kotlin
+@Service
+@Transactional(readOnly = true)
+class ReviewLikeService(
+    private val reviewLikeRepository: ReviewLikeRepository,
+    private val reviewRepository: ReviewRepository,
+    private val memberRepository: MemberRepository
+)
+```
+
+#### 3. Named Arguments를 통한 DTO 생성 가독성 개선
+
+Java에서는 생성자 파라미터 순서에 의존해야 했지만, Kotlin에서는 named arguments를 사용해 어떤 값이 어떤 필드에 매핑되는지 명확하게 표현했습니다.
+
+```kotlin
+return ReviewLikeResponse(
+    reviewId = review.id,
+    memberId = member.id,
+    isLiked = true,
+    likeCount = review.likeCount + 1
+)
+```
+
+#### 4. Property Access 적용
+
+Java의 getter 호출 방식은 Kotlin property 접근 방식으로 변경했습니다.
+
+| Java | Kotlin |
+|---|---|
+| `review.getId()` | `review.id` |
+| `member.getLoginId()` | `member.loginId` |
+| `review.getLikeCount()` | `review.likeCount` |
+| `review.getReportCount()` | `review.reportCount` |
+
+#### 5. Controller 단일 표현식 함수 적용
+
+Controller 계층에서는 단순히 Service를 호출하고 응답을 반환하는 메서드에 Kotlin 단일 표현식 함수를 적용하여 불필요한 `return`, `new`, 중괄호를 줄였습니다.
+
+```kotlin
+@PostMapping
+fun likeReview(
+    @PathVariable reviewId: Long,
+    authentication: Authentication
+): ResponseEntity<ApiRes<ReviewLikeResponse>> =
+    reviewLikeService.likeReview(reviewId, authentication.name)
+        .let { ResponseEntity.ok(ApiRes(200, "좋아요 상태가 변경되었습니다.", it)) }
+```
+
+#### 6. 동시성 테스트 구조 개선
+
+기존 동시성 테스트는 `CountDownLatch`를 완료 대기 용도로만 사용했습니다.
+
+개선 후에는 `startLatch`와 `doneLatch`를 분리하여 모든 작업이 같은 시점에 시작되도록 보완했습니다.
+
+```kotlin
+val startLatch = CountDownLatch(1)
+val doneLatch = CountDownLatch(THREAD_COUNT)
+
+repeat(THREAD_COUNT) { index ->
+    executorService.submit {
+        try {
+            startLatch.await()
+
+            val loginId = members[index].loginId
+            reviewLikeService.likeReview(savedReview.id, loginId)
+        } finally {
+            doneLatch.countDown()
+        }
+    }
+}
+
+startLatch.countDown()
+doneLatch.await()
+```
 
 ---
 
@@ -118,13 +284,99 @@ Kotlin 전환 후에는 `data class`를 사용하여 생성자, getter, equals/h
 | 의존성 주입 | `@RequiredArgsConstructor` | Kotlin 주 생성자 |
 | Getter 접근 | `getId()`, `getStatus()` | `id`, `status` |
 | 응답 생성 | 생성자 순서 의존 | named arguments |
+| Controller 응답 | 명시적 return + new | 단일 표현식 함수 + let |
 | 테스트 코드 | Java 기반 테스트 | Kotlin 기반 테스트 |
 | 동시성 테스트 | 완료 대기 latch만 사용 | 시작/완료 latch 분리 |
-| 로그 관리 | 단순 신고 처리 | 신고 5회 임계치 warn 로그 추가 |
+| 로그 관리 | 단순 처리 또는 print | SLF4J 기반 레벨별 로그 |
 
 ---
 
-### 🧪 마이그레이션 검증
+## 🛠 기능 보완 사항
+
+### 1. 로깅 도입
+
+기존 `System.out.println` 중심의 출력 방식에서 SLF4J 기반 로깅으로 전환하고, 상황에 따라 `info`, `warn`, `error` 레벨을 구분했습니다.
+
+| 영역 | 로그 내용 | 레벨 |
+|---|---|---|
+| 축제 동기화 | 스케줄러 시작/완료/실패 | info / error |
+| 공공 API | 429, 5xx 응답 감지 | warn |
+| 축제 상태 | 예정 → 진행중, 진행중 → 종료 전환 건수 | info |
+| 회원 | 회원가입, 로그인, 로그아웃, 탈퇴, 토큰 재발급 | info / warn |
+| 보안 | 블랙리스트 토큰 접근, 유효하지 않은 토큰 접근 | warn |
+| 관리자 | 회원 강제 탈퇴, 리뷰 블라인드 처리 | info |
+| 리뷰 | 신고 5회 임계치 도달 | warn |
+| 예외 | 500 서버 오류 | error |
+
+### 2. Slack 알림 도입
+
+공공데이터 축제 동기화 결과를 Slack Webhook을 통해 알림 받을 수 있도록 구성했습니다.
+
+* Incoming Webhook 기반 Slack 알림
+* 축제 데이터 동기화 성공/실패 결과 전달
+* 스케줄링 작업 결과 모니터링 가능
+* 운영 중 동기화 실패 상황을 빠르게 확인 가능
+
+### 3. Access Token Blacklist 보완
+
+로그아웃 또는 회원 탈퇴 이후에도 기존 Access Token이 만료 전까지 사용될 수 있는 문제를 보완하기 위해 Access Token Blacklist를 도입했습니다.
+
+* 로그아웃/탈퇴 시 Access Token blacklist 저장
+* JWT 인증 필터에서 blacklist 토큰 차단
+* 회원 상태가 ACTIVE인 경우에만 인증 처리
+* 만료된 blacklist token 정리 스케줄러 추가
+
+### 4. 파일 업로드 검증 보완
+
+리뷰 이미지 업로드 시 실제 이미지 파일 여부를 검증하도록 보완하여 잘못된 파일 업로드를 방지했습니다.
+
+* 이미지 MIME 타입 검증
+* 실제 이미지 파일 시그니처 검증
+* 비정상 파일 업로드 시 예외 처리
+* 테스트 코드에서 실제 이미지 바이트 기반 MockMultipartFile 사용
+
+### 5. 리뷰 신고 임계치 로그 추가
+
+리뷰 신고 수가 5회 이상 누적되는 시점에 warn 로그를 남겨 관리자 제재 대상 리뷰를 추적할 수 있도록 보완했습니다.
+
+```kotlin
+log.warn("[Review] 신고 5회 임계치 - reviewId={}, reportCount={}", reviewId, reportCount)
+```
+
+---
+
+## 📊 성능 테스트
+
+축제 검색 API에 대해 k6를 사용하여 Java 버전과 Kotlin 마이그레이션 버전의 성능을 비교했습니다.
+
+### 테스트 대상
+
+* 축제 검색 API
+* Java 기반 기존 코드
+* Kotlin 마이그레이션 이후 코드
+
+### 테스트 목적
+
+* Kotlin 전환 후 API 응답 성능 저하 여부 확인
+* 축제 검색 API의 평균 응답 시간과 처리량 비교
+* 마이그레이션 이후에도 기존 기능이 안정적으로 동작하는지 검증
+
+### 테스트 결과
+
+> k6 결과 이미지는 `docs/images` 또는 별도 문서에 추가 후 연결 예정입니다.
+
+```md
+![Java 축제 검색 k6 테스트 결과](./docs/images/k6-java-festival-search.png)
+![Kotlin 축제 검색 k6 테스트 결과](./docs/images/k6-kotlin-festival-search.png)
+```
+
+---
+
+## 🧪 테스트 및 검증
+
+```bash
+./gradlew test
+```
 
 마이그레이션 후 컴파일 및 주요 테스트를 통해 정상 동작을 확인했습니다.
 
@@ -133,26 +385,22 @@ Kotlin 전환 후에는 `data class`를 사용하여 생성자, getter, equals/h
 ./gradlew test
 ```
 
-주요 개별 테스트:
+### 주요 테스트 범위
 
-```bash
-./gradlew test --tests "com.example.review.reviewLike.ReviewLikeControllerTest"
-./gradlew test --tests "com.example.review.reviewLike.ReviewLikeCancelTest"
-./gradlew test --tests "com.example.review.reviewLike.ReviewLikeTest"
-./gradlew test --tests "com.example.review.reviewReport.ReviewReportControllerTest"
-./gradlew test --tests "com.example.review.reviewReport.ReviewReportTest"
-```
+* Auth API
+* Festival API
+* Festival 동기화/재시도
+* QueryDSL 검색
+* Bookmark
+* Review
+* Review Like
+* Review Report
+* Admin
+* Global Exception
+* Kotlin Migration Test
+* Concurrency Test
 
----
 
-### ✅ Kotlin Migration Summary
-
-* DTO를 Kotlin `data class`로 전환하여 반복 코드 감소
-* Service 계층에 Kotlin 주 생성자 기반 DI 적용
-* Java getter 호출을 Kotlin property access로 변경
-* named arguments를 활용해 DTO 필드 매핑 명확화
-* Review 신고 5회 임계치 warn 로그 추가
-* 테스트 코드 Kotlin 전환 및 동시성 테스트 신뢰도 개선
 
 ---
 
@@ -166,6 +414,7 @@ Client
         │    ├─ 로그인
         │    ├─ JWT 인증
         │    ├─ 토큰 재발급
+        │    ├─ Access Token Blacklist
         │    └─ 마이페이지
         │
         ├─ Festival
@@ -173,7 +422,8 @@ Client
         │    ├─ 축제 상세 조회
         │    ├─ QueryDSL 기반 검색
         │    ├─ 주변 축제 조회
-        │    └─ 공공데이터 API 동기화
+        │    ├─ 공공데이터 API 동기화
+        │    └─ Slack 동기화 알림
         │
         ├─ Review
         │    ├─ 리뷰 작성
@@ -181,7 +431,8 @@ Client
         │    ├─ 리뷰 수정
         │    ├─ 리뷰 삭제
         │    ├─ 리뷰 좋아요
-        │    └─ 리뷰 신고
+        │    ├─ 리뷰 신고
+        │    └─ 신고 5회 임계치 로그
         │
         ├─ Bookmark
         │    ├─ 축제 찜 등록
@@ -190,6 +441,7 @@ Client
         ├─ Admin
         │    ├─ 회원 관리
         │    ├─ 신고 리뷰 관리
+        │    ├─ 리뷰 블라인드 처리
         │    └─ 축제 데이터 동기화 관리
         │
         └─ Global
@@ -197,6 +449,7 @@ Client
              ├─ JWT
              ├─ Exception Handler
              ├─ Scheduler
+             ├─ Logging
              └─ WebMvc
 ```
 
@@ -204,18 +457,18 @@ Client
 
 ## 📂 프로젝트 구조
 
-> Java와 Kotlin 파일은 점진적 마이그레이션 방식으로 동일한 패키지 구조 내에서 함께 관리합니다.
+> Java에서 Kotlin으로 점진적 마이그레이션을 진행 중이며, 현재는 기존 패키지 구조를 유지한 상태에서 `.java`와 `.kt` 파일을 함께 관리합니다.
 
 ```text
 src/
 ├─ main/
-│  ├─ java/com/example/
+│  ├─ java/com/example/              # Java / Kotlin source root
 │  │  ├─ FestivalApplication.java
 │  │  ├─ domain/
 │  │  │  ├─ admin/
-│  │  │  │  ├─ controller/
-│  │  │  │  ├─ dto/
-│  │  │  │  └─ service/
+│  │  │  │  ├─ controller/           # 관리자 API Controller
+│  │  │  │  ├─ dto/                  # Java DTO / Kotlin data class
+│  │  │  │  └─ service/              # 관리자 비즈니스 로직
 │  │  │  ├─ bookmark/
 │  │  │  │  ├─ controller/
 │  │  │  │  ├─ dto/
@@ -223,13 +476,13 @@ src/
 │  │  │  │  ├─ repository/
 │  │  │  │  └─ service/
 │  │  │  ├─ festival/
-│  │  │  │  ├─ client/
+│  │  │  │  ├─ client/               # 공공데이터 API Client
 │  │  │  │  ├─ controller/
 │  │  │  │  ├─ converter/
-│  │  │  │  ├─ dto/
+│  │  │  │  ├─ dto/                  # Festival 요청/응답 DTO
 │  │  │  │  ├─ entity/
 │  │  │  │  ├─ event/
-│  │  │  │  ├─ repository/
+│  │  │  │  ├─ repository/           # JPA / QueryDSL Repository
 │  │  │  │  └─ service/
 │  │  │  ├─ member/
 │  │  │  │  ├─ controller/
@@ -239,23 +492,23 @@ src/
 │  │  │  │  └─ service/
 │  │  │  ├─ review/
 │  │  │  │  ├─ controller/
-│  │  │  │  ├─ dto/
+│  │  │  │  ├─ dto/                  # Review 요청/응답 DTO Kotlin 전환
 │  │  │  │  ├─ entity/
 │  │  │  │  ├─ repository/
-│  │  │  │  └─ service/
+│  │  │  │  └─ service/              # Review / ReviewLike 비즈니스 로직
 │  │  │  ├─ reviewlike/
-│  │  │  │  ├─ dto/
+│  │  │  │  ├─ dto/                  # ReviewLikeResponse Kotlin data class
 │  │  │  │  ├─ entity/
 │  │  │  │  └─ repository/
 │  │  │  └─ reviewreport/
-│  │  │     ├─ controller/
+│  │  │     ├─ controller/           # ReviewReportController Kotlin 전환
 │  │  │     ├─ dto/
 │  │  │     ├─ entity/
 │  │  │     ├─ repository/
-│  │  │     └─ service/
+│  │  │     └─ service/              # 신고 처리 및 임계치 로그
 │  │  └─ global/
 │  │     ├─ config/
-│  │     ├─ entity/
+│  │     ├─ entity/                  # BaseEntity Kotlin 호환성 보완
 │  │     ├─ exception/
 │  │     ├─ exceptionHandler/
 │  │     ├─ init/
@@ -270,7 +523,13 @@ src/
 │     ├─ application-mysql.yaml
 │     └─ application-test.yaml
 └─ test/
-   └─ java/com/example/
+   └─ java/com/example/              # Java / Kotlin test source root
+      ├─ admin/
+      ├─ festival/
+      ├─ review/
+      │  ├─ reviewLike/              # ReviewLike Kotlin 테스트
+      │  └─ reviewReport/            # ReviewReport Kotlin 테스트
+      └─ ...
 ```
 
 ---
@@ -300,6 +559,7 @@ src/
 * 공공데이터 API 축제 목록 동기화
 * 축제 상세 정보 보강
 * 동기화 실패/미처리 대상 관리
+* Slack Webhook 기반 동기화 결과 알림
 
 ### ✍️ Review
 
@@ -308,7 +568,9 @@ src/
 * 리뷰 수정
 * 리뷰 삭제
 * 리뷰 좋아요
+* 리뷰 좋아요 취소
 * 리뷰 신고
+* 신고 누적 5회 임계치 로그 기록
 
 ### 🔖 Bookmark
 
@@ -322,6 +584,7 @@ src/
 * 신고 누적 회원 조회
 * 신고 리뷰 조회
 * 리뷰 블라인드 처리
+* 신고 리뷰 기각 및 신고 수 초기화
 * 관리자 회원 탈퇴 처리
 * 축제 데이터 동기화 실행
 * 축제 상세 보강 실행
@@ -405,35 +668,9 @@ http://localhost:8080/swagger-ui/index.html
 
 ---
 
-## 🧪 테스트
-
-```bash
-./gradlew test
-```
-
-주요 테스트 범위:
-
-* Auth API
-* Festival API
-* Festival 동기화/재시도
-* QueryDSL 검색
-* Bookmark
-* Review
-* Review Like
-* Review Report
-* Admin
-* Global Exception
-* Kotlin Migration Test
-
-
-
-동시성 테스트는 `startLatch`와 `doneLatch`를 분리하여 요청 시작 시점을 맞추고, 좋아요/좋아요 취소/신고 카운트 정합성을 검증했습니다.
-
----
-
 ## 🎬 프로젝트 기능 구현 영상
 
-> 
+> TODO: 기능 시연 GIF 또는 시연 영상 링크 추가
 
 ### 주요 기능
 
@@ -446,6 +683,7 @@ http://localhost:8080/swagger-ui/index.html
 * 리뷰 좋아요/신고
 * 관리자 신고 리뷰 관리
 * 관리자 축제 데이터 동기화
+* Slack 기반 축제 동기화 결과 알림
 
 ---
 
@@ -473,8 +711,8 @@ http://localhost:8080/swagger-ui/index.html
 
 | 이름 | GitHub | 역할 |
 |---|---|---|
-| 박현준 | [github.com/Phj1225](https://github.com/Phj1225) | Member / Auth: 회원가입, 로그인, JWT 인증 인가 |
-| 김지영 | [github.com/jyeoniop](https://github.com/jyeoniop) | Festival 조회: 다중 필터 검색, 정렬, 지도 탐색 |
-| 김진세 | [github.com/wlstp8473](https://github.com/wlstp8473) | Festival 공공 API 동기화: 데이터 수집/적재, 에러 핸들링 |
-| 한정목 | [github.com/mokmok2yam](https://github.com/mokmok2yam) | Member / Auth, Admin: 신고 리뷰 제재, 회원 강제 탈퇴 |
-| 김민혁 | [github.com/zenesix](https://github.com/zenesix) | Review / Like / Bookmark: 리뷰 CRUD, 좋아요/찜, 평점 계산, 신고 접수 |
+| 박현준 | [github.com/Phj1225](https://github.com/Phj1225) | Member / Auth: 회원가입, 로그인, JWT 인증/인가, Access Token Blacklist 보완 |
+| 김지영 | [github.com/jyeoniop](https://github.com/jyeoniop) | Festival 조회: 다중 필터 검색, 정렬, 지도 탐색, Festival Repository/Global 일부 전환 |
+| 김진세 | [github.com/wlstp8473](https://github.com/wlstp8473) | Festival 공공 API 동기화: 데이터 수집/적재, Slack 알림, 동기화 서비스 전환 |
+| 한정목 | [github.com/mokmok2yam](https://github.com/mokmok2yam) | Member / MyPage / Admin / Bookmark: 신고 리뷰 제재, 회원 강제 탈퇴, 관리자 DTO/Service 전환 |
+| 김민혁 | [github.com/zenesix](https://github.com/zenesix) | Review / ReviewLike / ReviewReport: 리뷰 DTO, 좋아요 서비스, 신고 로그, 테스트 Kotlin 전환 |
