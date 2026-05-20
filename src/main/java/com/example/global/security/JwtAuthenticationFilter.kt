@@ -48,7 +48,6 @@ class JwtAuthenticationFilter(
     @Value("\${security.dev-token.role:USER}")
     private lateinit var devTokenRole: String
 
-    @Throws(ServletException::class, IOException::class)
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -102,7 +101,6 @@ class JwtAuthenticationFilter(
     private fun isLoggedOutAccessToken(token: String): Boolean =
         jwtUtil.validateToken(token) && jwtUtil.isAccessToken(token) && isBlacklisted(token)
 
-    @Throws(IOException::class)
     private fun writeUnauthorizedResponse(response: HttpServletResponse, message: String) {
         response.status = HttpServletResponse.SC_UNAUTHORIZED
         response.contentType = MediaType.APPLICATION_JSON_VALUE

@@ -58,8 +58,6 @@ class Member protected constructor() : BaseEntity() {
     }
 
     companion object {
-        @JvmOverloads
-        @JvmStatic
         fun create(
             userName: String,
             password: String,

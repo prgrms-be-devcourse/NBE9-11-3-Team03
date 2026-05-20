@@ -11,7 +11,6 @@ data class MemberPageResponse(
     val totalPages: Int
 ) {
     companion object {
-        @JvmStatic
         fun from(memberPage: Page<Member>): MemberPageResponse {
             return MemberPageResponse(
                 content = memberPage.content

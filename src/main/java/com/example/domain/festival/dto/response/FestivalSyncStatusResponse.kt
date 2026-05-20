@@ -8,6 +8,5 @@ data class FestivalSyncStatusResponse(
     val pendingCount: Long,
     val pendingBreakdown: Map<String, Long>,
     @get:JsonProperty("needsRetry")
-    @get:JvmName("isNeedsRetry")
     val needsRetry: Boolean
 )

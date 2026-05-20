@@ -12,7 +12,6 @@ data class MyReviewPageResponse(
     val hasNext: Boolean
 ) {
     companion object {
-        @JvmStatic
         fun from(reviewPage: Page<Review>) = MyReviewPageResponse(
             content       = reviewPage.content.map(MyReviewItemResponse::from),
             page          = reviewPage.number,

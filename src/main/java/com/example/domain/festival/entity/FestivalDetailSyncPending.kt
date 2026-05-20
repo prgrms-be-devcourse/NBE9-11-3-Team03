@@ -37,7 +37,6 @@ class FestivalDetailSyncPending protected constructor(
 
     companion object {
         // pending 생성 팩토리 메서드
-        @JvmStatic
         fun create(
             contentId: String,
             reason: DetailSyncPendingReason

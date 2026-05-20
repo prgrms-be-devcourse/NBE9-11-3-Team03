@@ -12,7 +12,6 @@ data class ReviewUpdateResponse(
     val updatedAt: LocalDateTime
 ) {
     companion object {
-        @JvmStatic
         fun from(review: Review): ReviewUpdateResponse {
             return ReviewUpdateResponse(
                 reviewId = review.id,

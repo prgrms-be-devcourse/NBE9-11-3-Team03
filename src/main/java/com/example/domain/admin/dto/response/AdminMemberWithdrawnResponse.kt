@@ -8,7 +8,6 @@ data class AdminMemberWithdrawnResponse(
     val status: MemberStatus
 ) {
     companion object {
-        @JvmStatic
         fun from(member: Member): AdminMemberWithdrawnResponse {
             return AdminMemberWithdrawnResponse(
                 member.id,
