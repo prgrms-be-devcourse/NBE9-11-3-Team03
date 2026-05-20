@@ -14,7 +14,6 @@ data class MyBookMarkItemResponse(
 
 ) {
     companion object {
-        @JvmStatic
         fun from(festivalBookmark: FestivalBookmark): MyBookMarkItemResponse {
             return MyBookMarkItemResponse(
                 festivalBookmark.id,

@@ -18,7 +18,6 @@ data class AdminReviewReportResponse(
     val status: ReviewStatus
 ) {
     companion object {
-        @JvmStatic
         fun from(review: Review): AdminReviewReportResponse {
             return AdminReviewReportResponse(
                 reviewId = review.id,

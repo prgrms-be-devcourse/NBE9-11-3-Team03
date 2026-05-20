@@ -161,7 +161,6 @@ class Festival(
          * 테스트 전용 팩토리. 운영 코드에서는 사용 금지.
          * viewCount/bookMarkCount/averageRate를 직접 세팅하기 위함.
          */
-        @JvmStatic
         fun forTest(
             contentId: String,
             title: String,

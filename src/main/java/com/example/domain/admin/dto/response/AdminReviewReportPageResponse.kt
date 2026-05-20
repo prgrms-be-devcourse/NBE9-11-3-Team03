@@ -11,7 +11,6 @@ data class AdminReviewReportPageResponse(
     val totalPages: Int
 ) {
     companion object {
-        @JvmStatic
         fun from(reviewPage: Page<Review>): AdminReviewReportPageResponse {
             return AdminReviewReportPageResponse(
                 // Stream API 대신 코틀린의 내장 map 함수 사용

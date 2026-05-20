@@ -14,7 +14,6 @@ data class MemberDetailResponse(
     val createdAt: LocalDateTime?
 ) {
     companion object {
-        @JvmStatic
         fun from(member: Member): MemberDetailResponse {
             return MemberDetailResponse(
                 member.id,

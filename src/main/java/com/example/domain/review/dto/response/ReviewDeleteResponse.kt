@@ -8,7 +8,6 @@ data class ReviewDeleteResponse(
     val status: ReviewStatus
 ) {
     companion object {
-        @JvmStatic
         fun from(review: Review): ReviewDeleteResponse {
             return ReviewDeleteResponse(
                 reviewId = review.id,

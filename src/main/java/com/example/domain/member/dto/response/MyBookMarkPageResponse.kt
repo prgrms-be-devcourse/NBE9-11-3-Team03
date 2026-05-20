@@ -12,7 +12,6 @@ data class MyBookMarkPageResponse(
     val hasNext: Boolean
 ) {
     companion object {
-        @JvmStatic
         fun from(bookmarks: Page<FestivalBookmark>) = MyBookMarkPageResponse(
             content = bookmarks.content.map(MyBookMarkItemResponse::from),
             page = bookmarks.number,

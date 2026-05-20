@@ -9,7 +9,6 @@ data class FestivalMarkerResponse(
     val mapY: Double,
 ) {
     companion object {
-        @JvmStatic
         fun from(festival: Festival) = FestivalMarkerResponse(
             id = festival.id,
             title = festival.title,

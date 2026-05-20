@@ -19,7 +19,6 @@ data class FestivalListResponse(
     val isBookmarked: Boolean,
 ) {
     companion object {
-        @JvmStatic
         fun from(festival: Festival, isBookmarked: Boolean): FestivalListResponse {
             return FestivalListResponse(
                 id = festival.id,

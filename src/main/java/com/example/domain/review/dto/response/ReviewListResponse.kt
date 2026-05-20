@@ -18,7 +18,6 @@ data class ReviewListResponse(
     val liked: Boolean
 ) {
     companion object {
-        @JvmStatic
         fun from(review: Review, liked: Boolean): ReviewListResponse {
             val member = review.member
 
